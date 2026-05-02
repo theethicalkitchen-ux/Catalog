@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ethical Delights — WA Creative</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --deep:#1C1408;--earth:#6B4C1E;--wheat:#D4A96A;
+  --rust:#C4622D;--cream:#F5EFE0;--green:#2d5a27;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#111;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;}
+
+.card{
+  width:420px;
+  background:var(--deep);
+  font-family:'Jost',sans-serif;
+  overflow:hidden;
+  position:relative;
+}
+
+/* BG watermark */
+.bg-text{
+  position:absolute;top:-10px;left:-15px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:130pt;font-weight:600;
+  color:rgba(255,255,255,0.025);
+  line-height:1;pointer-events:none;
+  white-space:nowrap;z-index:0;
+}
+
+/* TOP BAR */
+.top-bar{background:var(--rust);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;}
+.top-bar-brand{font-family:'Cormorant Garamond',serif;font-size:13pt;font-weight:300;color:#fff;font-style:italic;}
+.top-bar-tag{font-size:6pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.8);}
+
+/* HERO TEXT */
+.hero{padding:28px 20px 20px;position:relative;z-index:1;}
+.eyebrow{font-size:6.5pt;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--rust);margin-bottom:8px;}
+.headline{font-family:'Cormorant Garamond',serif;font-size:36pt;font-weight:300;color:var(--cream);line-height:1.0;margin-bottom:10px;}
+.headline em{font-style:italic;color:var(--wheat);}
+.subline{font-size:9pt;font-weight:500;color:rgba(245,239,224,0.7);line-height:1.55;margin-bottom:16px;}
+.subline strong{color:var(--wheat);}
+
+/* DIVIDER */
+.divider{height:2px;background:linear-gradient(to right,var(--rust),transparent);margin:0 20px 16px;}
+
+/* PRODUCTS SECTION */
+.products{padding:0 20px 16px;position:relative;z-index:1;}
+.prod-heading{font-size:6pt;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--rust);margin-bottom:10px;}
+
+.prod-row{display:flex;gap:8px;margin-bottom:8px;}
+.prod-pill{flex:1;background:rgba(212,169,106,0.08);border:1px solid rgba(212,169,106,0.2);padding:10px 8px;text-align:center;}
+.prod-pill-icon{font-size:18pt;display:block;margin-bottom:4px;}
+.prod-pill-name{font-family:'Cormorant Garamond',serif;font-size:10pt;font-weight:400;color:var(--cream);line-height:1.1;margin-bottom:2px;}
+.prod-pill-name em{font-style:italic;color:var(--wheat);}
+.prod-pill-sub{font-size:5.5pt;font-weight:500;color:rgba(245,239,224,0.45);letter-spacing:0.05em;text-transform:uppercase;}
+
+/* PROCESS */
+.process{background:rgba(212,169,106,0.06);border-top:1px solid rgba(212,169,106,0.15);border-bottom:1px solid rgba(212,169,106,0.15);padding:14px 20px;margin-bottom:0;position:relative;z-index:1;}
+.process-label{font-size:6pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--rust);margin-bottom:10px;text-align:center;}
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;}
+.step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;}
+.step-icon{width:36px;height:36px;border-radius:50%;background:rgba(212,169,106,0.12);border:1.5px solid rgba(212,169,106,0.35);display:flex;align-items:center;justify-content:center;}
+.step-icon svg{width:18px;height:18px;}
+.step-lbl{font-size:6pt;font-weight:600;color:rgba(245,239,224,0.75);text-align:center;line-height:1.3;}
+.step-arrow{font-size:12pt;color:rgba(212,169,106,0.4);margin-top:-10px;}
+
+/* PROMISES */
+.promises{padding:14px 20px;display:grid;grid-template-columns:1fr 1fr;gap:6px;position:relative;z-index:1;}
+.promise{display:flex;align-items:flex-start;gap:7px;}
+.promise-icon{font-size:13pt;flex-shrink:0;line-height:1.2;}
+.promise-text{}
+.promise-title{font-size:7.5pt;font-weight:700;color:var(--wheat);line-height:1.2;margin-bottom:1px;}
+.promise-sub{font-size:6pt;font-weight:400;color:rgba(245,239,224,0.5);line-height:1.3;}
+
+/* CLIENTS */
+.clients{background:rgba(196,98,45,0.1);border-top:1px solid rgba(196,98,45,0.2);padding:10px 20px;position:relative;z-index:1;}
+.clients-label{font-size:5.8pt;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--rust);margin-bottom:5px;}
+.clients-list{font-size:6.5pt;font-weight:500;color:rgba(245,239,224,0.6);line-height:1.7;}
+
+/* CTA */
+.cta{background:var(--rust);padding:16px 20px;position:relative;z-index:1;}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:14pt;font-weight:300;color:#fff;font-style:italic;margin-bottom:8px;}
+.cta-title strong{font-style:normal;font-weight:600;}
+.cta-contacts{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.cta-item{font-size:7pt;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.7;}
+.cta-item strong{color:#fff;font-size:7.5pt;}
+
+/* FOOTER */
+.footer{background:var(--earth);padding:7px 20px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;}
+.footer-brand{font-family:'Cormorant Garamond',serif;font-size:8pt;color:var(--cream);font-style:italic;}
+.footer-fssai{font-size:5.5pt;color:rgba(245,239,224,0.5);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg-text">Satvik</div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-brand">Ethical Delights®</div>
+    <div class="top-bar-tag">For Caterers · Hotels · Cloud Kitchens</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow">Satvik · Preservative-Free · Blast Frozen</div>
+    <div class="headline">Stop<br>Rolling.<br>Start<br><em>Serving.</em></div>
+    <div class="subline">
+      Whole Wheat Chapatis, Puris &amp; Bhaturas —<br>
+      <strong>Homestyle quality. Zero prep. Consistent every time.</strong>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PRODUCTS -->
+  <div class="products">
+    <div class="prod-heading">Our Products</div>
+    <div class="prod-row">
+      <div class="prod-pill">
+        <span class="prod-pill-icon">🫓</span>
+        <div class="prod-pill-name">Satvik<br><em>Chapati</em></div>
+        <div class="prod-pill-sub">Ready in 60 sec</div>
+      </div>
+      <div class="prod-pill">
+        <span class="prod-pill-icon">🫔</span>
+        <div class="prod-pill-name">Satvik<br><em>Puri</em></div>
+        <div class="prod-pill-sub">4 Variants · Puffs in 5 sec</div>
+      </div>
+      <div class="prod-pill">
+        <span class="prod-pill-icon">🍽️</span>
+        <div class="prod-pill-name">Whole Wheat<br><em>Bhatura</em></div>
+        <div class="prod-pill-sub">No Maida · Par-Fried</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCESS -->
+  <div class="process">
+    <div class="process-label">From Freezer to Table — 4 Simple Steps</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D4A96A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <path d="M8 15 L11 18 L16 13"/>
+          </svg>
+        </div>
+        <div class="step-lbl">Remove<br>from Freezer</div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step">
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D4A96A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8"/><polyline points="12,8 12,12 15,14"/>
+          </svg>
+        </div>
+        <div class="step-lbl">Thaw<br>Briefly</div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step">
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D4A96A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17 Q6 13 9 17 Q12 21 15 17 Q18 13 21 17"/>
+            <path d="M6 11 C6 7 9 4 12 4 C15 4 18 7 18 11"/>
+            <line x1="12" y1="4" x2="12" y2="2"/>
+            <line x1="8" y1="5.5" x2="7" y2="3.5"/>
+            <line x1="16" y1="5.5" x2="17" y2="3.5"/>
+          </svg>
+        </div>
+        <div class="step-lbl">Bake<br>or Fry</div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step">
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D4A96A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19 Q12 14 20 19"/>
+            <ellipse cx="12" cy="14" rx="6" ry="2.5"/>
+            <path d="M9 14 C9 11 10.5 9 12 8 C13.5 9 15 11 15 14"/>
+            <circle cx="12" cy="7" r="1.2" fill="#D4A96A" stroke="none"/>
+          </svg>
+        </div>
+        <div class="step-lbl">Serve<br>Fresh</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMISES -->
+  <div class="promises">
+    <div class="promise">
+      <div class="promise-icon">🌾</div>
+      <div class="promise-text">
+        <div class="promise-title">100% Whole Wheat</div>
+        <div class="promise-sub">No Maida. No Palm Oil. No Preservatives.</div>
+      </div>
+    </div>
+    <div class="promise">
+      <div class="promise-icon">⚡</div>
+      <div class="promise-text">
+        <div class="promise-title">Zero Prep Needed</div>
+        <div class="promise-sub">No kneading, rolling or skilled cook.</div>
+      </div>
+    </div>
+    <div class="promise">
+      <div class="promise-icon">📐</div>
+      <div class="promise-text">
+        <div class="promise-title">Uniform Every Time</div>
+        <div class="promise-sub">Same size, texture &amp; taste — every batch.</div>
+      </div>
+    </div>
+    <div class="promise">
+      <div class="promise-icon">📦</div>
+      <div class="promise-text">
+        <div class="promise-title">Bulk Friendly</div>
+        <div class="promise-sub">1 year shelf life. Order ahead, use on demand.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTS -->
+  <div class="clients">
+    <div class="clients-label">Trusted by 20+ Commercial Kitchens</div>
+    <div class="clients-list">Chitale · Dorabjee · TSR Catering · Manohar Caterers · Bakul Caterers · Hotel Lakshman · Mehfil Caterers · Wet &amp; Joy Water Park · and more</div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div class="cta-title">Ready to simplify your kitchen?<br><strong>Call or WhatsApp us today.</strong></div>
+    <div class="cta-contacts">
+      <div class="cta-item">📞 <strong>+91 9822635254</strong></div>
+      <div class="cta-item">📞 <strong>+91 9923065960</strong></div>
+      <div class="cta-item">💬 <strong>+91 99707 02853</strong><br><span style="font-size:6pt;opacity:0.7;">WhatsApp — say "Sample"</span></div>
+      <div class="cta-item">🌐 <strong>ethicaldelights.in</strong><br>✉ theethicalkitchen@gmail.com</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">Ethical Delights® · ANF Ventures LLP · Pune · 2026</div>
+    <div class="footer-fssai">FSSAI: 11525037000057</div>
+  </div>
+
+</div>
+</body>
+</html>
