@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethical Delights® — Product Catalog 2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --deep:#1C1408; --earth:#6B4C1E; --wheat:#D4A96A;
+  --rust:#C4622D; --cream:#F5EFE0; --pale:#FAF6EE;
+  --green:#2d5a27; --gold:#C9A84C;
+  --page: 210mm;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; }
+body {
+  font-family:'Jost', sans-serif;
+  background:#e8e0d0;
+  color:var(--deep);
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+
+/* ── PAGE SHELL ── */
+.page {
+  width:210mm; min-height:297mm;
+  background:var(--pale);
+  margin:0 auto 8mm;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 4px 40px rgba(0,0,0,0.18);
+}
+
+/* ── COVER PAGE ── */
+.cover {
+  background:var(--deep);
+  min-height:297mm;
+  display:flex; flex-direction:column;
+}
+.cover-top-bar {
+  height:8mm; background:var(--rust);
+  border-bottom:1px solid var(--wheat);
+  flex-shrink:0;
+}
+.cover-body {
+  flex:1; display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  padding:16mm 18mm;
+  text-align:center;
+  position:relative;
+}
+.cover-body::before {
+  content:'';
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 40%, rgba(212,169,106,0.12) 0%, transparent 65%);
+  pointer-events:none;
+}
+.cover-eyebrow {
+  font-family:'Jost',sans-serif;
+  font-size:7pt; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--rust); font-weight:600; margin-bottom:5mm;
+}
+.cover-brand {
+  font-family:'Cormorant Garamond',serif;
+  font-size:44pt; font-weight:300; color:var(--cream);
+  line-height:1; margin-bottom:2mm;
+}
+.cover-brand em { font-style:italic; color:var(--wheat); }
+.cover-rule { width:40mm; height:1px; background:var(--wheat); margin:5mm auto; opacity:0.6; }
+.cover-tagline {
+  font-family:'Cormorant Garamond',serif;
+  font-size:13pt; font-style:italic; color:rgba(245,239,224,0.7);
+  margin-bottom:8mm; line-height:1.5;
+}
+.cover-catalog-label {
+  font-family:'Jost',sans-serif;
+  font-size:7.5pt; letter-spacing:0.25em; text-transform:uppercase;
+  color:rgba(245,239,224,0.4); margin-bottom:10mm;
+}
+
+/* Product category tiles */
+.cover-tiles {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:2mm; width:100%; margin-bottom:10mm;
+}
+.cover-tile {
+  padding:5mm 3mm;
+  border:1px solid rgba(212,169,106,0.2);
+  text-align:center;
+}
+.cover-tile-icon { font-size:18pt; margin-bottom:2mm; }
+.cover-tile-name {
+  font-family:'Jost',sans-serif; font-size:7.5pt;
+  font-weight:600; color:var(--cream); letter-spacing:0.08em;
+  text-transform:uppercase; margin-bottom:1.5mm;
+}
+.cover-tile-var {
+  font-size:7pt; color:var(--wheat); font-weight:300;
+}
+
+/* USP strip */
+.cover-usps {
+  display:flex; gap:2mm; width:100%; margin-bottom:10mm;
+}
+.cover-usp {
+  flex:1; padding:3mm 2mm;
+  background:rgba(212,169,106,0.08);
+  border:1px solid rgba(212,169,106,0.2);
+  text-align:center;
+  font-size:6.5pt; font-weight:700; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--wheat);
+}
+
+/* Cover why us */
+.cover-why {
+  width:100%; margin-bottom:10mm;
+  border:1px solid rgba(212,169,106,0.15);
+}
+.cover-why-header {
+  background:var(--rust);
+  padding:3mm 5mm;
+  font-size:7pt; font-weight:700; letter-spacing:0.2em;
+  text-transform:uppercase; color:#fff;
+}
+.cover-why-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+}
+.cover-why-item {
+  padding:5mm 4mm;
+  border-right:1px solid rgba(212,169,106,0.1);
+  text-align:center;
+}
+.cover-why-item:last-child { border-right:none; }
+.cover-why-num {
+  font-family:'Cormorant Garamond',serif;
+  font-size:22pt; font-weight:300; color:var(--wheat);
+  line-height:1; display:block; margin-bottom:1mm;
+}
+.cover-why-label {
+  font-size:6.5pt; font-weight:600; letter-spacing:0.1em;
+  text-transform:uppercase; color:rgba(245,239,224,0.7);
+  display:block; margin-bottom:1mm;
+}
+.cover-why-desc {
+  font-size:6pt; font-weight:300; color:rgba(245,239,224,0.4);
+  line-height:1.4;
+}
+
+/* Cover channels */
+.cover-channels {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:1.5mm; width:100%; margin-bottom:10mm;
+}
+.cover-channel {
+  padding:3.5mm 3mm; text-align:center;
+  background:rgba(107,76,30,0.25);
+  border:1px solid rgba(212,169,106,0.15);
+}
+.cover-channel-icon { font-size:11pt; }
+.cover-channel-name {
+  font-size:6.5pt; font-weight:600; color:var(--cream);
+  letter-spacing:0.06em; text-transform:uppercase;
+  display:block; margin-top:1mm;
+}
+
+.cover-bottom {
+  background:var(--earth);
+  padding:5mm 18mm; flex-shrink:0;
+}
+.cover-contact-row {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.cover-contact-item { font-size:7pt; color:rgba(245,239,224,0.8); }
+.cover-contact-item strong { color:var(--wheat); font-weight:600; }
+
+/* ── INNER PAGE HEADER/FOOTER ── */
+.page-header {
+  height:9mm; background:var(--deep);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 8mm;
+}
+.page-header-brand {
+  font-family:'Jost',sans-serif; font-size:7pt;
+  font-weight:700; letter-spacing:0.2em; color:var(--wheat);
+  text-transform:uppercase;
+}
+.page-header-title {
+  font-size:7pt; font-weight:300; color:rgba(245,239,224,0.5);
+  letter-spacing:0.1em;
+}
+.page-footer {
+  height:8mm; background:var(--cream);
+  border-top:1px solid rgba(212,169,106,0.3);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 8mm; position:absolute; bottom:0; left:0; right:0;
+}
+.page-footer-text {
+  font-size:6.5pt; color:rgba(107,76,30,0.5);
+}
+.page-num {
+  font-size:6.5pt; font-weight:600; color:var(--rust);
+}
+
+.page-content { padding:8mm 10mm 14mm; }
+
+/* ── SECTION HEADER BAR ── */
+.section-bar {
+  background:var(--deep);
+  padding:5mm 6mm; margin-bottom:6mm;
+  border-left:4px solid var(--rust);
+  display:flex; align-items:baseline; justify-content:space-between;
+}
+.section-bar-title {
+  font-family:'Cormorant Garamond',serif;
+  font-size:19pt; font-weight:300; color:var(--cream);
+}
+.section-bar-title em { font-style:italic; color:var(--wheat); }
+.section-bar-sub {
+  font-size:7pt; font-weight:300; color:rgba(245,239,224,0.5);
+  letter-spacing:0.05em;
+}
+
+/* ── INTRO TEXT ── */
+.intro-text {
+  font-size:8.5pt; font-weight:300; line-height:1.8;
+  color:var(--earth); margin-bottom:5mm;
+}
+
+/* ── DIVIDER ── */
+.rule { height:1px; background:rgba(212,169,106,0.3); margin:5mm 0; }
+.rule-rust { background:var(--rust); height:2px; }
+
+/* ── STAT ROW ── */
+.stats-row {
+  display:grid; grid-template-columns:repeat(5,1fr);
+  border:1px solid rgba(212,169,106,0.25); margin-bottom:5mm;
+  overflow:hidden;
+}
+.stat-cell {
+  padding:5mm 3mm; text-align:center;
+  border-right:1px solid rgba(212,169,106,0.15);
+}
+.stat-cell:last-child { border-right:none; }
+.stat-num {
+  font-family:'Cormorant Garamond',serif;
+  font-size:26pt; font-weight:300; color:var(--rust);
+  display:block; line-height:1;
+}
+.stat-label {
+  font-size:6.5pt; font-weight:600; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--earth);
+  display:block; margin-top:2mm; line-height:1.4;
+}
+.stat-head {
+  background:var(--deep); padding:3mm 3mm;
+  font-size:6.5pt; font-weight:700; letter-spacing:0.2em;
+  text-transform:uppercase; color:var(--wheat);
+  text-align:center; grid-column:1/-1;
+  border-bottom:1px solid rgba(212,169,106,0.2);
+}
+
+/* ── HOW IT WORKS ── */
+.how-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:3mm; margin-bottom:5mm;
+}
+.how-card {
+  border:1px solid rgba(212,169,106,0.2);
+  overflow:hidden;
+}
+.how-card-top {
+  background:var(--deep);
+  padding:4mm; text-align:center;
+}
+.how-icon { font-size:20pt; line-height:1; }
+.how-svg { width:40px; height:40px; }
+.how-step-label {
+  font-size:6.5pt; font-weight:700; letter-spacing:0.15em;
+  text-transform:uppercase; color:var(--wheat);
+  margin-top:2mm; display:block;
+}
+.how-card-body { padding:4mm; background:var(--pale); }
+.how-card-title {
+  font-family:'Cormorant Garamond',serif;
+  font-size:11pt; color:var(--deep); margin-bottom:2mm;
+}
+.how-card-desc {
+  font-size:7.5pt; font-weight:300; color:var(--earth);
+  line-height:1.6;
+}
+.how-card-time {
+  font-size:6.5pt; font-weight:600; color:var(--rust);
+  margin-top:2mm; letter-spacing:0.1em; text-transform:uppercase;
+}
+
+/* ── CUSTOMER LIST ── */
+.customers-box {
+  background:var(--cream);
+  border:1px solid rgba(212,169,106,0.3);
+  border-left:4px solid var(--rust);
+  padding:5mm 6mm; margin-bottom:5mm;
+}
+.customers-label {
+  font-size:6.5pt; font-weight:700; letter-spacing:0.2em;
+  text-transform:uppercase; color:var(--rust); margin-bottom:3mm;
+}
+.customers-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:2mm;
+}
+.customer-name {
+  font-size:8pt; font-weight:500; color:var(--deep);
+  padding:2mm 3mm;
+  border:1px solid rgba(212,169,106,0.2);
+  background:var(--pale);
+  text-align:center;
+}
+
+/* ── PRODUCT CARD ── */
+.product-card {
+  border:1px solid rgba(212,169,106,0.2);
+  margin-bottom:3mm; overflow:hidden;
+  display:flex;
+}
+.product-card-bar {
+  width:5px; flex-shrink:0;
+}
+.product-card-body { flex:1; padding:4mm 5mm; background:var(--pale); }
+.product-card-right {
+  width:52mm; flex-shrink:0;
+  padding:4mm; background:var(--deep);
+  display:flex; flex-direction:column; justify-content:center;
+  gap:2mm;
+}
+
+.product-num {
+  font-size:7pt; font-weight:700; letter-spacing:0.15em;
+  text-transform:uppercase; color:var(--rust); margin-bottom:1mm;
+}
+.product-name {
+  font-family:'Cormorant Garamond',serif;
+  font-size:13pt; color:var(--deep); margin-bottom:1mm; line-height:1.2;
+}
+.product-tagline {
+  font-size:7pt; font-style:italic; color:var(--earth);
+  margin-bottom:2mm; line-height:1.5;
+}
+.product-ingr-label {
+  font-size:6pt; font-weight:700; letter-spacing:0.15em;
+  text-transform:uppercase; color:var(--rust); margin-bottom:1mm;
+}
+.product-ingr {
+  font-size:7.5pt; font-weight:300; color:var(--earth);
+  line-height:1.6;
+}
+.product-pack {
+  font-size:7pt; font-weight:300; color:rgba(107,76,30,0.6);
+  margin-top:2mm; border-top:1px solid rgba(212,169,106,0.2);
+  padding-top:2mm;
+}
+
+.usp-tag {
+  display:inline-block; background:var(--deep);
+  color:var(--wheat); font-size:6pt; font-weight:700;
+  letter-spacing:0.08em; text-transform:uppercase;
+  padding:1.5mm 3mm; margin:1px;
+}
+.usp-tag.green { background:var(--green); }
+.usp-tag.rust { background:var(--rust); }
+
+/* ── WRAPS TABLE ── */
+.wraps-table { width:100%; border-collapse:collapse; margin-bottom:5mm; }
+.wraps-table th {
+  background:var(--deep); color:var(--wheat);
+  font-size:7pt; font-weight:700; letter-spacing:0.12em;
+  text-transform:uppercase; padding:4mm 3mm; text-align:left;
+  border-right:1px solid rgba(212,169,106,0.15);
+}
+.wraps-table td {
+  font-size:7.5pt; font-weight:300; color:var(--earth);
+  padding:4mm 3mm; vertical-align:top;
+  border-bottom:1px solid rgba(212,169,106,0.15);
+  border-right:1px solid rgba(212,169,106,0.1);
+  line-height:1.5;
+}
+.wraps-table tr:nth-child(even) td { background:rgba(212,169,106,0.04); }
+.wraps-table tr:nth-child(odd) td { background:var(--pale); }
+.wraps-table .bold { font-weight:600; color:var(--deep); }
+
+/* ── BENEFITS GRID ── */
+.benefits-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:2mm; margin-bottom:5mm;
+}
+.benefit-card {
+  padding:4mm; border:1px solid rgba(212,169,106,0.2);
+  background:var(--pale); text-align:center;
+}
+.benefit-icon { font-size:16pt; margin-bottom:2mm; display:block; }
+.benefit-title {
+  font-size:7.5pt; font-weight:700; color:var(--deep);
+  margin-bottom:1.5mm; letter-spacing:0.03em;
+}
+.benefit-desc {
+  font-size:7pt; font-weight:300; color:var(--earth);
+  line-height:1.5;
+}
+
+/* ── CHANNELS GRID ── */
+.channels-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:2mm; margin-bottom:5mm;
+}
+.channel-card {
+  padding:4mm 3mm; text-align:center;
+  border:1px solid rgba(212,169,106,0.2);
+}
+.channel-card:nth-child(odd) { background:var(--deep); }
+.channel-card:nth-child(even) { background:rgba(107,76,30,0.1); }
+.channel-icon-lg { font-size:14pt; display:block; margin-bottom:2mm; }
+.channel-name-lg {
+  font-size:7.5pt; font-weight:700;
+  letter-spacing:0.06em; text-transform:uppercase;
+  margin-bottom:1.5mm;
+}
+.channel-card:nth-child(odd) .channel-name-lg { color:var(--wheat); }
+.channel-card:nth-child(even) .channel-name-lg { color:var(--deep); }
+.channel-tag {
+  font-size:6.5pt; font-weight:300; line-height:1.4;
+}
+.channel-card:nth-child(odd) .channel-tag { color:rgba(245,239,224,0.55); }
+.channel-card:nth-child(even) .channel-tag { color:var(--earth); }
+
+/* ── CERTS ── */
+.certs-row {
+  display:flex; gap:2mm;
+}
+.cert-badge {
+  flex:1; padding:3.5mm 2mm; text-align:center;
+  background:var(--deep); border:1px solid rgba(212,169,106,0.2);
+  font-size:6.5pt; font-weight:700; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--wheat);
+  line-height:1.4;
+}
+
+/* ── CONTACT BACK PAGE ── */
+.contact-page { background:var(--deep); min-height:297mm; display:flex; flex-direction:column; }
+.contact-top-bar { height:8mm; background:var(--rust); border-bottom:1px solid var(--wheat); }
+.contact-body { flex:1; padding:16mm 18mm; display:flex; flex-direction:column; justify-content:center; }
+.contact-eyebrow {
+  font-size:7pt; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--rust); font-weight:600; margin-bottom:4mm;
+  display:flex; align-items:center; gap:3mm;
+}
+.contact-eyebrow::after { content:''; flex:1; height:1px; background:rgba(196,98,45,0.4); }
+.contact-heading {
+  font-family:'Cormorant Garamond',serif;
+  font-size:34pt; font-weight:300; color:var(--cream);
+  line-height:1.05; margin-bottom:4mm;
+}
+.contact-heading em { font-style:italic; color:var(--wheat); }
+.contact-sub {
+  font-size:9pt; font-weight:300; color:rgba(245,239,224,0.55);
+  margin-bottom:10mm; line-height:1.7;
+}
+.contact-items { display:grid; grid-template-columns:1fr 1fr; gap:4mm; margin-bottom:10mm; }
+.contact-item {
+  padding:5mm; border:1px solid rgba(212,169,106,0.15);
+  background:rgba(212,169,106,0.04);
+}
+.contact-item-icon { font-size:14pt; margin-bottom:2mm; }
+.contact-item-label {
+  font-size:6.5pt; font-weight:700; letter-spacing:0.15em;
+  text-transform:uppercase; color:var(--rust); margin-bottom:2mm;
+}
+.contact-item-val {
+  font-size:9.5pt; font-weight:300; color:var(--cream); line-height:1.6;
+}
+.contact-customers-box {
+  padding:5mm; border:1px solid rgba(212,169,106,0.15);
+  margin-bottom:6mm;
+}
+.contact-customers-label {
+  font-size:6.5pt; font-weight:700; letter-spacing:0.2em;
+  text-transform:uppercase; color:var(--wheat); margin-bottom:3mm;
+}
+.contact-customers-names {
+  font-size:8pt; font-weight:300; color:rgba(245,239,224,0.6);
+  line-height:1.8;
+}
+.contact-bottom {
+  background:var(--earth); padding:5mm 18mm;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.contact-bottom-text { font-size:7.5pt; color:rgba(245,239,224,0.7); }
+.contact-bottom-text strong { color:var(--wheat); }
+
+@media print {
+  body { background:white; }
+  .page { margin:0; box-shadow:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════
+     PAGE 1 — COVER
+══════════════════════════ -->
+<div class="page cover">
+  <div class="cover-top-bar"></div>
+  <div class="cover-body">
+    <div class="cover-eyebrow">Product Catalog 2025</div>
+    <div class="cover-brand">Ethical <em>Delights</em><sup style="font-size:0.5em;vertical-align:super;">®</sup></div>
+    <div class="cover-tagline">Homestyle Quality. Commercial Scale.</div>
+    <div class="cover-rule"></div>
+    <div class="cover-catalog-label">Satvik · Preservative-Free · Blast Frozen · Ready to Cook</div>
+
+    <!-- Product tiles -->
+    <div class="cover-tiles">
+      <div class="cover-tile">
+        <div class="cover-tile-icon">🫓</div>
+        <div class="cover-tile-name">Satvik Chapati</div>
+        <div class="cover-tile-var">4 Variants</div>
+      </div>
+      <div class="cover-tile">
+        <div class="cover-tile-icon">🫔</div>
+        <div class="cover-tile-name">Satvik Puri</div>
+        <div class="cover-tile-var">4 Variants</div>
+      </div>
+      <div class="cover-tile">
+        <div class="cover-tile-icon">🍽️</div>
+        <div class="cover-tile-name">Bhatura</div>
+        <div class="cover-tile-var">Whole Wheat</div>
+      </div>
+      <div class="cover-tile">
+        <div class="cover-tile-icon">🌯</div>
+        <div class="cover-tile-name">Wraps</div>
+        <div class="cover-tile-var">3 Variants · 12 inch</div>
+      </div>
+    </div>
+
+    <!-- Why use us -->
+    <div class="cover-why">
+      <div class="cover-why-header">Why Commercial Kitchens Choose Ethical Delights</div>
+      <div class="cover-why-grid">
+        <div class="cover-why-item">
+          <span class="cover-why-num">60s</span>
+          <span class="cover-why-label">Prep Time</span>
+          <span class="cover-why-desc">From freezer to plate — no kneading, no rolling, no skill required</span>
+        </div>
+        <div class="cover-why-item">
+          <span class="cover-why-num">Zero</span>
+          <span class="cover-why-label">Wastage</span>
+          <span class="cover-why-desc">Cook exactly what you need. Freeze the rest. No daily spoilage</span>
+        </div>
+        <div class="cover-why-item">
+          <span class="cover-why-num">100%</span>
+          <span class="cover-why-label">Consistent</span>
+          <span class="cover-why-desc">Uniform size, thickness and taste — every plate, every service</span>
+        </div>
+        <div class="cover-why-item">
+          <span class="cover-why-num">₹0</span>
+          <span class="cover-why-label">Flour Mess</span>
+          <span class="cover-why-desc">No prep station, no flour dust — audit-ready hygiene built in</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Who we serve -->
+    <div class="cover-channels">
+      <div class="cover-channel">
+        <div class="cover-channel-icon">👨‍🍳</div>
+        <span class="cover-channel-name">Caterers</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">🍽️</div>
+        <span class="cover-channel-name">HoReCa</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">🏫</div>
+        <span class="cover-channel-name">Canteens</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">🍔</div>
+        <span class="cover-channel-name">QSRs & Cloud</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">🏖️</div>
+        <span class="cover-channel-name">Water Parks</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">🏭</div>
+        <span class="cover-channel-name">Institutional</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">✈️</div>
+        <span class="cover-channel-name">Airlines</span>
+      </div>
+      <div class="cover-channel">
+        <div class="cover-channel-icon">🚢</div>
+        <span class="cover-channel-name">Exports</span>
+      </div>
+    </div>
+
+    <!-- USPs -->
+    <div class="cover-usps">
+      <div class="cover-usp">No Maida</div>
+      <div class="cover-usp">No Palm Oil</div>
+      <div class="cover-usp">No Preservatives</div>
+      <div class="cover-usp">100% Satvik</div>
+      <div class="cover-usp">Clean Label</div>
+      <div class="cover-usp">Blast Frozen</div>
+    </div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-contact-row">
+      <div class="cover-contact-item"><strong>ANF Ventures LLP</strong> · Pimple Nilakh, Pune – 411027</div>
+      <div class="cover-contact-item">📞 <strong>+91-9822635254</strong> &nbsp;|&nbsp; 💬 <strong>+91 99707 02853</strong></div>
+      <div class="cover-contact-item">✉ <strong>theethicalkitchen@gmail.com</strong> &nbsp;|&nbsp; 🌐 <strong>ethicaldelights.in</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PAGE 2 — ABOUT + HOW IT WORKS + CUSTOMERS
+══════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">Ethical Delights®</div>
+    <div class="page-header-title">About Us &amp; How It Works</div>
+  </div>
+  <div class="page-content">
+
+    <div class="section-bar">
+      <div class="section-bar-title">About <em>Ethical Delights</em></div>
+      <div class="section-bar-sub">Fresh. Honest. Intentional.</div>
+    </div>
+
+    <p class="intro-text">
+      Founded in Pune by Amit and Nishant, Ethical Delights was built with one mission: to bring homestyle Satvik flatbreads to commercial kitchens — pure, consistent, and truly nourishing. Eight months of R&D. Zero shortcuts. Every chapati, puri, and wrap made with clean ingredients and deep respect for India's flatbread traditions.
+    </p>
+
+    <!-- Stats — no divider line, clear text -->
+    <div class="stats-row">
+      <div class="stat-head" style="background:var(--deep);color:var(--wheat);font-size:6.5pt;letter-spacing:0.2em;text-transform:uppercase;font-weight:700;padding:3mm;text-align:center;grid-column:1/-1;">OUR NUMBERS</div>
+      <div class="stat-cell">
+        <span class="stat-num">20+</span>
+        <span class="stat-label">Commercial Kitchens<br>Across Pune</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-num">600+</span>
+        <span class="stat-label">Families<br>Served</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-num">8</span>
+        <span class="stat-label">Months of R&amp;D<br>Before Launch</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-num">0</span>
+        <span class="stat-label">Preservatives.<br>Ever.</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-num">1 yr</span>
+        <span class="stat-label">Frozen<br>Shelf Life</span>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- How It Works with SVG icons -->
+    <div style="font-size:6.5pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--rust);margin-bottom:3mm;">HOW IT WORKS — FREEZER TO TABLE</div>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-card-top">
+          <div style="display:flex;justify-content:center;margin-bottom:2mm;">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="how-svg">
+              <rect x="15" y="10" width="50" height="60" rx="6" stroke="rgba(245,239,224,0.8)" stroke-width="2" fill="rgba(245,239,224,0.06)"/>
+              <rect x="22" y="24" width="18" height="26" rx="2" stroke="rgba(212,169,106,0.5)" stroke-width="1.5" fill="rgba(212,169,106,0.08)"/>
+              <rect x="44" y="24" width="14" height="26" rx="2" stroke="rgba(212,169,106,0.4)" stroke-width="1.5" fill="rgba(212,169,106,0.06)"/>
+              <line x1="40" y1="55" x2="40" y2="67" stroke="rgba(160,210,255,0.6)" stroke-width="1.5"/>
+              <line x1="34" y1="61" x2="46" y2="61" stroke="rgba(160,210,255,0.6)" stroke-width="1.5"/>
+              <line x1="36" y1="57" x2="44" y2="65" stroke="rgba(160,210,255,0.5)" stroke-width="1"/>
+              <line x1="44" y1="57" x2="36" y2="65" stroke="rgba(160,210,255,0.5)" stroke-width="1"/>
+            </svg>
+          </div>
+          <span class="how-step-label">Step 1 — Take from Freezer</span>
+        </div>
+        <div class="how-card-body">
+          <div class="how-card-title">Remove &amp; Thaw</div>
+          <div class="how-card-desc">Remove packet from deep freezer. For chapatis, place on a dry cloth briefly. For puris and bhatura, fry directly — no thawing needed.</div>
+          <div class="how-card-time">No skill required</div>
+        </div>
+      </div>
+      <div class="how-card">
+        <div class="how-card-top">
+          <div style="display:flex;justify-content:center;margin-bottom:2mm;">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="how-svg">
+              <ellipse cx="40" cy="52" rx="28" ry="7" fill="rgba(30,20,8,0.5)" stroke="rgba(107,76,30,0.6)" stroke-width="1.5"/>
+              <ellipse cx="40" cy="48" rx="28" ry="7" fill="rgba(40,28,10,0.6)" stroke="rgba(107,76,30,0.5)" stroke-width="1.5"/>
+              <ellipse cx="40" cy="43" rx="20" ry="6" fill="rgba(240,220,175,0.9)" stroke="rgba(107,76,30,0.3)" stroke-width="1"/>
+              <path d="M26 56 Q24 50 27 46 Q29 51 31 47 Q33 52 28 56Z" fill="rgba(255,140,0,0.8)"/>
+              <path d="M38 54 Q36 48 39 44 Q41 49 43 45 Q45 50 40 54Z" fill="rgba(255,160,0,0.85)"/>
+              <path d="M52 56 Q50 50 53 46 Q55 51 57 47 Q59 52 54 56Z" fill="rgba(255,140,0,0.8)"/>
+            </svg>
+          </div>
+          <span class="how-step-label">Step 2 — Bake or Fry</span>
+        </div>
+        <div class="how-card-body">
+          <div class="how-card-title">Heat &amp; Cook</div>
+          <div class="how-card-desc">Chapati: 60 seconds on a hot tawa. Puri &amp; Bhatura: 10–15 seconds in hot oil at 180°C. Perfectly puffed, golden and consistent every time.</div>
+          <div class="how-card-time">60 seconds · Any team member can do it</div>
+        </div>
+      </div>
+      <div class="how-card">
+        <div class="how-card-top">
+          <div style="display:flex;justify-content:center;margin-bottom:2mm;">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="how-svg">
+              <circle cx="40" cy="44" r="24" fill="rgba(245,239,224,0.12)" stroke="rgba(212,169,106,0.5)" stroke-width="1.5"/>
+              <circle cx="40" cy="44" r="18" fill="rgba(245,239,224,0.08)" stroke="rgba(212,169,106,0.3)" stroke-width="1"/>
+              <ellipse cx="40" cy="50" rx="14" ry="4" fill="rgba(220,195,148,0.7)" stroke="rgba(107,76,30,0.25)" stroke-width="1"/>
+              <ellipse cx="40" cy="46" rx="14" ry="4" fill="rgba(232,210,165,0.85)" stroke="rgba(107,76,30,0.28)" stroke-width="1"/>
+              <ellipse cx="40" cy="42" rx="14" ry="4" fill="rgba(242,225,185,0.95)" stroke="rgba(107,76,30,0.3)" stroke-width="1"/>
+              <circle cx="56" cy="24" r="10" fill="rgba(107,76,30,0.7)" stroke="rgba(212,169,106,0.5)" stroke-width="1"/>
+              <path d="M50 24 L54 28 L62 20" stroke="#D4A96A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <span class="how-step-label">Step 3 — Serve Hot &amp; Fresh</span>
+        </div>
+        <div class="how-card-body">
+          <div class="how-card-title">Serve &amp; Store</div>
+          <div class="how-card-desc">Soft, aromatic, fresh-tasting. Cook only what you need and put the rest back in the freezer. Zero wastage, zero over-prep, zero compromise.</div>
+          <div class="how-card-time">Zero wastage · Store back in freezer</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- Customer list -->
+    <div class="customers-box">
+      <div class="customers-label">Proud Suppliers To — 20+ Commercial Kitchens &amp; Counting</div>
+      <div class="customers-grid">
+        <div class="customer-name">Chitale</div>
+        <div class="customer-name">Dorabjee</div>
+        <div class="customer-name">TSR Catering</div>
+        <div class="customer-name">Green Signal Catering</div>
+        <div class="customer-name">Manohar Caterers</div>
+        <div class="customer-name">Bakul Caterers</div>
+        <div class="customer-name">Hotel Lakshman</div>
+        <div class="customer-name">Mehfil Caterers</div>
+        <div class="customer-name">Janaseva Dining Hall</div>
+        <div class="customer-name">GMK Caterers</div>
+        <div class="customer-name">Nandus Parathas</div>
+        <div class="customer-name">Wet &amp; Joy Water Park</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="page-footer">
+    <div class="page-footer-text">Ethical Delights® — theethicalkitchen@gmail.com · +91 99707 02853</div>
+    <div class="page-num">2</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PAGE 3 — SATVIK CHAPATI
+══════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">Ethical Delights®</div>
+    <div class="page-header-title">Satvik Chapati — All Variants</div>
+  </div>
+  <div class="page-content">
+
+    <div class="section-bar">
+      <div class="section-bar-title">Satvik <em>Chapati</em></div>
+      <div class="section-bar-sub">Whole Wheat · Half Baked · Ready to Cook · 400g · Pack of 10 · 40g each</div>
+    </div>
+
+    <p class="intro-text">100% whole wheat, kneaded fresh, precision-rolled to uniform thickness, half-cooked and blast-frozen at –18°C within minutes of production. No maida, no palm oil, no preservatives. Bake on a tawa in under 60 seconds. Available in four distinct variants.</p>
+
+    <!-- Regular -->
+    <div class="product-card">
+      <div class="product-card-bar" style="background:var(--rust);"></div>
+      <div class="product-card-body">
+        <div class="product-num">01 · Hero Product</div>
+        <div class="product-name">Regular Whole Wheat Chapati</div>
+        <div class="product-tagline">"The chapati your kitchen deserves — every single time."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Water, Cold Pressed Sunflower Oil, Pink Salt</div>
+        <div class="product-pack">400g · Pack of 10 · 40g per piece · 1 Year shelf life at –18°C · 5g Protein per piece · 130 kcal</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag">No Maida</span>
+        <span class="usp-tag">No Palm Oil</span>
+        <span class="usp-tag">No Preservatives</span>
+        <span class="usp-tag rust">Clean Label</span>
+        <span class="usp-tag">5g Protein</span>
+        <span class="usp-tag">Zero Trans Fat</span>
+      </div>
+    </div>
+
+    <!-- Spinach -->
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#2d5a27;"></div>
+      <div class="product-card-body">
+        <div class="product-num">02</div>
+        <div class="product-name">Spinach Chapati</div>
+        <div class="product-tagline">"Vibrant green from real spinach — iron-rich, naturally coloured."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Fresh Spinach Puree, Water, Cold Pressed Sunflower Oil, Pink Salt</div>
+        <div class="product-pack">400g · Pack of 10 · 40g per piece · Naturally coloured — no artificial dyes</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag green">Fresh Spinach</span>
+        <span class="usp-tag green">Iron Rich</span>
+        <span class="usp-tag">Natural Colour</span>
+        <span class="usp-tag">No Maida</span>
+      </div>
+    </div>
+
+    <!-- Beetroot -->
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#8b1a2a;"></div>
+      <div class="product-card-body">
+        <div class="product-num">03</div>
+        <div class="product-name">Beetroot Chapati</div>
+        <div class="product-tagline">"Deep rose-pink from real beetroot — antioxidant-rich and stunning on the plate."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Fresh Beetroot Puree, Water, Cold Pressed Sunflower Oil, Pink Salt</div>
+        <div class="product-pack">400g · Pack of 10 · 40g per piece · Naturally coloured — no artificial dyes</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag" style="background:#8b1a2a;">Fresh Beetroot</span>
+        <span class="usp-tag" style="background:#8b1a2a;">Antioxidants</span>
+        <span class="usp-tag">Natural Colour</span>
+        <span class="usp-tag">No Maida</span>
+      </div>
+    </div>
+
+    <!-- Khapli -->
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#7a5200;"></div>
+      <div class="product-card-body">
+        <div class="product-num">04</div>
+        <div class="product-name">Khapli (Emmer) Wheat Chapati</div>
+        <div class="product-tagline">"Ancient grain, modern kitchen — naturally low GI, easier to digest."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Khapli (Emmer) Wheat Flour (59%), Water, Cold Pressed Sunflower Oil, Pink Salt</div>
+        <div class="product-pack">400g · Pack of 10 · 40g per piece · Made from 100% Khapli ancient wheat · Ideal for health-conscious menus</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag" style="background:#7a5200;">Khapli Wheat</span>
+        <span class="usp-tag" style="background:#7a5200;">Low GI</span>
+        <span class="usp-tag">High Fibre</span>
+        <span class="usp-tag">Diabetic-Friendly</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="page-footer">
+    <div class="page-footer-text">Ethical Delights® — theethicalkitchen@gmail.com · +91 99707 02853</div>
+    <div class="page-num">3</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PAGE 4 — SATVIK PURI
+══════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">Ethical Delights®</div>
+    <div class="page-header-title">Satvik Puri — All Variants</div>
+  </div>
+  <div class="page-content">
+
+    <div class="section-bar">
+      <div class="section-bar-title">Satvik <em>Puri</em></div>
+      <div class="section-bar-sub">Whole Wheat · Half Baked · Ready to Fry · 500g · Pack of 20 · 25g each</div>
+    </div>
+
+    <p class="intro-text">Par-fried for perfect puffing with minimal oil absorption. Remove from freezer, drop directly into hot oil at 180°C — puffed, golden, beautiful in 10–15 seconds. No rolling, no kneading, no prep. Available in four variants.</p>
+
+    <div class="product-card">
+      <div class="product-card-bar" style="background:var(--rust);"></div>
+      <div class="product-card-body">
+        <div class="product-num">01 · Regular</div>
+        <div class="product-name">Satvik Plain Puri</div>
+        <div class="product-tagline">"Golden, puffed and perfect — every single one."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Water, Semolina (Rawa), Pink Salt</div>
+        <div class="product-pack">500g · Pack of 20 · 25g per puri · 1 Year shelf life at –18°C · Fry time: 10–15 seconds at 180°C</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag">No Maida</span>
+        <span class="usp-tag">No Palm Oil</span>
+        <span class="usp-tag rust">Uniform Puff</span>
+        <span class="usp-tag">Low Oil</span>
+        <span class="usp-tag">Whole Wheat</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#c96a10;"></div>
+      <div class="product-card-body">
+        <div class="product-num">02</div>
+        <div class="product-name">Masala Puri</div>
+        <div class="product-tagline">"Same golden puff — bolder flavour."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Water, Semolina (Rawa), Spice Blend, Pink Salt</div>
+        <div class="product-pack">500g · Pack of 20 · 25g per puri · Pairs beautifully with aloo sabzi or chole</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag" style="background:#c96a10;">Spiced</span>
+        <span class="usp-tag">No Maida</span>
+        <span class="usp-tag">Whole Wheat</span>
+        <span class="usp-tag">Ready to Fry</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#2d5a27;"></div>
+      <div class="product-card-body">
+        <div class="product-num">03 · Our Innovation</div>
+        <div class="product-name">Tri-Color Puri</div>
+        <div class="product-tagline">"Spinach · Beetroot · Turmeric — three natural colours, zero artificial dyes."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Water, Fresh Spinach Puree, Fresh Beetroot Puree, Turmeric, Semolina (Rawa), Salt</div>
+        <div class="product-pack">500g · Pack of 20 · Mixed colours per pack · "One Puri. Three Flavours. All Natural."</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag green">Spinach</span>
+        <span class="usp-tag" style="background:#8b1a2a;">Beetroot</span>
+        <span class="usp-tag" style="background:#c96a10;">Turmeric</span>
+        <span class="usp-tag">No Artificial Colour</span>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#8b5a00;"></div>
+      <div class="product-card-body">
+        <div class="product-num">04</div>
+        <div class="product-name">Aloo Puri</div>
+        <div class="product-tagline">"Aloo masala in the dough — soft inside, golden outside."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour (59%), Water, Aloo Masala, Semolina (Rawa), Pink Salt</div>
+        <div class="product-pack">500g · Pack of 20 · 25g per puri · Perfect with chole or any gravy</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag" style="background:#8b5a00;">Aloo Masala</span>
+        <span class="usp-tag">Whole Wheat</span>
+        <span class="usp-tag">No Maida</span>
+        <span class="usp-tag">Ready to Fry</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="page-footer">
+    <div class="page-footer-text">Ethical Delights® — theethicalkitchen@gmail.com · +91 99707 02853</div>
+    <div class="page-num">4</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PAGE 5 — BHATURA + WRAPS
+══════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">Ethical Delights®</div>
+    <div class="page-header-title">Bhatura &amp; Whole Wheat Wraps</div>
+  </div>
+  <div class="page-content">
+
+    <!-- BHATURA -->
+    <div class="section-bar">
+      <div class="section-bar-title">Whole Wheat <em>Bhatura</em></div>
+      <div class="section-bar-sub">Oval · Medium Sized · Par-Fried · Ready to Fry</div>
+    </div>
+
+    <p class="intro-text">Medium-sized oval bhaturas made from 100% whole wheat — golden brown, perfectly puffed and shiny. No maida, no shortcuts. Par-fried and blast-frozen. Drop into hot oil and serve in seconds. Ideal for commercial kitchens serving chole bhatura at scale.</p>
+
+    <div class="product-card">
+      <div class="product-card-bar" style="background:#8b5a00;"></div>
+      <div class="product-card-body">
+        <div class="product-num">01 · Available Now</div>
+        <div class="product-name">Whole Wheat Bhatura</div>
+        <div class="product-tagline">"Chole bhatura — without the compromise."</div>
+        <div class="product-ingr-label">Ingredients</div>
+        <div class="product-ingr">Whole Wheat Flour, Water, Semolina, Curd, Salt · No Maida · No Shortcuts</div>
+        <div class="product-pack">Oval shape · Medium size · Par-fried &amp; blast-frozen · Fry time: 15–20 sec at 180°C · Serve with chole or sabzi</div>
+      </div>
+      <div class="product-card-right">
+        <span class="usp-tag" style="background:#7a5200;">Whole Wheat</span>
+        <span class="usp-tag" style="background:#7a5200;">No Maida</span>
+        <span class="usp-tag">Oval Shape</span>
+        <span class="usp-tag">Par-Fried</span>
+        <span class="usp-tag">Ready to Fry</span>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- WRAPS -->
+    <div class="section-bar" style="margin-top:2mm;">
+      <div class="section-bar-title">Whole Wheat <em>Wraps</em></div>
+      <div class="section-bar-sub">12 Inch · Naturally Coloured · Blast Frozen · No Maida</div>
+    </div>
+
+    <p class="intro-text">Large 12-inch whole wheat wraps — thin, pliable, strong enough to hold any filling. Ideal for kathi rolls, shawarma-style wraps and breakfast burritos. Naturally coloured variants for a stunning visual spread.</p>
+
+    <table class="wraps-table">
+      <thead>
+        <tr>
+          <th style="width:18%;">Variant</th>
+          <th style="width:10%;">Colour</th>
+          <th style="width:36%;">Ingredients</th>
+          <th style="width:10%;">Size</th>
+          <th style="width:26%;">Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Regular Whole Wheat</td>
+          <td>Natural wheat</td>
+          <td>Whole Wheat Flour, Water, Cold Pressed Sunflower Oil, Pink Salt</td>
+          <td style="text-align:center;">12 inch</td>
+          <td>Kathi rolls, wraps, burritos, any filling</td>
+        </tr>
+        <tr>
+          <td class="bold">Spinach Wrap</td>
+          <td>Vibrant green</td>
+          <td>Whole Wheat Flour, Fresh Spinach Puree, Water, Cold Pressed Sunflower Oil, Pink Salt</td>
+          <td style="text-align:center;">12 inch</td>
+          <td>Health menus, colourful platters, iron-rich offerings</td>
+        </tr>
+        <tr>
+          <td class="bold">Beetroot Wrap</td>
+          <td>Rose pink</td>
+          <td>Whole Wheat Flour, Fresh Beetroot Puree, Water, Cold Pressed Sunflower Oil, Pink Salt</td>
+          <td style="text-align:center;">12 inch</td>
+          <td>Premium menus, visual differentiation, antioxidant-rich</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+  <div class="page-footer">
+    <div class="page-footer-text">Ethical Delights® — theethicalkitchen@gmail.com · +91 99707 02853</div>
+    <div class="page-num">5</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PAGE 6 — WHY PARTNER + CERTS
+══════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">Ethical Delights®</div>
+    <div class="page-header-title">Why Partner With Us</div>
+  </div>
+  <div class="page-content">
+
+    <div class="section-bar">
+      <div class="section-bar-title">The Operational <em>Edge</em></div>
+      <div class="section-bar-sub">For commercial kitchens that demand consistency, hygiene and scale</div>
+    </div>
+
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <span class="benefit-icon">⚡</span>
+        <div class="benefit-title">60-Second Prep</div>
+        <div class="benefit-desc">From freezer to plate in under a minute. No skill required — any team member can do it.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">📐</span>
+        <div class="benefit-title">Uniform Quality</div>
+        <div class="benefit-desc">Machine-rolled to identical size and thickness. The first and the thousandth are indistinguishable.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">♾️</span>
+        <div class="benefit-title">Zero Wastage</div>
+        <div class="benefit-desc">Cook exactly what you need. Freeze the rest. No daily spoilage, no over-prep.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">✨</span>
+        <div class="benefit-title">Audit-Ready</div>
+        <div class="benefit-desc">Sealed, machine-made. No flour dust, no open prep. Hygiene compliance built in.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">🌿</span>
+        <div class="benefit-title">100% Satvik</div>
+        <div class="benefit-desc">No maida, no palm oil, no preservatives. Clean label. Safe for all dietary requirements.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">💰</span>
+        <div class="benefit-title">Cost Predictable</div>
+        <div class="benefit-desc">Fixed price per unit. Accurate meal costing. Zero budget surprises from wastage.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">👷</span>
+        <div class="benefit-title">Labor Reduction</div>
+        <div class="benefit-desc">Eliminate skilled roti maker dependency. Free your team for higher-value work.</div>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">🏭</span>
+        <div class="benefit-title">Scale Ready</div>
+        <div class="benefit-desc">200 to 20,000 pieces per day. Our supply chain scales with your demand.</div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- Who We Serve -->
+    <div style="font-size:6.5pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--rust);margin-bottom:3mm;">WHO WE SERVE</div>
+    <div class="channels-grid">
+      <div class="channel-card">
+        <span class="channel-icon-lg">👨‍🍳</span>
+        <div class="channel-name-lg">Caterers</div>
+        <div class="channel-tag">Scale any event without chaos</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">🍽️</span>
+        <div class="channel-name-lg">HoReCa</div>
+        <div class="channel-tag">Uniform quality across outlets</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">🏫</span>
+        <div class="channel-name-lg">Canteens</div>
+        <div class="channel-tag">Smart kitchens for institutions</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">🍔</span>
+        <div class="channel-name-lg">QSRs & Cloud</div>
+        <div class="channel-tag">Speed meets authenticity</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">🏖️</span>
+        <div class="channel-name-lg">Water Parks</div>
+        <div class="channel-tag">Freshness at scale</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">🏭</span>
+        <div class="channel-name-lg">Institutional</div>
+        <div class="channel-tag">Industrial scale supply</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">✈️</span>
+        <div class="channel-name-lg">Airlines</div>
+        <div class="channel-tag">Travel catering simplified</div>
+      </div>
+      <div class="channel-card">
+        <span class="channel-icon-lg">🚢</span>
+        <div class="channel-name-lg">Exports</div>
+        <div class="channel-tag">Indian tradition globally</div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- Certifications -->
+    <div style="font-size:6.5pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--rust);margin-bottom:3mm;">CERTIFICATIONS &amp; COMPLIANCE</div>
+    <div class="certs-row">
+      <div class="cert-badge">🏛️<br>FSSAI<br>Licensed</div>
+      <div class="cert-badge">🌿<br>100%<br>Vegetarian</div>
+      <div class="cert-badge">🕉️<br>Satvik<br>Certified</div>
+      <div class="cert-badge">🏷️<br>Clean<br>Label</div>
+      <div class="cert-badge">✅<br>Audit-Ready<br>Hygiene</div>
+    </div>
+
+  </div>
+  <div class="page-footer">
+    <div class="page-footer-text">Ethical Delights® — theethicalkitchen@gmail.com · +91 99707 02853</div>
+    <div class="page-num">6</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PAGE 7 — CONTACT (BACK COVER)
+══════════════════════════ -->
+<div class="page contact-page">
+  <div class="contact-top-bar"></div>
+  <div class="contact-body">
+
+    <div class="contact-eyebrow">Get In Touch</div>
+    <div class="contact-heading">Ready to Stock<br><em>Ethical Delights?</em></div>
+    <div class="contact-sub">
+      Whether you're serving 200 meals a day or 20,000 — we have the product, the process and the supply chain to support your growth. Let's talk about how Ethical Delights fits your operation.
+    </div>
+
+    <div class="contact-items">
+      <div class="contact-item">
+        <div class="contact-item-icon">📞</div>
+        <div class="contact-item-label">Phone</div>
+        <div class="contact-item-val">+91-9822635254<br>+91-9923065960</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-item-icon">💬</div>
+        <div class="contact-item-label">WhatsApp</div>
+        <div class="contact-item-val">+91 99707 02853<br>Say "Hi" to start</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-item-icon">✉️</div>
+        <div class="contact-item-label">Email</div>
+        <div class="contact-item-val">theethicalkitchen<br>@gmail.com</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-item-icon">🌐</div>
+        <div class="contact-item-label">Website</div>
+        <div class="contact-item-val">www.ethicaldelights.in<br>Full catalog online</div>
+      </div>
+    </div>
+
+    <div class="contact-customers-box">
+      <div class="contact-customers-label">Trusted by 20+ Commercial Kitchens &amp; Counting</div>
+      <div class="contact-customers-names">
+        Chitale &nbsp;·&nbsp; Dorabjee &nbsp;·&nbsp; TSR Catering &nbsp;·&nbsp; Green Signal Catering &nbsp;·&nbsp; Manohar Caterers &nbsp;·&nbsp; Bakul Caterers &nbsp;·&nbsp; Hotel Lakshman &nbsp;·&nbsp; Mehfil Caterers &nbsp;·&nbsp; Janaseva Dining Hall &nbsp;·&nbsp; GMK Caterers &nbsp;·&nbsp; Nandus Parathas &nbsp;·&nbsp; Wet &amp; Joy Water Park &nbsp;·&nbsp; and more...
+      </div>
+    </div>
+
+    <div style="font-size:7pt;color:rgba(245,239,224,0.35);line-height:1.6;text-align:center;">
+      ANF Ventures LLP &nbsp;·&nbsp; SR. No 24/1B, Shop No 1, Chondhe Patil Lawns, Vishal Nagar, Pimple Nilakh, Pune – 411027<br>
+      FSSAI Lic. No: 11525037000057
+    </div>
+  </div>
+  <div class="contact-bottom">
+    <div class="contact-bottom-text">© 2025 <strong>Ethical Delights®</strong> — Homestyle Quality. Commercial Scale.</div>
+    <div class="contact-bottom-text"><strong>Fresh. Honest. Intentional.</strong></div>
+  </div>
+</div>
+
+</body>
+</html>
