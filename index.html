@@ -180,44 +180,38 @@ function get(url, cb){
 }
 
 function fetchStock(sym, cb){
-  // Try Yahoo Finance via corsproxy (works from any origin including file://)
-  var proxies=[
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url=',
-    'https://proxy.cors.sh/'
+  var base='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d&_='+Date.now();
+  var urls=[
+    'https://corsproxy.io/?'+encodeURIComponent(base),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(base),
+    'https://proxy.cors.sh/'+base,
+    base  // direct — works on GitHub Pages
   ];
-  var base='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=2d';
   var tried=0;
-  function next(){
-    if(tried>=proxies.length){
-      // Last resort: try Yahoo directly (works on GitHub Pages)
-      get(base, function(err,body){
-        if(!err) parse(body,cb);
-        else cb('all failed');
-      });
-      return;
-    }
-    var url=proxies[tried++]+encodeURIComponent(base);
-    get(url,function(err,body){
-      if(err){next();return;}
-      parse(body,cb);
+  function attempt(){
+    if(tried>=urls.length){ cb('all failed'); return; }
+    var url=urls[tried++];
+    get(url, function(err, body){
+      if(err){ attempt(); return; }
+      try{
+        var d=JSON.parse(body);
+        var m=d.chart.result[0].meta;
+        var price=+parseFloat(m.regularMarketPrice).toFixed(2);
+        var prev=+parseFloat(m.previousClose||m.chartPreviousClose||m.regularMarketPrice).toFixed(2);
+        if(!price){ attempt(); return; }
+        cb(null, {price:price, prev:prev});
+      }catch(e){ attempt(); }
     });
   }
-  function parse(body,cb){
-    try{
-      var d=JSON.parse(body);
-      var m=d.chart.result[0].meta;
-      cb(null,{price:+m.regularMarketPrice.toFixed(2),prev:+(m.previousClose||m.chartPreviousClose||m.regularMarketPrice).toFixed(2)});
-    }catch(e){next();}
-  }
-  next();
+  attempt();
 }
 
 function fetchFX(cb){
+  var t=Date.now();
   var apis=[
-    ['https://open.er-api.com/v6/latest/USD',function(d){return JSON.parse(d).rates.INR;}],
-    ['https://api.exchangerate-api.com/v4/latest/USD',function(d){return JSON.parse(d).rates.INR;}],
-    ['https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',function(d){return JSON.parse(d).usd.inr;}],
+    ['https://open.er-api.com/v6/latest/USD?_='+t,function(d){return JSON.parse(d).rates.INR;}],
+    ['https://api.exchangerate-api.com/v4/latest/USD?_='+t,function(d){return JSON.parse(d).rates.INR;}],
+    ['https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json?_='+t,function(d){return JSON.parse(d).usd.inr;}],
   ];
   var i=0;
   function next(){
@@ -251,6 +245,7 @@ function refresh(){
 }
 
 function render(d){
+  console.log('[Portfolio] Rendering with live data:', d);
   var as_=gv('i_as'),ab=gv('i_ab'),ms_=gv('i_ms'),mb=gv('i_mb'),fx=d.fx;
   var ap=d.amzn.price,apv=d.amzn.prev,mp=d.mrvl.price,mpv=d.mrvl.prev;
   var aVal=as_*ap*fx,mVal=ms_*mp*fx,tot=aVal+mVal;
