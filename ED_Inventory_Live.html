@@ -106,8 +106,20 @@ let rawMaterials=[], recipes=[], recipeIngredients=[], recipeVariants=[], skuMap
 
 let expandedOrders=new Set();
 let editingRM=null, editingRecipe=null;
-let purchaseFormOpen=null; // {id, name, unit} of RM being purchased
+let purchaseFormOpen=null;
 let rmFormOpen=false;
+let rmDirty=new Set(); // RM ids with unsaved edits
+
+function markRMDirty(id){
+  rmDirty.add(parseInt(id));
+  const input=document.querySelector(`.rm-qty-input[data-id="${id}"]`);
+  if(input) input.style.borderColor='#ef9f27';
+  const btn=document.getElementById('rm-save-all-btn');
+  if(btn){
+    btn.style.background='#faeeda';btn.style.borderColor='#ef9f27';btn.style.color='#633806';
+    btn.textContent=`✓ Save ${rmDirty.size} change${rmDirty.size>1?'s':''}`;
+  }
+}
 
 /* ── SUPABASE ── */
 const H=()=>({'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'});
@@ -285,7 +297,13 @@ async function doLogin(){
 }
 function startPolling(){
   if(pollTimer)clearInterval(pollTimer);
-  pollTimer=setInterval(async()=>{if(!user){clearInterval(pollTimer);return;}await loadAll();render();},20000);
+  pollTimer=setInterval(async()=>{
+    if(!user){clearInterval(pollTimer);return;}
+    await loadAll();
+    // Don't re-render if user has unsaved RM edits — would wipe their inputs
+    if(activeTab==='rm' && rmDirty.size>0) return;
+    render();
+  },20000);
 }
 
 /* ── SHELL ── */
@@ -332,7 +350,7 @@ function bindShell(){
   }));
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
     activeTab=t.dataset.tab;
-    rmFormOpen=false; editingRM=null; purchaseFormOpen=null;
+    rmFormOpen=false; editingRM=null; purchaseFormOpen=null; rmDirty.clear();
     render();
   }));
 
@@ -573,51 +591,93 @@ ${activeTab==='report'?renderReportTab(alarms):''}`;
 /* ── RAW MATERIALS TAB ── */
 function renderRMTab(){
   const totalValue=rawMaterials.reduce((a,r)=>a+(r.stock_qty*r.price_per_unit),0);
-  const lowRM=rawMaterials.filter(r=>r.stock_qty<=r.reorder_threshold&&r.reorder_threshold>0);
+  const totalItems=rawMaterials.length;
+  const lowRM=rawMaterials.filter(r=>r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0);
+
   return `
 <div class="g3" style="margin-bottom:14px">
-  <div class="metric"><div class="lbl">Total RM items</div><div class="val">${rawMaterials.length}</div></div>
-  <div class="metric"><div class="lbl">Stock value</div><div class="val" style="font-size:16px;padding-top:4px">${rupees(totalValue)}</div></div>
-  <div class="metric"><div class="lbl">Low / reorder</div><div class="val">${lowRM.length}</div></div>
+  <div class="metric"><div class="lbl">Total RM items</div><div class="val">${totalItems}</div></div>
+  <div class="metric"><div class="lbl">Total stock value</div><div class="val" style="font-size:16px;padding-top:4px">${rupees(totalValue)}</div></div>
+  <div class="metric"><div class="lbl">Items to reorder</div><div class="val" style="color:${lowRM.length>0?'#791f1f':'inherit'}">${lowRM.length}</div></div>
 </div>
 
 ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.name).join(', ')}</div>`:''}
 
-<div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span class="sec" style="margin:0">Raw materials</span>
-    <button class="btn btn-primary btn-sm" data-action="add-rm">+ Add material</button>
-  </div>
-  ${rawMaterials.length===0?'<div class="muted">No raw materials added yet.</div>':''}
-  ${rawMaterials.map(r=>`
-  <div class="card-flat" style="border-color:${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'#ef9f27':'#e8e5de'}">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <strong>${r.name}</strong>
-          ${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'<span class="badge b-low">Reorder</span>':''}
-          <span class="muted">· ${rupees(r.price_per_unit)}/${r.unit} · Supplier: ${r.supplier||'—'}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-          <span class="muted" style="white-space:nowrap">Stock:</span>
-          <input type="number" class="rm-stock-input" data-id="${r.id}" data-unit="${r.unit}" value="${r.stock_qty}" min="0" step="0.001"
-            style="width:90px;padding:4px 8px;font-size:13px;font-weight:500"/>
-          <span class="muted">${r.unit}</span>
-          <button class="btn btn-success btn-sm rm-stock-save" data-id="${r.id}" style="padding:4px 10px">Save</button>
-          <span class="muted" style="margin-left:4px">· Reorder at: ${r.reorder_threshold} ${r.unit} · Value: ${rupees(r.stock_qty*r.price_per_unit)}</span>
-        </div>
-      </div>
-      <div class="row" style="flex-shrink:0">
-        <button class="btn btn-sm" data-action="add-purchase" data-id="${r.id}" data-name="${r.name}" data-unit="${r.unit}">+ Purchase</button>
-        <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}">⚙ Edit</button>
-        <button class="btn btn-danger btn-sm" data-action="del-rm" data-id="${r.id}">✕</button>
-      </div>
+<div class="card" style="padding:0">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem 0.75rem">
+    <div>
+      <span class="sec" style="margin:0">Stock quantities</span>
+      <span class="muted" style="margin-left:8px">Edit any qty below, then click Save all</span>
     </div>
-  </div>`).join('')}
+    <div class="row">
+      <button class="btn btn-success" id="rm-save-all-btn" style="font-weight:500">✓ Save all changes</button>
+      <button class="btn btn-primary btn-sm" data-action="add-rm">+ Add</button>
+    </div>
+  </div>
+  <div id="rm-save-msg" style="padding:0 1.25rem 8px;font-size:12px"></div>
+  ${rawMaterials.length===0?'<div class="muted" style="padding:1rem 1.25rem">No raw materials yet. Click + Add to start.</div>':''}
+  ${rawMaterials.length>0?`<div style="overflow-x:auto">
+  <table style="table-layout:fixed">
+    <thead><tr>
+      <th style="width:22%">Material</th>
+      <th style="width:16%">Current stock</th>
+      <th style="width:9%">Unit</th>
+      <th style="width:14%">Reorder at</th>
+      <th style="width:14%">Stock value</th>
+      <th style="width:12%">Status</th>
+      <th style="width:13%">Actions</th>
+    </tr></thead>
+    <tbody id="rm-table-body">
+    ${rawMaterials.map(r=>{
+      const isLow=r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0;
+      return `<tr id="rm-row-${r.id}" style="${isLow?'background:#fff8f0':''}">
+        <td><strong style="font-weight:500">${r.name}</strong>${r.supplier?`<br><span class="muted">${r.supplier}</span>`:''}</td>
+        <td>
+          <input type="number" class="rm-qty-input" data-id="${r.id}" data-orig="${r.stock_qty}"
+            value="${r.stock_qty}" min="0" step="0.001"
+            style="width:100%;padding:5px 7px;font-size:13px;font-weight:500;border:1.5px solid #ccc;border-radius:6px"
+            onchange="markRMDirty(${r.id})" oninput="markRMDirty(${r.id})"/>
+        </td>
+        <td class="muted">${r.unit}</td>
+        <td class="muted">${r.reorder_threshold} ${r.unit}</td>
+        <td class="muted" id="rm-val-${r.id}">${rupees(r.stock_qty*r.price_per_unit)}</td>
+        <td>${isLow?'<span class="badge b-low">Reorder</span>':'<span class="badge b-ok">OK</span>'}</td>
+        <td>
+          <div class="row" style="gap:4px">
+            <button class="btn btn-sm" data-action="add-purchase" data-id="${r.id}" data-name="${r.name}" data-unit="${r.unit}" title="Record purchase">+ Buy</button>
+            <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}" title="Edit details">⚙</button>
+            <button class="btn btn-danger btn-sm" data-action="del-rm" data-id="${r.id}" title="Delete">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>`:''}
+  <div style="padding:0.75rem 1.25rem;border-top:1px solid #f0ede6;display:flex;justify-content:space-between;align-items:center">
+    <span class="muted">Total inventory value</span>
+    <strong style="font-size:15px">${rupees(totalValue)}</strong>
+  </div>
 </div>
 
+${purchaseFormOpen ? `<div class="card" id="purchase-form-card" style="border-color:#85b7eb">
+  <div class="sec" style="margin-bottom:12px">Record purchase — <strong>${purchaseFormOpen.name}</strong></div>
+  <input type="hidden" id="purch-rm-id" value="${purchaseFormOpen.id}"/>
+  <div class="g3" style="margin-bottom:8px">
+    <div><label class="fl">Qty purchased (${purchaseFormOpen.unit})</label><input type="number" id="purch-qty" min="0" placeholder="0"/></div>
+    <div><label class="fl">Price per unit (₹)</label><input type="number" id="purch-price" min="0" placeholder="0"/></div>
+    <div><label class="fl">Total cost (₹)</label><input type="number" id="purch-total" min="0" placeholder="auto"/></div>
+  </div>
+  <input id="purch-note" placeholder="Note (supplier, invoice no…)" style="margin-bottom:8px"/>
+  <div class="row">
+    <button class="btn btn-success" id="purch-save-btn">Record purchase → updates stock</button>
+    <button class="btn" id="purch-cancel-btn">Cancel</button>
+  </div>
+  <div id="purch-msg"></div>
+</div>` : ''}
+
 ${rmFormOpen ? `<div class="card" id="rm-form-card" style="border-color:#85b7eb">
-  <div class="sec" style="margin-bottom:12px">${editingRM?'Edit — '+editingRM.name:'Add raw material'}</div>
+  <div class="sec" style="margin-bottom:12px">${editingRM?'Edit details — '+editingRM.name:'Add raw material'}</div>
   <div class="g2" style="margin-bottom:8px">
     <div><label class="fl">Name</label><input id="rm-name" placeholder="e.g. Siddhikala Wheat" value="${editingRM?.name||''}"/></div>
     <div><label class="fl">Unit</label><select id="rm-unit">
@@ -625,12 +685,12 @@ ${rmFormOpen ? `<div class="card" id="rm-form-card" style="border-color:#85b7eb"
     </select></div>
   </div>
   <div class="g2" style="margin-bottom:8px">
-    <div><label class="fl">Current stock qty</label><input type="number" id="rm-stock" min="0" placeholder="0" value="${editingRM?.stock_qty||''}"/></div>
     <div><label class="fl">Reorder threshold</label><input type="number" id="rm-thresh" min="0" placeholder="0" value="${editingRM?.reorder_threshold||''}"/></div>
+    <div><label class="fl">Price per unit (₹)</label><input type="number" id="rm-price" min="0" placeholder="0" value="${editingRM?.price_per_unit||''}"/></div>
   </div>
   <div class="g2" style="margin-bottom:8px">
-    <div><label class="fl">Price per unit (₹)</label><input type="number" id="rm-price" min="0" placeholder="0" value="${editingRM?.price_per_unit||''}"/></div>
     <div><label class="fl">Supplier name</label><input id="rm-supplier" placeholder="Optional" value="${editingRM?.supplier||''}"/></div>
+    <div><label class="fl">Current stock qty</label><input type="number" id="rm-stock" min="0" placeholder="0" value="${editingRM?.stock_qty||''}"/></div>
   </div>
   <div class="row">
     <button class="btn btn-primary" id="rm-save-btn">Save</button>
@@ -638,6 +698,25 @@ ${rmFormOpen ? `<div class="card" id="rm-form-card" style="border-color:#85b7eb"
   </div>
   <div id="rm-msg"></div>
 </div>` : ''}
+
+<div class="card">
+  <div class="sec" style="margin-bottom:10px">Purchase history</div>
+  ${rmPurchases.length===0?'<div class="muted">No purchases recorded.</div>':`
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>Date</th><th>Material</th><th>Qty</th><th>Price/unit</th><th>Total</th><th>By</th></tr></thead>
+    <tbody>${rmPurchases.slice(0,30).map(p=>{
+      const rm=rawMaterials.find(r=>r.id===p.raw_material_id);
+      return `<tr>
+        <td class="muted">${ft(p.purchased_at)}</td>
+        <td>${rm?.name||'—'}</td>
+        <td>${p.qty_purchased} ${rm?.unit||''}</td>
+        <td>${rupees(p.price_per_unit)}</td>
+        <td><strong>${rupees(p.total_cost)}</strong></td>
+        <td class="muted">${p.purchased_by}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`}
+</div>`;}
 
 ${purchaseFormOpen ? `<div class="card" id="purchase-form-card" style="border-color:#85b7eb">
   <div class="sec" style="margin-bottom:12px">Record purchase — <strong>${purchaseFormOpen.name}</strong></div>
@@ -963,28 +1042,41 @@ function bindLocal(){
     await loadLocal();render();
   }));
 
-  // Inline stock save — Save button on each RM card
-  document.querySelectorAll('.rm-stock-save').forEach(btn=>btn.addEventListener('click',async()=>{
-    const id  = btn.dataset.id;
-    const input = document.querySelector(`.rm-stock-input[data-id="${id}"]`);
-    const unit  = input.dataset.unit;
-    const n = parseFloat(input.value);
-    if(isNaN(n)||n<0){input.style.borderColor='#f09595';return;}
-    const rm = rawMaterials.find(r=>r.id==id);
-    const old = rm?.stock_qty||0;
-    btn.disabled=true; btn.textContent='✓';
-    await sbPatch('raw_materials',{id},{stock_qty:n});
-    await addLog('Stock adjusted',null,`${rm?.name}: ${old}→${n} ${unit} (manual)`);
-    await loadLocal(); render();
-  }));
-
-  // Also save on Enter key in stock input
-  document.querySelectorAll('.rm-stock-input').forEach(input=>input.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      const btn=document.querySelector(`.rm-stock-save[data-id="${input.dataset.id}"]`);
-      btn?.click();
+  // Save all RM stock changes at once
+  document.getElementById('rm-save-all-btn')?.addEventListener('click',async()=>{
+    const inputs=[...document.querySelectorAll('.rm-qty-input')];
+    const changed=inputs.filter(i=>rmDirty.has(parseInt(i.dataset.id)));
+    if(changed.length===0){
+      const msg=document.getElementById('rm-save-msg');
+      if(msg){msg.style.color='#666';msg.textContent='No changes to save.';}
+      return;
     }
-  }));
+    const btn=document.getElementById('rm-save-all-btn');
+    btn.disabled=true;btn.textContent='Saving…';
+
+    let saved=0;
+    for(const input of changed){
+      const id=parseInt(input.dataset.id);
+      const n=parseFloat(input.value);
+      if(isNaN(n)||n<0) continue;
+      const rm=rawMaterials.find(r=>r.id===id);
+      const old=rm?.stock_qty||0;
+      await sbPatch('raw_materials',{id},{stock_qty:n});
+      await addLog('Stock updated',null,`${rm?.name}: ${old}→${n} ${rm?.unit} (bulk edit)`);
+      input.style.borderColor='#97c459'; // green = saved
+      saved++;
+    }
+
+    rmDirty.clear();
+    const msg=document.getElementById('rm-save-msg');
+    if(msg){msg.style.color='#3b6d11';msg.textContent=`✓ ${saved} item${saved>1?'s':''} saved successfully.`;}
+    btn.style.background='';btn.style.borderColor='';btn.style.color='';
+    btn.textContent='✓ Save all changes';btn.disabled=false;
+
+    await loadLocal();
+    // Only re-render after save — now rmDirty is clear so it's safe
+    render();
+  });
 
   // Purchase
   document.querySelectorAll('[data-action="add-purchase"]').forEach(b=>b.addEventListener('click',()=>{
