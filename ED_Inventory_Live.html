@@ -625,14 +625,14 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
   </div>
   <div id="rm-save-msg" style="padding:6px 1.25rem;font-size:12px;min-height:22px"></div>
   ${rawMaterials.length===0?'<div class="muted" style="padding:1rem 1.25rem">No raw materials yet. Click + Add material to start.</div>':''}
-  ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;min-width:500px">
+  ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;min-width:520px">
     <thead><tr>
-      <th style="width:32%">Material</th>
-      <th style="width:18%;text-align:right">Total stock</th>
-      <th style="width:9%;text-align:center">Unit</th>
+      <th style="width:30%">Material</th>
+      <th style="width:17%;text-align:right">Total stock</th>
+      <th style="width:8%;text-align:center">Unit</th>
       <th style="width:22%;text-align:right;color:#0c447c">Add qty</th>
-      <th style="width:12%;text-align:right">Reorder at</th>
-      <th style="width:7%"></th>
+      <th style="width:15%;text-align:right">Reorder at</th>
+      <th style="width:8%;text-align:center">Edit</th>
     </tr></thead>
     <tbody>
     ${rawMaterials.map(r=>{
