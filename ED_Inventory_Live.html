@@ -599,6 +599,7 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
         <div class="muted">Value: ${rupees(r.stock_qty*r.price_per_unit)} · Supplier: ${r.supplier||'—'}</div>
       </div>
       <div class="row">
+        <button class="btn btn-sm" data-action="quick-stock" data-id="${r.id}" data-name="${r.name}" data-unit="${r.unit}" data-stock="${r.stock_qty}">± Stock</button>
         <button class="btn btn-sm" data-action="add-purchase" data-id="${r.id}" data-name="${r.name}" data-unit="${r.unit}">+ Purchase</button>
         <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}">Edit</button>
         <button class="btn btn-danger btn-sm" data-action="del-rm" data-id="${r.id}">✕</button>
@@ -954,6 +955,18 @@ function bindLocal(){
     await loadLocal();render();
   }));
 
+  // Quick stock override
+  document.querySelectorAll('[data-action="quick-stock"]').forEach(b=>b.addEventListener('click',async()=>{
+    const name=b.dataset.name, unit=b.dataset.unit, cur=parseFloat(b.dataset.stock)||0;
+    const v=prompt(`Manual stock adjustment — ${name}\nCurrent: ${cur} ${unit}\n\nEnter corrected qty (${unit}):`);
+    if(v===null) return;
+    const n=parseFloat(v);
+    if(isNaN(n)||n<0){alert('Invalid number');return;}
+    await sbPatch('raw_materials',{id:b.dataset.id},{stock_qty:n});
+    await addLog('Stock adjusted',null,`${name}: ${cur}→${n} ${unit} (manual override)`);
+    await loadLocal();render();
+  }));
+
   // Purchase
   document.querySelectorAll('[data-action="add-purchase"]').forEach(b=>b.addEventListener('click',()=>{
     purchaseFormOpen={id:b.dataset.id, name:b.dataset.name, unit:b.dataset.unit};
@@ -1057,8 +1070,35 @@ function bindLocal(){
     await loadLocal();render();
   });
   document.querySelectorAll('[data-action="mark-plan-done"]').forEach(b=>b.addEventListener('click',async()=>{
-    await sbPatch('production_plans',{id:b.dataset.id},{status:'done'});
-    await loadLocal();render();
+    const planId = b.dataset.id;
+    const plan   = productionPlans.find(p=>p.id==planId);
+    if(!plan) return;
+
+    // Calculate RM deductions
+    const ings = recipeIngredients.filter(i=>i.recipe_id===plan.recipe_id);
+    const deductions = [];
+    ings.forEach(ing=>{
+      const rm = rawMaterials.find(r=>r.name.toLowerCase()===ing.ingredient_name.toLowerCase());
+      if(!rm) return;
+      const needed = ingQtyInRMUnit(ing.qty_per_kg, ing.unit, plan.planned_kg, rm.unit);
+      deductions.push({rm, needed});
+    });
+
+    // Show confirmation with deduction summary
+    const summary = deductions.map(d=>`${d.rm.name}: −${d.needed.toFixed(3)} ${d.rm.unit}`).join('\n');
+    if(!confirm(`Mark production complete?\n\nThis will deduct from raw material stock:\n\n${summary}\n\nContinue?`)) return;
+
+    b.disabled=true; b.textContent='Saving…';
+
+    // Deduct each RM
+    for(const d of deductions){
+      const newQty = Math.max(0, (d.rm.stock_qty||0) - d.needed);
+      await sbPatch('raw_materials',{id:d.rm.id},{stock_qty:newQty});
+    }
+
+    await sbPatch('production_plans',{id:planId},{status:'done'});
+    await addLog('Production done', null, `${plan.planned_kg}kg of ${plan.recipe_id} — ${deductions.length} RMs deducted`);
+    await loadLocal(); render();
   }));
   document.querySelectorAll('[data-action="del-plan"]').forEach(b=>b.addEventListener('click',async()=>{
     if(!confirm('Cancel this production plan?'))return;
