@@ -106,6 +106,8 @@ let rawMaterials=[], recipes=[], recipeIngredients=[], recipeVariants=[], skuMap
 
 let expandedOrders=new Set();
 let editingRM=null, editingRecipe=null;
+let purchaseFormOpen=null; // {id, name, unit} of RM being purchased
+let rmFormOpen=false;
 
 /* ── SUPABASE ── */
 const H=()=>({'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'});
@@ -168,6 +170,22 @@ function statusBadge(p){
 function setMsg(id,txt,ok){const el=document.getElementById(id);if(!el)return;el.className=ok?'msg-ok':'msg-err';el.textContent=txt;}
 function rupees(n){return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
+// Convert ingredient qty (recipe units: g or ml per kg batch) to RM stock unit
+// Handles: g↔kg, ml↔litre, g→g (softener stored in g), ml→ml
+function ingQtyInRMUnit(qty_per_kg, ing_unit, batch_kg, rm_unit){
+  const raw = qty_per_kg * batch_kg; // total in recipe unit
+  const ing = ing_unit?.toLowerCase();
+  const rm  = rm_unit?.toLowerCase();
+  if(ing === rm) return raw;                            // same unit — no conversion
+  if(ing==='g'     && rm==='kg')     return raw/1000;  // g → kg
+  if(ing==='kg'    && rm==='g')      return raw*1000;  // kg → g
+  if(ing==='ml'    && rm==='litre')  return raw/1000;  // ml → litre
+  if(ing==='litre' && rm==='ml')     return raw*1000;  // litre → ml
+  if(ing==='g'     && rm==='litre')  return raw/1000;  // g → litre (edge case)
+  if(ing==='ml'    && rm==='kg')     return raw/1000;  // ml → kg (edge case)
+  return raw; // fallback — same scale assumed
+}
+
 /* ── RM ALARM ENGINE ── */
 function computeRMNeeds(){
   // Returns array of {rmId, name, unit, needed, have, shortage}
@@ -204,10 +222,10 @@ function computeRMNeeds(){
   demands.forEach(d=>{
     const ings=recipeIngredients.filter(i=>i.recipe_id===d.recipe_id);
     ings.forEach(ing=>{
-      const needed=ing.qty_per_kg*d.kg;
       // Find RM by name match
       const rm=rawMaterials.find(r=>r.name.toLowerCase()===ing.ingredient_name.toLowerCase());
       if(!rm) return;
+      const needed=ingQtyInRMUnit(ing.qty_per_kg, ing.unit, d.kg, rm.unit);
       if(!rmNeeded[rm.id]) rmNeeded[rm.id]={rm, needed:0, sources:[]};
       rmNeeded[rm.id].needed+=needed;
       rmNeeded[rm.id].sources.push(d.source);
@@ -312,7 +330,11 @@ function bindShell(){
   document.querySelectorAll('.mod-tab').forEach(t=>t.addEventListener('click',()=>{
     module=t.dataset.mod;activeTab=module==='mumbai'?'inventory':'rm';render();
   }));
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{activeTab=t.dataset.tab;render();}));
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    activeTab=t.dataset.tab;
+    rmFormOpen=false; editingRM=null; purchaseFormOpen=null;
+    render();
+  }));
 
   if(module==='mumbai') bindMumbai();
   else bindLocal();
@@ -585,37 +607,34 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
   </div>`).join('')}
 </div>
 
-<div class="card" id="rm-form-card" style="display:none">
-  <div class="sec" style="margin-bottom:12px" id="rm-form-title">Add raw material</div>
+${rmFormOpen ? `<div class="card" id="rm-form-card" style="border-color:#85b7eb">
+  <div class="sec" style="margin-bottom:12px">${editingRM?'Edit — '+editingRM.name:'Add raw material'}</div>
   <div class="g2" style="margin-bottom:8px">
-    <div><label class="fl">Name</label><input id="rm-name" placeholder="e.g. Siddhikala Wheat"/></div>
+    <div><label class="fl">Name</label><input id="rm-name" placeholder="e.g. Siddhikala Wheat" value="${editingRM?.name||''}"/></div>
     <div><label class="fl">Unit</label><select id="rm-unit">
-      <option value="kg">kg</option><option value="g">g</option>
-      <option value="litre">litre</option><option value="ml">ml</option>
-      <option value="pcs">pcs</option>
+      ${['kg','g','litre','ml','pcs'].map(u=>`<option value="${u}" ${(editingRM?.unit||'kg')===u?'selected':''}>${u}</option>`).join('')}
     </select></div>
   </div>
   <div class="g2" style="margin-bottom:8px">
-    <div><label class="fl">Current stock qty</label><input type="number" id="rm-stock" min="0" placeholder="0"/></div>
-    <div><label class="fl">Reorder threshold</label><input type="number" id="rm-thresh" min="0" placeholder="0"/></div>
+    <div><label class="fl">Current stock qty</label><input type="number" id="rm-stock" min="0" placeholder="0" value="${editingRM?.stock_qty||''}"/></div>
+    <div><label class="fl">Reorder threshold</label><input type="number" id="rm-thresh" min="0" placeholder="0" value="${editingRM?.reorder_threshold||''}"/></div>
   </div>
   <div class="g2" style="margin-bottom:8px">
-    <div><label class="fl">Price per unit (₹)</label><input type="number" id="rm-price" min="0" placeholder="0"/></div>
-    <div><label class="fl">Supplier name</label><input id="rm-supplier" placeholder="Optional"/></div>
+    <div><label class="fl">Price per unit (₹)</label><input type="number" id="rm-price" min="0" placeholder="0" value="${editingRM?.price_per_unit||''}"/></div>
+    <div><label class="fl">Supplier name</label><input id="rm-supplier" placeholder="Optional" value="${editingRM?.supplier||''}"/></div>
   </div>
   <div class="row">
     <button class="btn btn-primary" id="rm-save-btn">Save</button>
     <button class="btn" id="rm-cancel-btn">Cancel</button>
   </div>
   <div id="rm-msg"></div>
-</div>
+</div>` : ''}
 
-<div class="card" id="purchase-form-card" style="display:none">
-  <div class="sec" style="margin-bottom:12px">Record purchase — <span id="purch-rm-name"></span></div>
-  <input type="hidden" id="purch-rm-id"/>
-  <input type="hidden" id="purch-rm-unit-val"/>
+${purchaseFormOpen ? `<div class="card" id="purchase-form-card" style="border-color:#85b7eb">
+  <div class="sec" style="margin-bottom:12px">Record purchase — <strong>${purchaseFormOpen.name}</strong></div>
+  <input type="hidden" id="purch-rm-id" value="${purchaseFormOpen.id}"/>
   <div class="g3" style="margin-bottom:8px">
-    <div><label class="fl">Qty purchased (<span id="purch-unit-lbl"></span>)</label><input type="number" id="purch-qty" min="0" placeholder="0"/></div>
+    <div><label class="fl">Qty purchased (${purchaseFormOpen.unit})</label><input type="number" id="purch-qty" min="0" placeholder="0"/></div>
     <div><label class="fl">Price per unit (₹)</label><input type="number" id="purch-price" min="0" placeholder="0"/></div>
     <div><label class="fl">Total cost (₹)</label><input type="number" id="purch-total" min="0" placeholder="auto"/></div>
   </div>
@@ -625,7 +644,7 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
     <button class="btn" id="purch-cancel-btn">Cancel</button>
   </div>
   <div id="purch-msg"></div>
-</div>
+</div>` : ''}
 
 <div class="card">
   <div class="sec" style="margin-bottom:10px">Purchase history</div>
@@ -768,9 +787,10 @@ ${active.map(p=>{
   const ings=recipeIngredients.filter(i=>i.recipe_id===p.recipe_id);
   const checks=ings.map(ing=>{
     const rm=rawMaterials.find(r=>r.name.toLowerCase()===ing.ingredient_name.toLowerCase());
-    const needed=ing.qty_per_kg*p.planned_kg;
+    const needed=ingQtyInRMUnit(ing.qty_per_kg, ing.unit, p.planned_kg, rm?.unit||ing.unit);
     const have=rm?.stock_qty||0;
-    return {name:ing.ingredient_name,needed,have,unit:ing.unit,ok:have>=needed};
+    const displayUnit=rm?.unit||ing.unit;
+    return {name:ing.ingredient_name,needed,have,unit:displayUnit,ok:have>=needed};
   });
   const hasAlarm=checks.some(c=>!c.ok);
   return `<div class="card" style="border-color:${hasAlarm?'#f09595':'#97c459'}">
@@ -824,7 +844,10 @@ function renderReportTab(alarms){
     ings.forEach(ing=>{
       const rm=rawMaterials.find(x=>x.name.toLowerCase()===ing.ingredient_name.toLowerCase());
       if(!rm||!ing.qty_per_kg) return;
-      const possible=rm.stock_qty/ing.qty_per_kg;
+      // Convert: how many kg of batch can this RM stock support?
+      // needed per kg batch = ingQtyInRMUnit(qty_per_kg, ing.unit, 1, rm.unit)
+      const neededPerKg=ingQtyInRMUnit(ing.qty_per_kg, ing.unit, 1, rm.unit);
+      const possible=rm.stock_qty/neededPerKg;
       if(possible<maxKg) maxKg=possible;
     });
     return {recipe:r,maxKg:maxKg===Infinity?0:maxKg};
@@ -896,27 +919,17 @@ ${alarms.length?`<div class="card">
 function bindLocal(){
   // RM add/edit
   document.querySelector('[data-action="add-rm"]')?.addEventListener('click',()=>{
-    editingRM=null;
-    document.getElementById('rm-form-title').textContent='Add raw material';
-    ['rm-name','rm-stock','rm-thresh','rm-price','rm-supplier'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('rm-unit').value='kg';
-    document.getElementById('rm-form-card').style.display='block';
-    document.getElementById('rm-form-card').scrollIntoView({behavior:'smooth'});
+    editingRM=null; rmFormOpen=true; purchaseFormOpen=null;
+    render();
+    setTimeout(()=>document.getElementById('rm-form-card')?.scrollIntoView({behavior:'smooth'}),50);
   });
   document.querySelectorAll('[data-action="edit-rm"]').forEach(b=>b.addEventListener('click',()=>{
     const rm=rawMaterials.find(r=>r.id==b.dataset.id);if(!rm)return;
-    editingRM=rm;
-    document.getElementById('rm-form-title').textContent='Edit — '+rm.name;
-    document.getElementById('rm-name').value=rm.name;
-    document.getElementById('rm-unit').value=rm.unit;
-    document.getElementById('rm-stock').value=rm.stock_qty;
-    document.getElementById('rm-thresh').value=rm.reorder_threshold;
-    document.getElementById('rm-price').value=rm.price_per_unit;
-    document.getElementById('rm-supplier').value=rm.supplier||'';
-    document.getElementById('rm-form-card').style.display='block';
-    document.getElementById('rm-form-card').scrollIntoView({behavior:'smooth'});
+    editingRM=rm; rmFormOpen=true; purchaseFormOpen=null;
+    render();
+    setTimeout(()=>document.getElementById('rm-form-card')?.scrollIntoView({behavior:'smooth'}),50);
   }));
-  document.getElementById('rm-cancel-btn')?.addEventListener('click',()=>{document.getElementById('rm-form-card').style.display='none';editingRM=null;});
+  document.getElementById('rm-cancel-btn')?.addEventListener('click',()=>{rmFormOpen=false;editingRM=null;render();});
   document.getElementById('rm-save-btn')?.addEventListener('click',async()=>{
     const name=document.getElementById('rm-name').value.trim();
     const unit=document.getElementById('rm-unit').value;
@@ -931,9 +944,8 @@ function bindLocal(){
     }else{
       await sbPost('raw_materials',{name,unit,stock_qty:stock,reorder_threshold:thresh,price_per_unit:price,supplier});
     }
-    await loadLocal();editingRM=null;
-    document.getElementById('rm-form-card').style.display='none';
-    btn.disabled=false;btn.textContent='Save';render();
+    rmFormOpen=false; editingRM=null;
+    await loadLocal(); render();
   });
   document.querySelectorAll('[data-action="del-rm"]').forEach(b=>b.addEventListener('click',async()=>{
     const rm=rawMaterials.find(r=>r.id==b.dataset.id);
@@ -944,13 +956,10 @@ function bindLocal(){
 
   // Purchase
   document.querySelectorAll('[data-action="add-purchase"]').forEach(b=>b.addEventListener('click',()=>{
-    document.getElementById('purch-rm-id').value=b.dataset.id;
-    document.getElementById('purch-rm-name').textContent=b.dataset.name;
-    document.getElementById('purch-unit-lbl').textContent=b.dataset.unit;
-    document.getElementById('purch-rm-unit-val').value=b.dataset.unit;
-    ['purch-qty','purch-price','purch-total','purch-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('purchase-form-card').style.display='block';
-    document.getElementById('purchase-form-card').scrollIntoView({behavior:'smooth'});
+    purchaseFormOpen={id:b.dataset.id, name:b.dataset.name, unit:b.dataset.unit};
+    rmFormOpen=false; editingRM=null;
+    render();
+    setTimeout(()=>document.getElementById('purchase-form-card')?.scrollIntoView({behavior:'smooth'}),50);
   }));
   document.getElementById('purch-qty')?.addEventListener('input',()=>{
     const q=parseFloat(document.getElementById('purch-qty').value)||0;
@@ -962,7 +971,7 @@ function bindLocal(){
     const p=parseFloat(document.getElementById('purch-price').value)||0;
     if(q&&p) document.getElementById('purch-total').value=(q*p).toFixed(2);
   });
-  document.getElementById('purch-cancel-btn')?.addEventListener('click',()=>{document.getElementById('purchase-form-card').style.display='none';});
+  document.getElementById('purch-cancel-btn')?.addEventListener('click',()=>{purchaseFormOpen=null;render();});
   document.getElementById('purch-save-btn')?.addEventListener('click',async()=>{
     const rmId=document.getElementById('purch-rm-id').value;
     const qty=parseFloat(document.getElementById('purch-qty').value);
@@ -972,12 +981,10 @@ function bindLocal(){
     if(isNaN(qty)||qty<=0){setMsg('purch-msg','Enter valid quantity.',false);return;}
     const btn=document.getElementById('purch-save-btn');btn.disabled=true;btn.textContent='Saving…';
     await sbPost('rm_purchases',{raw_material_id:parseInt(rmId),qty_purchased:qty,price_per_unit:price,total_cost:total,note,purchased_by:user});
-    // Update stock
     const rm=rawMaterials.find(r=>r.id==rmId);
     const newStock=(rm?.stock_qty||0)+qty;
     await sbPatch('raw_materials',{id:rmId},{stock_qty:newStock});
-    document.getElementById('purchase-form-card').style.display='none';
-    btn.disabled=false;btn.textContent='Record purchase → updates stock';
+    purchaseFormOpen=null;
     await loadLocal();render();
   });
 
