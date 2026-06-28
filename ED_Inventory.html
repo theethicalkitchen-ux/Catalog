@@ -9,27 +9,31 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;min-height:100vh}
 .app-wrap{max-width:720px;margin:0 auto;padding:1rem}
 .card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
-.btn{cursor:pointer;padding:7px 14px;border-radius:8px;border:1px solid #ccc;background:transparent;color:#1a1a1a;font-size:13px;font-family:inherit}
+.btn{cursor:pointer;padding:7px 14px;border-radius:8px;border:1px solid #ccc;background:transparent;color:#1a1a1a;font-size:13px;font-family:inherit;transition:background 0.15s}
 .btn:hover{background:#f0ede6}
 .btn:active{transform:scale(0.98)}
+.btn:disabled{opacity:0.45;cursor:not-allowed;transform:none}
 .btn-primary{background:#e6f1fb;border-color:#85b7eb;color:#0c447c}
 .btn-primary:hover{background:#d0e5f7}
 .btn-danger{background:#fcebeb;border-color:#f09595;color:#791f1f}
 .btn-danger:hover{background:#f7c1c1}
 .btn-success{background:#eaf3de;border-color:#97c459;color:#27500a}
 .btn-success:hover{background:#d5eab8}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-warning{background:#faeeda;border-color:#ef9f27;color:#633806}
+.btn-warning:hover{background:#f5d89a}
 input,select,textarea{font-family:inherit;font-size:13px;color:#1a1a1a;background:#fff;border:1px solid #ccc;border-radius:8px;padding:7px 10px;width:100%}
 input:focus,select:focus{outline:none;border-color:#888}
-.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
+.badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500}
 .badge-ok{background:#eaf3de;color:#27500a}
 .badge-low{background:#faeeda;color:#633806}
 .badge-critical{background:#fcebeb;color:#791f1f}
 .badge-urgent{background:#fcebeb;color:#791f1f}
 .badge-normal{background:#eaf3de;color:#27500a}
-.badge-approved{background:#eaf3de;color:#27500a}
-.badge-rejected{background:#fcebeb;color:#791f1f}
 .badge-pending{background:#faeeda;color:#633806}
+.badge-approved{background:#e6f1fb;color:#0c447c}
+.badge-dispatched{background:#eeedfe;color:#3c3489}
+.badge-delivered{background:#eaf3de;color:#27500a}
+.badge-rejected{background:#fcebeb;color:#791f1f}
 .tab{padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid transparent;background:transparent;color:#555;font-family:inherit}
 .tab.active{background:#fff;border-color:#ddd;color:#1a1a1a;font-weight:500}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -38,35 +42,45 @@ input:focus,select:focus{outline:none;border-color:#888}
 .metric .label{font-size:11px;color:#666;margin-bottom:4px}
 .metric .value{font-size:22px;font-weight:500}
 .muted{color:#666;font-size:12px}
+.fl{display:block;font-size:11px;color:#666;margin-bottom:4px}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 th{font-size:11px;color:#888;font-weight:500;text-align:left;padding:7px 10px;border-bottom:1px solid #e0ddd5}
 td{padding:9px 10px;border-bottom:1px solid #f0ede6;font-size:13px;vertical-align:middle}
 tr:last-child td{border-bottom:none}
-.section-title{font-size:13px;font-weight:500;margin-bottom:10px}
+.section-title{font-size:13px;font-weight:500}
 .alert-bar{background:#faeeda;border:1px solid #ef9f27;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#633806}
 .info-bar{background:#e6f1fb;border:1px solid #85b7eb;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#0c447c}
-label.fl{display:block;font-size:11px;color:#666;margin-bottom:4px}
+.success-bar{background:#eaf3de;border:1px solid #97c459;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#27500a}
 .msg-ok{color:#3b6d11;font-size:12px;margin-top:6px}
 .msg-err{color:#791f1f;font-size:12px;margin-top:6px}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .tabs-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;background:#f0ede6;padding:4px;border-radius:10px}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ccc;border-top-color:#555;border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:6px}
+.order-card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px}
+.order-card.urgent{border-color:#f09595}
+.order-card.approved{border-color:#85b7eb}
+.order-card.dispatched{border-color:#afa9ec}
+.order-steps{display:flex;align-items:center;gap:0;margin:10px 0;font-size:11px}
+.step{padding:4px 10px;background:#f5f5f0;color:#888;border:1px solid #e0ddd5}
+.step:first-child{border-radius:6px 0 0 6px}
+.step:last-child{border-radius:0 6px 6px 0}
+.step.done{background:#eaf3de;color:#27500a;border-color:#97c459}
+.step.active{background:#e6f1fb;color:#0c447c;border-color:#85b7eb;font-weight:500}
+.dispatch-form{background:#f5f5f0;border-radius:8px;padding:12px;margin-top:10px}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #ccc;border-top-color:#555;border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:4px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:500px){
   .grid2,.grid3{grid-template-columns:1fr}
   .metric .value{font-size:18px}
-  table{font-size:12px}
-  th,td{padding:6px 6px}
+  th,td{padding:6px 6px;font-size:12px}
+  .order-steps{flex-wrap:wrap}
 }
 </style>
 </head>
 <body>
-<div class="app-wrap">
-  <div id="app"></div>
-</div>
+<div class="app-wrap"><div id="app"></div></div>
 <script>
-const SUPABASE_URL = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
+const SB_URL = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
+const SB_KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
 
 const SKUS = [
   {id:'chap8',       name:'Chapati 8"',  packSize:25},
@@ -84,83 +98,84 @@ const USERS = {
   'mumbai2': {pw:'mbai002', role:'mumbai', name:'Mumbai Staff',   loc:'Mumbai'},
 };
 
-const LOW_THRESHOLD      = 5;
-const CRITICAL_THRESHOLD = 2;
+const LOW = 5, CRIT = 2;
 
-let currentUser = sessionStorage.getItem('ed_user') || null;
-let activeTab   = 'inventory';
-let inv         = {};
-let orders      = [];
-let dispatches  = [];
-let log         = [];
-let loading     = false;
-let pollTimer   = null;
+let user      = sessionStorage.getItem('ed_user') || null;
+let activeTab = 'inventory';
+let inv = {}, orders = [], dispatches = [], actlog = [];
+let pollTimer = null;
+let expandedOrders = new Set();
 
-async function sbGet(table, query='') {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}&order=id.desc`, {
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'}
-  });
+/* ── SUPABASE HELPERS ── */
+const hdrs = () => ({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'});
+
+async function sbGet(table, qs='') {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${qs}`, {headers:hdrs()});
   return r.json();
 }
 async function sbPost(table, body) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method:'POST',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify(body)
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method:'POST', headers:{...hdrs(),'Prefer':'return=representation'}, body:JSON.stringify(body)
   });
   return r.json();
 }
 async function sbPatch(table, match, body) {
-  const params = Object.entries(match).map(([k,v])=>`${k}=eq.${v}`).join('&');
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify(body)
+  const qs = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  const r  = await fetch(`${SB_URL}/rest/v1/${table}?${qs}`, {
+    method:'PATCH', headers:{...hdrs(),'Prefer':'return=representation'}, body:JSON.stringify(body)
   });
   return r.json();
 }
 
 async function loadAll() {
-  const [invData, ordData, disData, logData] = await Promise.all([
+  const [invD, ordD, disD, logD] = await Promise.all([
     sbGet('inventory',''),
-    sbGet('orders','limit=50'),
-    sbGet('dispatches','limit=50'),
-    sbGet('activity_log','limit=80'),
+    sbGet('orders','order=id.desc&limit=60'),
+    sbGet('dispatches','order=id.desc&limit=40'),
+    sbGet('activity_log','order=id.desc&limit=80'),
   ]);
-  inv        = {};
-  (invData||[]).forEach(r => inv[r.sku] = {packs:r.packs});
-  orders     = ordData||[];
-  dispatches = disData||[];
-  log        = logData||[];
+  inv = {};
+  (invD||[]).forEach(r => inv[r.sku] = {packs:r.packs});
+  orders     = ordD||[];
+  dispatches = disD||[];
+  actlog     = logD||[];
 }
 
-function ts() {
-  return new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+async function addLog(action, sku, detail) {
+  await sbPost('activity_log', {action, sku, detail, done_by:user});
 }
+
+/* ── UTILS ── */
+function skuName(id)  { return SKUS.find(s=>s.id===id)?.name||id; }
+function fmtTime(ts)  { return new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
 function statusBadge(packs) {
-  if (packs <= CRITICAL_THRESHOLD) return `<span class="badge badge-critical">Critical</span>`;
-  if (packs <= LOW_THRESHOLD)      return `<span class="badge badge-low">Low</span>`;
+  if (packs<=CRIT) return `<span class="badge badge-critical">Critical</span>`;
+  if (packs<=LOW)  return `<span class="badge badge-low">Low</span>`;
   return `<span class="badge badge-ok">OK</span>`;
 }
-function skuName(id) { return SKUS.find(s=>s.id===id)?.name||id; }
-
-function render() {
-  const app = document.getElementById('app');
-  if (!currentUser) { app.innerHTML = renderLogin(); bindLoginEvents(); return; }
-  app.innerHTML = renderApp();
-  bindAppEvents();
+function setMsg(id, text, ok) {
+  const el=document.getElementById(id); if(!el) return;
+  el.className=ok?'msg-ok':'msg-err'; el.textContent=text;
 }
 
+/* ── RENDER ROOT ── */
+function render() {
+  const app = document.getElementById('app');
+  if (!user) { app.innerHTML = renderLogin(); bindLogin(); return; }
+  app.innerHTML = renderApp();
+  bindApp();
+}
+
+/* ── LOGIN ── */
 function renderLogin() {
-  return `
-<div style="max-width:360px;margin:3rem auto">
+  return `<div style="max-width:360px;margin:3rem auto">
   <div class="card">
     <div style="text-align:center;margin-bottom:1.5rem">
       <div style="font-size:20px;font-weight:600">ED Inventory</div>
       <div class="muted" style="margin-top:4px">Ethical Delights · Live stock tracker</div>
     </div>
     <label class="fl">Username</label>
-    <input id="un" placeholder="Enter username" style="margin-bottom:10px" />
+    <input id="un" placeholder="Enter username" style="margin-bottom:10px" autocapitalize="none" />
     <label class="fl">Password</label>
     <input id="pw" type="password" placeholder="Enter password" style="margin-bottom:16px" />
     <button class="btn btn-primary" id="login-btn" style="width:100%;padding:10px">Sign in</button>
@@ -168,50 +183,43 @@ function renderLogin() {
   </div>
 </div>`;
 }
-
-function bindLoginEvents() {
-  document.getElementById('un').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('pw').focus(); });
-  document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+function bindLogin() {
+  document.getElementById('un').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('pw').focus(); });
+  document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
   document.getElementById('login-btn').addEventListener('click', doLogin);
 }
-
 async function doLogin() {
   const un = document.getElementById('un').value.trim().toLowerCase();
   const pw = document.getElementById('pw').value;
-  if (!USERS[un] || USERS[un].pw !== pw) {
-    document.getElementById('login-err').textContent = 'Incorrect username or password.';
-    return;
-  }
-  document.getElementById('login-btn').innerHTML = '<span class="spinner"></span>Signing in…';
-  document.getElementById('login-btn').disabled = true;
+  if (!USERS[un]||USERS[un].pw!==pw) { document.getElementById('login-err').textContent='Incorrect username or password.'; return; }
+  const btn = document.getElementById('login-btn');
+  btn.innerHTML='<span class="spinner"></span>Signing in…'; btn.disabled=true;
   try {
     await loadAll();
-    currentUser = un;
-    sessionStorage.setItem('ed_user', un);
-    activeTab = 'inventory';
-    render();
-    startPolling();
+    user=un; sessionStorage.setItem('ed_user',un); activeTab='inventory';
+    render(); startPolling();
   } catch(e) {
-    document.getElementById('login-err').textContent = 'Could not connect. Check internet and try again.';
-    document.getElementById('login-btn').innerHTML = 'Sign in';
-    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-err').textContent='Could not connect. Check internet and try again.';
+    btn.innerHTML='Sign in'; btn.disabled=false;
   }
 }
 
+/* ── POLLING ── */
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(async () => {
-    if (!currentUser) { clearInterval(pollTimer); return; }
-    await loadAll();
-    render();
-  }, 15000);
+  pollTimer = setInterval(async ()=>{ if(!user){clearInterval(pollTimer);return;} await loadAll(); render(); }, 15000);
 }
 
+/* ── APP SHELL ── */
 function renderApp() {
-  const u       = USERS[currentUser];
-  const isPune  = u.role === 'pune';
-  const alerts  = SKUS.filter(s => (inv[s.id]?.packs||0) <= LOW_THRESHOLD);
-  const pending = orders.filter(o => o.status === 'pending').length;
+  const u      = USERS[user];
+  const isPune = u.role==='pune';
+  const lowAlerts  = SKUS.filter(s=>(inv[s.id]?.packs||0)<=LOW);
+  const pendingCnt = orders.filter(o=>o.status==='pending').length;
+  const dispatchCnt= orders.filter(o=>o.status==='approved').length;
+  const deliverCnt = orders.filter(o=>o.status==='dispatched').length;
+
+  const notifCount = isPune ? pendingCnt + dispatchCnt : deliverCnt;
 
   return `
 <div class="header">
@@ -221,92 +229,67 @@ function renderApp() {
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <span class="muted" id="sync-label">🟢 Live</span>
-    <button class="btn" id="refresh-btn" style="font-size:12px">↻ Refresh</button>
+    <button class="btn" id="refresh-btn" style="font-size:12px">↻</button>
     <button class="btn" id="logout-btn" style="font-size:12px">Sign out</button>
   </div>
 </div>
 
-${alerts.length ? `<div class="alert-bar">⚠️ Low stock: ${alerts.map(s=>s.name).join(', ')}</div>` : ''}
+${lowAlerts.length ? `<div class="alert-bar">⚠️ Low stock in Mumbai: ${lowAlerts.map(s=>s.name).join(', ')}</div>` : ''}
+
+${isPune && dispatchCnt>0 ? `<div class="info-bar">📦 ${dispatchCnt} approved order${dispatchCnt>1?'s':''} waiting to be dispatched</div>` : ''}
+${!isPune && deliverCnt>0 ? `<div class="info-bar">🚚 ${deliverCnt} shipment${deliverCnt>1?'s':''} on the way — mark as delivered when received</div>` : ''}
 
 <div class="tabs-row">
   <button class="tab ${activeTab==='inventory'?'active':''}" data-tab="inventory">📦 Inventory</button>
-  ${isPune ? `<button class="tab ${activeTab==='dispatch'?'active':''}" data-tab="dispatch">🚚 Dispatch</button>` : ''}
-  <button class="tab ${activeTab==='orders'?'active':''}" data-tab="orders">📋 Orders${pending>0?` (${pending})`:''}</button>
+  <button class="tab ${activeTab==='orders'?'active':''}" data-tab="orders">📋 Orders${notifCount>0?` <span style="background:#f09595;color:#791f1f;border-radius:10px;padding:1px 6px;font-size:10px">${notifCount}</span>`:''}</button>
   <button class="tab ${activeTab==='log'?'active':''}" data-tab="log">🕒 Log</button>
 </div>
 
-${activeTab==='inventory'          ? renderInventoryTab(isPune) : ''}
-${activeTab==='dispatch' && isPune ? renderDispatchTab()        : ''}
-${activeTab==='orders'             ? renderOrdersTab(isPune)    : ''}
-${activeTab==='log'                ? renderLogTab()             : ''}`;
+${activeTab==='inventory' ? renderInventoryTab(isPune) : ''}
+${activeTab==='orders'    ? renderOrdersTab(isPune)    : ''}
+${activeTab==='log'       ? renderLogTab()             : ''}`;
 }
 
+/* ── INVENTORY TAB ── */
 function renderInventoryTab(isPune) {
-  const totalPacks    = SKUS.reduce((a,s) => a+(inv[s.id]?.packs||0), 0);
-  const criticalCount = SKUS.filter(s => (inv[s.id]?.packs||0) <= CRITICAL_THRESHOLD).length;
-  const lowCount      = SKUS.filter(s => (inv[s.id]?.packs||0) <= LOW_THRESHOLD && (inv[s.id]?.packs||0) > CRITICAL_THRESHOLD).length;
+  const total = SKUS.reduce((a,s)=>a+(inv[s.id]?.packs||0),0);
+  const crit  = SKUS.filter(s=>(inv[s.id]?.packs||0)<=CRIT).length;
+  const low   = SKUS.filter(s=>(inv[s.id]?.packs||0)<=LOW&&(inv[s.id]?.packs||0)>CRIT).length;
 
   return `
 <div class="grid3" style="margin-bottom:14px">
-  <div class="metric"><div class="label">Total packs (Mumbai)</div><div class="value">${totalPacks}</div></div>
-  <div class="metric"><div class="label">Low / critical SKUs</div><div class="value">${lowCount} / ${criticalCount}</div></div>
-  <div class="metric"><div class="label">Auto-refreshes every</div><div class="value" style="font-size:16px;padding-top:4px">15 seconds</div></div>
+  <div class="metric"><div class="label">Total packs (Mumbai)</div><div class="value">${total}</div></div>
+  <div class="metric"><div class="label">Low / critical</div><div class="value">${low} / ${crit}</div></div>
+  <div class="metric"><div class="label">Auto-refresh</div><div class="value" style="font-size:14px;padding-top:6px">Every 15s</div></div>
 </div>
-
 <div class="card" style="padding:0.75rem 0">
-  <div style="padding:0 1.25rem 8px"><span class="section-title">Mumbai stock — all SKUs</span></div>
-  <div style="overflow-x:auto">
-  <table>
+  <div style="padding:0 1.25rem 10px"><span class="section-title">Mumbai stock — all SKUs</span></div>
+  <div style="overflow-x:auto"><table>
     <thead><tr>
-      <th style="width:28%">SKU</th><th style="width:12%">Packs</th>
-      <th style="width:22%">Units</th><th style="width:16%">Status</th><th style="width:22%">Action</th>
+      <th style="width:30%">SKU</th><th style="width:13%">Packs</th>
+      <th style="width:22%">Units</th><th style="width:16%">Status</th><th style="width:19%">Action</th>
     </tr></thead>
     <tbody>
-    ${SKUS.map(s => {
-      const packs = inv[s.id]?.packs||0;
-      const units = packs * s.packSize;
-      const btn = isPune
-        ? `<button class="btn" style="font-size:11px;padding:4px 8px" data-action="adjust" data-sku="${s.id}">Adjust</button>`
-        : `<button class="btn" style="font-size:11px;padding:4px 8px" data-action="jump-update" data-sku="${s.id}">Update</button>`;
+    ${SKUS.map(s=>{
+      const packs=(inv[s.id]?.packs||0);
       return `<tr>
         <td><strong style="font-weight:500">${s.name}</strong><br><span class="muted">${s.packSize} pcs/pack</span></td>
         <td style="font-weight:600">${packs}</td>
-        <td class="muted">${units.toLocaleString()} pcs</td>
+        <td class="muted">${(packs*s.packSize).toLocaleString()} pcs</td>
         <td>${statusBadge(packs)}</td>
-        <td>${btn}</td>
+        <td>${isPune
+          ? `<button class="btn" style="font-size:11px;padding:4px 8px" data-action="pune-adjust" data-sku="${s.id}">Adjust</button>`
+          : `<button class="btn" style="font-size:11px;padding:4px 8px" data-action="mumbai-set" data-sku="${s.id}">Set count</button>`
+        }</td>
       </tr>`;
     }).join('')}
     </tbody>
-  </table>
-  </div>
+  </table></div>
 </div>
-${!isPune ? renderMumbaiUpdateForms() : ''}`;
-}
 
-function renderMumbaiUpdateForms() {
-  return `
-<div class="card" id="update-form-card">
-  <div class="section-title">Update stock</div>
-  <div class="grid2" style="margin-bottom:8px">
-    <div><label class="fl">SKU</label>
-      <select id="upd-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-    <div><label class="fl">Method</label>
-      <select id="upd-method">
-        <option value="set">Set current stock (packs on hand)</option>
-        <option value="sell">Deduct — sold packs</option>
-      </select></div>
-  </div>
-  <div class="grid2" style="margin-bottom:8px">
-    <div><label class="fl" id="upd-qty-label">Packs</label>
-      <input type="number" id="upd-qty" min="0" placeholder="0" /></div>
-    <div><label class="fl">Note (optional)</label>
-      <input id="upd-note" placeholder="e.g. sold to Sharma store" /></div>
-  </div>
-  <button class="btn btn-primary" id="upd-btn">Update stock</button>
-  <div id="upd-msg"></div>
-</div>
+${!isPune ? `
 <div class="card">
-  <div class="section-title">Place reorder request</div>
+  <div class="section-title" style="margin-bottom:12px">Place reorder request</div>
   <div class="grid3" style="margin-bottom:8px">
     <div><label class="fl">SKU</label>
       <select id="ord-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
@@ -315,213 +298,241 @@ function renderMumbaiUpdateForms() {
     <div><label class="fl">Urgency</label>
       <select id="ord-urgency"><option value="normal">Normal</option><option value="urgent">Urgent</option></select></div>
   </div>
-  <input id="ord-note" placeholder="Any notes for Pune..." style="margin-bottom:8px" />
-  <button class="btn btn-success" id="ord-btn">Place order request</button>
+  <input id="ord-note" placeholder="Notes for Pune (optional)…" style="margin-bottom:10px" />
+  <button class="btn btn-success" id="ord-btn">Place order request →</button>
   <div id="ord-msg"></div>
-</div>`;
-}
-
-function renderDispatchTab() {
-  return `
-<div class="card">
-  <div class="section-title">Record dispatch to Mumbai</div>
-  <div class="grid3" style="margin-bottom:8px">
-    <div><label class="fl">SKU</label>
-      <select id="dis-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-    <div><label class="fl">Packs dispatched</label>
-      <input type="number" id="dis-qty" min="1" placeholder="0" /></div>
-    <div><label class="fl">Vehicle / batch ref</label>
-      <input id="dis-ref" placeholder="e.g. MH12-AB-1234" /></div>
-  </div>
-  <input id="dis-note" placeholder="Notes..." style="margin-bottom:10px" />
-  <button class="btn btn-primary" id="dis-btn">Record dispatch → adds to Mumbai stock</button>
-  <div id="dis-msg"></div>
-</div>
-<div class="card" style="padding:0.75rem 0">
-  <div style="padding:0 1.25rem 8px"><span class="section-title">Dispatch history</span></div>
-  ${dispatches.length===0
-    ? '<div class="muted" style="padding:0 1.25rem">No dispatches yet.</div>'
-    : `<div style="overflow-x:auto"><table>
-      <thead><tr><th>Time</th><th>SKU</th><th>Packs</th><th>Ref</th><th>By</th></tr></thead>
-      <tbody>${dispatches.slice(0,25).map(d=>`<tr>
-        <td class="muted">${new Date(d.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-        <td>${skuName(d.sku)}</td><td><strong>${d.qty}</strong></td>
-        <td class="muted">${d.ref||'—'}</td><td class="muted">${d.dispatched_by}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`}
-</div>`;
-}
-
-function renderOrdersTab(isPune) {
-  const pending = orders.filter(o=>o.status==='pending');
-  const done    = orders.filter(o=>o.status!=='pending');
-  return `
-${pending.length===0 ? '<div class="card muted" style="text-align:center;padding:1.5rem">No pending orders.</div>' : ''}
-${pending.map(o=>`
-<div class="card" style="border-color:${o.urgency==='urgent'?'#f09595':'#e0ddd5'}">
-  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-    <div><strong>${skuName(o.sku)}</strong>
-      <span class="badge badge-${o.urgency}" style="margin-left:8px">${o.urgency}</span></div>
-    <span class="muted">${new Date(o.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
-  </div>
-  <div class="muted" style="margin-bottom:10px">Requested: <strong style="color:#1a1a1a">${o.qty} packs</strong> · By: ${o.placed_by}${o.note?` · "${o.note}"`:''}</div>
-  ${isPune
-    ? `<div style="display:flex;gap:8px">
-        <button class="btn btn-success" data-action="approve-order" data-id="${o.id}" data-sku="${o.sku}" data-qty="${o.qty}">✓ Approve &amp; dispatch</button>
-        <button class="btn btn-danger"  data-action="reject-order"  data-id="${o.id}">✕ Reject</button>
-      </div>`
-    : '<span class="muted">Awaiting Pune approval…</span>'}
-</div>`).join('')}
-${done.length>0 ? `<div class="card" style="padding:0.75rem 0">
-  <div style="padding:0 1.25rem 8px"><span class="section-title">Past orders</span></div>
-  <div style="overflow-x:auto"><table>
-    <thead><tr><th>SKU</th><th>Packs</th><th>Status</th><th>Urgency</th><th>Time</th></tr></thead>
-    <tbody>${done.slice(0,20).map(o=>`<tr>
-      <td>${skuName(o.sku)}</td><td>${o.qty}</td>
-      <td><span class="badge badge-${o.status}">${o.status}</span></td>
-      <td><span class="badge badge-${o.urgency}">${o.urgency}</span></td>
-      <td class="muted">${new Date(o.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>
 </div>` : ''}`;
 }
 
+/* ── ORDERS TAB ── */
+function renderOrdersTab(isPune) {
+  const pending   = orders.filter(o=>o.status==='pending');
+  const approved  = orders.filter(o=>o.status==='approved');
+  const dispatched= orders.filter(o=>o.status==='dispatched');
+  const delivered = orders.filter(o=>o.status==='delivered');
+  const rejected  = orders.filter(o=>o.status==='rejected');
+
+  function stepBar(status) {
+    const steps = ['Ordered','Approved','Dispatched','Delivered'];
+    const idx   = {pending:0,approved:1,dispatched:2,delivered:3,rejected:0}[status]||0;
+    const isRej = status==='rejected';
+    return `<div class="order-steps">
+      ${steps.map((s,i)=>`<div class="step ${isRej&&i===0?'active':i<idx?'done':i===idx?'active':''}">${i<idx?'✓ ':''} ${s}</div>`).join('')}
+      ${isRej?'<span class="muted" style="margin-left:8px">— Rejected</span>':''}
+    </div>`;
+  }
+
+  function orderCard(o) {
+    const isExp = expandedOrders.has(o.id);
+    const sku   = SKUS.find(s=>s.id===o.sku);
+
+    let actionHtml = '';
+
+    if (o.status==='pending' && isPune) {
+      actionHtml = `<div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-success" data-action="approve" data-id="${o.id}">✓ Approve order</button>
+        <button class="btn btn-danger"  data-action="reject"  data-id="${o.id}">✕ Reject</button>
+      </div>`;
+    }
+    else if (o.status==='pending' && !isPune) {
+      actionHtml = `<div style="margin-top:8px"><span class="muted">Awaiting Pune approval…</span></div>`;
+    }
+    else if (o.status==='approved' && isPune) {
+      actionHtml = isExp
+        ? `<div class="dispatch-form" id="dform-${o.id}">
+            <div style="font-size:12px;font-weight:500;margin-bottom:8px;color:#0c447c">Record dispatch for this order</div>
+            <div class="grid2" style="margin-bottom:8px">
+              <div><label class="fl">SKU</label><input value="${sku?.name}" disabled style="background:#f5f5f0" /></div>
+              <div><label class="fl">Packs</label><input value="${o.qty}" disabled style="background:#f5f5f0" /></div>
+            </div>
+            <div><label class="fl">Vehicle / batch ref (optional)</label>
+              <input id="dref-${o.id}" placeholder="e.g. MH12-AB-1234" style="margin-bottom:8px" /></div>
+            <div><label class="fl">Note (optional)</label>
+              <input id="dnote-${o.id}" placeholder="Any note…" style="margin-bottom:10px" /></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" data-action="do-dispatch" data-id="${o.id}" data-sku="${o.sku}" data-qty="${o.qty}">🚚 Confirm dispatch</button>
+              <button class="btn" data-action="collapse" data-id="${o.id}">Cancel</button>
+            </div>
+            <div id="dmsg-${o.id}"></div>
+          </div>`
+        : `<div style="margin-top:10px">
+            <button class="btn btn-primary" data-action="expand-dispatch" data-id="${o.id}">🚚 Record dispatch</button>
+          </div>`;
+    }
+    else if (o.status==='approved' && !isPune) {
+      actionHtml = `<div style="margin-top:8px"><span style="color:#0c447c;font-size:12px">✓ Approved — Pune is preparing dispatch</span></div>`;
+    }
+    else if (o.status==='dispatched' && !isPune) {
+      actionHtml = `<div style="margin-top:10px">
+        <button class="btn btn-success" data-action="mark-delivered" data-id="${o.id}" data-sku="${o.sku}" data-qty="${o.qty}">✓ Mark as delivered — update my stock</button>
+      </div>`;
+    }
+    else if (o.status==='dispatched' && isPune) {
+      actionHtml = `<div style="margin-top:8px"><span style="color:#3c3489;font-size:12px">🚚 Dispatched — waiting for Mumbai to confirm delivery</span></div>`;
+    }
+
+    return `<div class="order-card ${o.urgency==='urgent'?'urgent':o.status}">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
+        <div>
+          <strong style="font-size:15px">${sku?.name||o.sku}</strong>
+          <span class="badge badge-${o.urgency}" style="margin-left:8px">${o.urgency}</span>
+          <span class="badge badge-${o.status}" style="margin-left:4px">${o.status}</span>
+        </div>
+        <span class="muted">${fmtTime(o.created_at)}</span>
+      </div>
+      <div class="muted" style="margin-bottom:6px">
+        <strong style="color:#1a1a1a">${o.qty} packs</strong> · ${sku?.packSize*o.qty} pcs · By: ${o.placed_by}${o.note?` · "${o.note}"`:''}</div>
+      ${o.dispatched_ref ? `<div class="muted">Dispatch ref: ${o.dispatched_ref}</div>` : ''}
+      ${stepBar(o.status)}
+      ${actionHtml}
+    </div>`;
+  }
+
+  const active  = [...pending, ...approved, ...dispatched];
+  const history = [...delivered, ...rejected];
+
+  return `
+${active.length===0 ? '<div class="card muted" style="text-align:center;padding:1.5rem">No active orders right now.</div>' : ''}
+${active.map(orderCard).join('')}
+
+${history.length>0 ? `
+<div style="margin-top:4px">
+  <div class="section-title" style="margin-bottom:8px;color:#888">Completed orders</div>
+  ${history.slice(0,15).map(orderCard).join('')}
+</div>` : ''}`;
+}
+
+/* ── LOG TAB ── */
 function renderLogTab() {
   return `<div class="card" style="padding:0.75rem 0">
-  <div style="padding:0 1.25rem 8px"><span class="section-title">Activity log</span></div>
-  ${log.length===0
+  <div style="padding:0 1.25rem 10px"><span class="section-title">Activity log</span></div>
+  ${actlog.length===0
     ? '<div class="muted" style="padding:0 1.25rem">No activity yet.</div>'
     : `<div style="overflow-x:auto"><table>
-      <thead><tr><th style="width:22%">Time</th><th style="width:18%">Action</th><th style="width:20%">SKU</th><th>Detail</th><th style="width:14%">By</th></tr></thead>
-      <tbody>${log.slice(0,50).map(l=>`<tr>
-        <td class="muted" style="font-size:11px">${new Date(l.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-        <td>${l.action}</td><td>${l.sku?skuName(l.sku):'—'}</td>
-        <td class="muted">${l.detail}</td><td class="muted">${l.done_by}</td>
+      <thead><tr><th style="width:22%">Time</th><th style="width:18%">Action</th><th style="width:20%">SKU</th><th>Detail</th><th style="width:13%">By</th></tr></thead>
+      <tbody>${actlog.slice(0,50).map(l=>`<tr>
+        <td class="muted" style="font-size:11px">${fmtTime(l.created_at)}</td>
+        <td>${l.action}</td>
+        <td>${l.sku?skuName(l.sku):'—'}</td>
+        <td class="muted">${l.detail}</td>
+        <td class="muted">${l.done_by}</td>
       </tr>`).join('')}</tbody>
     </table></div>`}
 </div>`;
 }
 
-function setMsg(id, text, isOk) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.className = isOk ? 'msg-ok' : 'msg-err';
-  el.textContent = text;
-}
-
-async function addLog(action, sku, detail) {
-  await sbPost('activity_log', {action, sku, detail, done_by:currentUser});
-}
-
-function bindAppEvents() {
-  document.getElementById('logout-btn')?.addEventListener('click', () => {
-    currentUser = null; sessionStorage.removeItem('ed_user');
-    if (pollTimer) clearInterval(pollTimer);
-    render();
+/* ── EVENT BINDING ── */
+function bindApp() {
+  document.getElementById('logout-btn')?.addEventListener('click', ()=>{
+    user=null; sessionStorage.removeItem('ed_user');
+    if(pollTimer) clearInterval(pollTimer); render();
   });
+  document.getElementById('refresh-btn')?.addEventListener('click', async ()=>{
+    document.getElementById('sync-label').textContent='🔄 Syncing…';
+    await loadAll(); render();
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{ activeTab=t.dataset.tab; render(); }));
 
-  document.getElementById('refresh-btn')?.addEventListener('click', async () => {
-    document.getElementById('sync-label').textContent = '🔄 Syncing…';
+  /* Mumbai — place order */
+  document.getElementById('ord-btn')?.addEventListener('click', async ()=>{
+    const sku=document.getElementById('ord-sku').value;
+    const qty=parseInt(document.getElementById('ord-qty').value);
+    const urgency=document.getElementById('ord-urgency').value;
+    const note=document.getElementById('ord-note').value.trim();
+    if(isNaN(qty)||qty<1){setMsg('ord-msg','Enter a valid quantity.',false);return;}
+    const btn=document.getElementById('ord-btn');
+    btn.disabled=true; btn.textContent='Placing…';
+    await sbPost('orders',{sku,qty,urgency,note,placed_by:user,status:'pending'});
+    await addLog('Order placed',sku,`${qty} packs (${urgency})${note?'. '+note:''}`);
+    setMsg('ord-msg','✓ Order sent to Pune!',true);
     await loadAll(); render();
   });
 
-  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
-    activeTab = t.dataset.tab; render();
-  }));
-
-  document.querySelectorAll('[data-action="jump-update"]').forEach(b => b.addEventListener('click', () => {
-    document.getElementById('upd-sku').value = b.dataset.sku;
-    document.getElementById('update-form-card').scrollIntoView({behavior:'smooth'});
-  }));
-
-  document.querySelectorAll('[data-action="adjust"]').forEach(b => b.addEventListener('click', async () => {
-    const sku  = b.dataset.sku;
-    const name = skuName(sku);
-    const cur  = inv[sku]?.packs||0;
-    const v    = prompt(`Adjust packs for ${name}\nCurrent: ${cur} packs\n\nEnter new pack count:`);
-    if (v===null) return;
-    const n = parseInt(v);
-    if (isNaN(n)||n<0) { alert('Please enter a valid number.'); return; }
-    await sbPatch('inventory',{sku},{packs:n,updated_by:currentUser});
-    await addLog('Adjusted', sku, `${cur} → ${n} packs (Pune override)`);
+  /* Inventory — Pune adjust */
+  document.querySelectorAll('[data-action="pune-adjust"]').forEach(b=>b.addEventListener('click',async ()=>{
+    const sku=b.dataset.sku; const cur=inv[sku]?.packs||0;
+    const v=prompt(`Adjust packs for ${skuName(sku)}\nCurrent: ${cur}\n\nEnter corrected pack count:`);
+    if(v===null) return;
+    const n=parseInt(v); if(isNaN(n)||n<0){alert('Invalid number');return;}
+    await sbPatch('inventory',{sku},{packs:n,updated_by:user});
+    await addLog('Adjusted',sku,`${cur} → ${n} packs (Pune override)`);
     await loadAll(); render();
   }));
 
-  document.getElementById('upd-method')?.addEventListener('change', function() {
-    document.getElementById('upd-qty-label').textContent = this.value==='sell' ? 'Packs sold' : 'Packs on hand now';
-  });
-
-  document.getElementById('upd-btn')?.addEventListener('click', async () => {
-    const sku    = document.getElementById('upd-sku').value;
-    const method = document.getElementById('upd-method').value;
-    const qty    = parseInt(document.getElementById('upd-qty').value);
-    const note   = document.getElementById('upd-note').value.trim();
-    if (isNaN(qty)||qty<0) { setMsg('upd-msg','Enter a valid number.',false); return; }
-    const old = inv[sku]?.packs||0;
-    let newPacks;
-    if (method==='sell') {
-      if (qty>old) { setMsg('upd-msg','Cannot sell more than available stock.',false); return; }
-      newPacks = old - qty;
-      await sbPatch('inventory',{sku},{packs:newPacks,updated_by:currentUser});
-      await addLog('Sold', sku, `${qty} packs sold. Stock: ${old} → ${newPacks}${note?'. '+note:''}`);
-    } else {
-      newPacks = qty;
-      await sbPatch('inventory',{sku},{packs:newPacks,updated_by:currentUser});
-      await addLog('Stock set', sku, `Set to ${qty} packs (was ${old})${note?'. '+note:''}`);
-    }
-    setMsg('upd-msg','✓ Stock updated!', true);
+  /* Inventory — Mumbai set count */
+  document.querySelectorAll('[data-action="mumbai-set"]').forEach(b=>b.addEventListener('click',async ()=>{
+    const sku=b.dataset.sku; const cur=inv[sku]?.packs||0;
+    const v=prompt(`Set current pack count for ${skuName(sku)}\nCurrent: ${cur}\n\nEnter actual packs on hand:`);
+    if(v===null) return;
+    const n=parseInt(v); if(isNaN(n)||n<0){alert('Invalid number');return;}
+    await sbPatch('inventory',{sku},{packs:n,updated_by:user});
+    await addLog('Stock set',sku,`Set to ${n} packs (was ${cur})`);
     await loadAll(); render();
-  });
+  }));
 
-  document.getElementById('ord-btn')?.addEventListener('click', async () => {
-    const sku     = document.getElementById('ord-sku').value;
-    const qty     = parseInt(document.getElementById('ord-qty').value);
-    const urgency = document.getElementById('ord-urgency').value;
-    const note    = document.getElementById('ord-note').value.trim();
-    if (isNaN(qty)||qty<1) { setMsg('ord-msg','Enter a valid quantity.',false); return; }
-    await sbPost('orders',{sku,qty,urgency,note,placed_by:currentUser,status:'pending'});
-    await addLog('Order placed', sku, `${qty} packs (${urgency})${note?'. '+note:''}`);
-    setMsg('ord-msg','✓ Order sent to Pune!', true);
+  /* Pune — approve order */
+  document.querySelectorAll('[data-action="approve"]').forEach(b=>b.addEventListener('click',async ()=>{
+    const id=b.dataset.id;
+    b.disabled=true; b.textContent='Approving…';
+    await sbPatch('orders',{id},{status:'approved'});
+    const ord=orders.find(o=>o.id==id);
+    await addLog('Order approved',ord?.sku,`${ord?.qty} packs approved, pending dispatch`);
     await loadAll(); render();
-  });
+  }));
 
-  document.getElementById('dis-btn')?.addEventListener('click', async () => {
-    const sku = document.getElementById('dis-sku').value;
-    const qty = parseInt(document.getElementById('dis-qty').value);
-    const ref = document.getElementById('dis-ref').value.trim();
-    const note= document.getElementById('dis-note').value.trim();
-    if (isNaN(qty)||qty<1) { setMsg('dis-msg','Enter a valid quantity.',false); return; }
-    const cur = inv[sku]?.packs||0;
-    await sbPatch('inventory',{sku},{packs:cur+qty,updated_by:currentUser});
-    await sbPost('dispatches',{sku,qty,ref,note,dispatched_by:currentUser});
-    await addLog('Dispatched', sku, `+${qty} packs to Mumbai${ref?'. Ref: '+ref:''}${note?'. '+note:''}`);
-    setMsg('dis-msg',`✓ Dispatched! Mumbai stock now: ${cur+qty} packs`, true);
+  /* Pune — reject order */
+  document.querySelectorAll('[data-action="reject"]').forEach(b=>b.addEventListener('click',async ()=>{
+    if(!confirm('Reject this order?')) return;
+    const id=b.dataset.id;
+    await sbPatch('orders',{id},{status:'rejected'});
+    const ord=orders.find(o=>o.id==id);
+    await addLog('Order rejected',ord?.sku,`${ord?.qty} packs — rejected`);
     await loadAll(); render();
-  });
+  }));
 
-  document.querySelectorAll('[data-action="approve-order"]').forEach(b => b.addEventListener('click', async () => {
+  /* Pune — expand dispatch form */
+  document.querySelectorAll('[data-action="expand-dispatch"]').forEach(b=>b.addEventListener('click',()=>{
+    expandedOrders.add(parseInt(b.dataset.id)); render();
+  }));
+
+  /* Pune — collapse dispatch form */
+  document.querySelectorAll('[data-action="collapse"]').forEach(b=>b.addEventListener('click',()=>{
+    expandedOrders.delete(parseInt(b.dataset.id)); render();
+  }));
+
+  /* Pune — confirm dispatch */
+  document.querySelectorAll('[data-action="do-dispatch"]').forEach(b=>b.addEventListener('click',async ()=>{
     const id  = b.dataset.id;
     const sku = b.dataset.sku;
     const qty = parseInt(b.dataset.qty);
-    const cur = inv[sku]?.packs||0;
-    await sbPatch('orders',{id},{status:'approved'});
-    await sbPatch('inventory',{sku},{packs:cur+qty,updated_by:currentUser});
-    await sbPost('dispatches',{sku,qty,ref:'Order #'+id,note:'Auto from order approval',dispatched_by:currentUser});
-    await addLog('Order approved', sku, `+${qty} packs dispatched to Mumbai`);
+    const ref = document.getElementById(`dref-${id}`)?.value.trim()||'';
+    const note= document.getElementById(`dnote-${id}`)?.value.trim()||'';
+    b.disabled=true; b.textContent='Dispatching…';
+    await sbPatch('orders',{id},{status:'dispatched',dispatched_ref:ref||null,dispatched_at:new Date().toISOString()});
+    await sbPost('dispatches',{sku,qty,ref,note,dispatched_by:user});
+    await addLog('Dispatched',sku,`${qty} packs sent to Mumbai${ref?'. Ref: '+ref:''}${note?'. '+note:''}`);
+    expandedOrders.delete(parseInt(id));
     await loadAll(); render();
   }));
 
-  document.querySelectorAll('[data-action="reject-order"]').forEach(b => b.addEventListener('click', async () => {
+  /* Mumbai — mark delivered */
+  document.querySelectorAll('[data-action="mark-delivered"]').forEach(b=>b.addEventListener('click',async ()=>{
     const id  = b.dataset.id;
-    const ord = orders.find(o=>o.id==id);
-    await sbPatch('orders',{id},{status:'rejected'});
-    await addLog('Order rejected', ord?.sku, `Qty ${ord?.qty} packs`);
+    const sku = b.dataset.sku;
+    const qty = parseInt(b.dataset.qty);
+    if(!confirm(`Mark this delivery as received?\n\nThis will add ${qty} packs of ${skuName(sku)} to your Mumbai stock.`)) return;
+    b.disabled=true; b.textContent='Updating…';
+    const cur = inv[sku]?.packs||0;
+    await sbPatch('orders',{id},{status:'delivered',delivered_at:new Date().toISOString()});
+    await sbPatch('inventory',{sku},{packs:cur+qty,updated_by:user});
+    await addLog('Delivered',sku,`+${qty} packs received. Mumbai stock: ${cur} → ${cur+qty}`);
     await loadAll(); render();
   }));
 }
 
-if (currentUser) {
-  loadAll().then(() => { render(); startPolling(); });
+/* ── BOOT ── */
+if (user) {
+  loadAll().then(()=>{ render(); startPolling(); });
 } else {
   render();
 }
