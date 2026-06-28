@@ -18,6 +18,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-danger:hover{background:#f7c1c1}
 .btn-success{background:#eaf3de;border-color:#97c459;color:#27500a}
 .btn-success:hover{background:#d5eab8}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
 input,select,textarea{font-family:inherit;font-size:13px;color:#1a1a1a;background:#fff;border:1px solid #ccc;border-radius:8px;padding:7px 10px;width:100%}
 input:focus,select:focus{outline:none;border-color:#888}
 .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
@@ -26,6 +27,9 @@ input:focus,select:focus{outline:none;border-color:#888}
 .badge-critical{background:#fcebeb;color:#791f1f}
 .badge-urgent{background:#fcebeb;color:#791f1f}
 .badge-normal{background:#eaf3de;color:#27500a}
+.badge-approved{background:#eaf3de;color:#27500a}
+.badge-rejected{background:#fcebeb;color:#791f1f}
+.badge-pending{background:#faeeda;color:#633806}
 .tab{padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid transparent;background:transparent;color:#555;font-family:inherit}
 .tab.active{background:#fff;border-color:#ddd;color:#1a1a1a;font-weight:500}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -33,7 +37,6 @@ input:focus,select:focus{outline:none;border-color:#888}
 .metric{background:#f5f5f0;border-radius:8px;padding:12px 14px}
 .metric .label{font-size:11px;color:#666;margin-bottom:4px}
 .metric .value{font-size:22px;font-weight:500}
-.sep{border:none;border-top:1px solid #e0ddd5;margin:12px 0}
 .muted{color:#666;font-size:12px}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 th{font-size:11px;color:#888;font-weight:500;text-align:left;padding:7px 10px;border-bottom:1px solid #e0ddd5}
@@ -41,11 +44,14 @@ td{padding:9px 10px;border-bottom:1px solid #f0ede6;font-size:13px;vertical-alig
 tr:last-child td{border-bottom:none}
 .section-title{font-size:13px;font-weight:500;margin-bottom:10px}
 .alert-bar{background:#faeeda;border:1px solid #ef9f27;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#633806}
-label.field-label{display:block;font-size:11px;color:#666;margin-bottom:4px}
+.info-bar{background:#e6f1fb;border:1px solid #85b7eb;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:#0c447c}
+label.fl{display:block;font-size:11px;color:#666;margin-bottom:4px}
 .msg-ok{color:#3b6d11;font-size:12px;margin-top:6px}
 .msg-err{color:#791f1f;font-size:12px;margin-top:6px}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .tabs-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;background:#f0ede6;padding:4px;border-radius:10px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ccc;border-top-color:#555;border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:500px){
   .grid2,.grid3{grid-template-columns:1fr}
   .metric .value{font-size:18px}
@@ -58,43 +64,75 @@ label.field-label{display:block;font-size:11px;color:#666;margin-bottom:4px}
 <div class="app-wrap">
   <div id="app"></div>
 </div>
-
 <script>
+const SUPABASE_URL = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
+
 const SKUS = [
-  {id:'chap8',  name:'Chapati 8"',   packSize:25},
-  {id:'chap9',  name:'Chapati 9"',   packSize:25},
-  {id:'puri_plain',  name:'Puri plain',   packSize:50},
-  {id:'puri_masala', name:'Puri masala',  packSize:50},
-  {id:'dal_pakwan',  name:'Dal pakwan',   packSize:20},
-  {id:'bhature',     name:'Bhature',      packSize:20},
+  {id:'chap8',       name:'Chapati 8"',  packSize:25},
+  {id:'chap9',       name:'Chapati 9"',  packSize:25},
+  {id:'puri_plain',  name:'Puri plain',  packSize:50},
+  {id:'puri_masala', name:'Puri masala', packSize:50},
+  {id:'dal_pakwan',  name:'Dal pakwan',  packSize:20},
+  {id:'bhature',     name:'Bhature',     packSize:20},
 ];
 
 const USERS = {
-  'nishant':  {pw:'ed2024',   role:'pune',   name:'Nishant',         loc:'Pune'},
-  'amit':     {pw:'amit123',  role:'pune',   name:'Amit Patil',      loc:'Pune'},
-  'mumbai1':  {pw:'mbai001',  role:'mumbai', name:'Mumbai Manager',  loc:'Mumbai'},
-  'mumbai2':  {pw:'mbai002',  role:'mumbai', name:'Mumbai Staff',    loc:'Mumbai'},
+  'nishant': {pw:'ed2024',  role:'pune',   name:'Nishant',        loc:'Pune'},
+  'amit':    {pw:'amit123', role:'pune',   name:'Amit Patil',     loc:'Pune'},
+  'mumbai1': {pw:'mbai001', role:'mumbai', name:'Mumbai Manager', loc:'Mumbai'},
+  'mumbai2': {pw:'mbai002', role:'mumbai', name:'Mumbai Staff',   loc:'Mumbai'},
 };
 
 const LOW_THRESHOLD      = 5;
 const CRITICAL_THRESHOLD = 2;
 
-function getState() {
-  try {
-    const raw = localStorage.getItem('ed_inv_v1');
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
-  const inv = {};
-  SKUS.forEach(s => { inv[s.id] = {packs:0}; });
-  return {inv, orders:[], dispatches:[], log:[]};
+let currentUser = sessionStorage.getItem('ed_user') || null;
+let activeTab   = 'inventory';
+let inv         = {};
+let orders      = [];
+let dispatches  = [];
+let log         = [];
+let loading     = false;
+let pollTimer   = null;
+
+async function sbGet(table, query='') {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}&order=id.desc`, {
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'}
+  });
+  return r.json();
 }
-function saveState(st) {
-  try { localStorage.setItem('ed_inv_v1', JSON.stringify(st)); } catch(e) {}
+async function sbPost(table, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify(body)
+  });
+  return r.json();
+}
+async function sbPatch(table, match, body) {
+  const params = Object.entries(match).map(([k,v])=>`${k}=eq.${v}`).join('&');
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify(body)
+  });
+  return r.json();
 }
 
-let state       = getState();
-let currentUser = null;
-let activeTab   = 'inventory';
+async function loadAll() {
+  const [invData, ordData, disData, logData] = await Promise.all([
+    sbGet('inventory',''),
+    sbGet('orders','limit=50'),
+    sbGet('dispatches','limit=50'),
+    sbGet('activity_log','limit=80'),
+  ]);
+  inv        = {};
+  (invData||[]).forEach(r => inv[r.sku] = {packs:r.packs});
+  orders     = ordData||[];
+  dispatches = disData||[];
+  log        = logData||[];
+}
 
 function ts() {
   return new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -104,6 +142,7 @@ function statusBadge(packs) {
   if (packs <= LOW_THRESHOLD)      return `<span class="badge badge-low">Low</span>`;
   return `<span class="badge badge-ok">OK</span>`;
 }
+function skuName(id) { return SKUS.find(s=>s.id===id)?.name||id; }
 
 function render() {
   const app = document.getElementById('app');
@@ -112,45 +151,67 @@ function render() {
   bindAppEvents();
 }
 
-/* ── LOGIN ── */
 function renderLogin() {
   return `
 <div style="max-width:360px;margin:3rem auto">
   <div class="card">
     <div style="text-align:center;margin-bottom:1.5rem">
-      <div style="font-size:20px;font-weight:600;color:#1a1a1a">ED Inventory</div>
-      <div class="muted" style="margin-top:4px">Ethical Delights · Stock tracker</div>
+      <div style="font-size:20px;font-weight:600">ED Inventory</div>
+      <div class="muted" style="margin-top:4px">Ethical Delights · Live stock tracker</div>
     </div>
-    <label class="field-label">Username</label>
+    <label class="fl">Username</label>
     <input id="un" placeholder="Enter username" style="margin-bottom:10px" />
-    <label class="field-label">Password</label>
+    <label class="fl">Password</label>
     <input id="pw" type="password" placeholder="Enter password" style="margin-bottom:16px" />
     <button class="btn btn-primary" id="login-btn" style="width:100%;padding:10px">Sign in</button>
     <div id="login-err" style="color:#791f1f;font-size:12px;margin-top:8px;text-align:center"></div>
   </div>
 </div>`;
 }
+
 function bindLoginEvents() {
   document.getElementById('un').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('pw').focus(); });
   document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
   document.getElementById('login-btn').addEventListener('click', doLogin);
 }
-function doLogin() {
+
+async function doLogin() {
   const un = document.getElementById('un').value.trim().toLowerCase();
   const pw = document.getElementById('pw').value;
-  if (USERS[un] && USERS[un].pw === pw) {
-    currentUser = un; activeTab = 'inventory'; render();
-  } else {
+  if (!USERS[un] || USERS[un].pw !== pw) {
     document.getElementById('login-err').textContent = 'Incorrect username or password.';
+    return;
+  }
+  document.getElementById('login-btn').innerHTML = '<span class="spinner"></span>Signing in…';
+  document.getElementById('login-btn').disabled = true;
+  try {
+    await loadAll();
+    currentUser = un;
+    sessionStorage.setItem('ed_user', un);
+    activeTab = 'inventory';
+    render();
+    startPolling();
+  } catch(e) {
+    document.getElementById('login-err').textContent = 'Could not connect. Check internet and try again.';
+    document.getElementById('login-btn').innerHTML = 'Sign in';
+    document.getElementById('login-btn').disabled = false;
   }
 }
 
-/* ── MAIN APP ── */
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    if (!currentUser) { clearInterval(pollTimer); return; }
+    await loadAll();
+    render();
+  }, 15000);
+}
+
 function renderApp() {
-  const u      = USERS[currentUser];
-  const isPune = u.role === 'pune';
-  const alerts = SKUS.filter(s => state.inv[s.id].packs <= LOW_THRESHOLD);
-  const pending = state.orders.filter(o => o.status === 'pending').length;
+  const u       = USERS[currentUser];
+  const isPune  = u.role === 'pune';
+  const alerts  = SKUS.filter(s => (inv[s.id]?.packs||0) <= LOW_THRESHOLD);
+  const pending = orders.filter(o => o.status === 'pending').length;
 
   return `
 <div class="header">
@@ -158,12 +219,14 @@ function renderApp() {
     <span style="font-size:17px;font-weight:600">ED Inventory</span>
     <span class="muted" style="margin-left:8px">${u.name} · ${u.loc}</span>
   </div>
-  <button class="btn" id="logout-btn" style="font-size:12px">Sign out</button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="muted" id="sync-label">🟢 Live</span>
+    <button class="btn" id="refresh-btn" style="font-size:12px">↻ Refresh</button>
+    <button class="btn" id="logout-btn" style="font-size:12px">Sign out</button>
+  </div>
 </div>
 
-${alerts.length ? `<div class="alert-bar">
-  ⚠️ Low stock: ${alerts.map(s=>s.name).join(', ')}
-</div>` : ''}
+${alerts.length ? `<div class="alert-bar">⚠️ Low stock: ${alerts.map(s=>s.name).join(', ')}</div>` : ''}
 
 <div class="tabs-row">
   <button class="tab ${activeTab==='inventory'?'active':''}" data-tab="inventory">📦 Inventory</button>
@@ -172,24 +235,22 @@ ${alerts.length ? `<div class="alert-bar">
   <button class="tab ${activeTab==='log'?'active':''}" data-tab="log">🕒 Log</button>
 </div>
 
-${activeTab==='inventory'              ? renderInventoryTab(isPune) : ''}
-${activeTab==='dispatch' && isPune     ? renderDispatchTab()        : ''}
-${activeTab==='orders'                 ? renderOrdersTab(isPune)    : ''}
-${activeTab==='log'                    ? renderLogTab()             : ''}`;
+${activeTab==='inventory'          ? renderInventoryTab(isPune) : ''}
+${activeTab==='dispatch' && isPune ? renderDispatchTab()        : ''}
+${activeTab==='orders'             ? renderOrdersTab(isPune)    : ''}
+${activeTab==='log'                ? renderLogTab()             : ''}`;
 }
 
-/* ── INVENTORY TAB ── */
 function renderInventoryTab(isPune) {
-  const totalPacks    = SKUS.reduce((a,s) => a + state.inv[s.id].packs, 0);
-  const lowCount      = SKUS.filter(s => state.inv[s.id].packs <= LOW_THRESHOLD && state.inv[s.id].packs > CRITICAL_THRESHOLD).length;
-  const criticalCount = SKUS.filter(s => state.inv[s.id].packs <= CRITICAL_THRESHOLD).length;
-  const lastLog       = state.log.length ? state.log[state.log.length-1].time : '—';
+  const totalPacks    = SKUS.reduce((a,s) => a+(inv[s.id]?.packs||0), 0);
+  const criticalCount = SKUS.filter(s => (inv[s.id]?.packs||0) <= CRITICAL_THRESHOLD).length;
+  const lowCount      = SKUS.filter(s => (inv[s.id]?.packs||0) <= LOW_THRESHOLD && (inv[s.id]?.packs||0) > CRITICAL_THRESHOLD).length;
 
   return `
 <div class="grid3" style="margin-bottom:14px">
   <div class="metric"><div class="label">Total packs (Mumbai)</div><div class="value">${totalPacks}</div></div>
   <div class="metric"><div class="label">Low / critical SKUs</div><div class="value">${lowCount} / ${criticalCount}</div></div>
-  <div class="metric"><div class="label">Last updated</div><div class="value" style="font-size:12px;padding-top:6px">${lastLog}</div></div>
+  <div class="metric"><div class="label">Auto-refreshes every</div><div class="value" style="font-size:16px;padding-top:4px">15 seconds</div></div>
 </div>
 
 <div class="card" style="padding:0.75rem 0">
@@ -197,24 +258,21 @@ function renderInventoryTab(isPune) {
   <div style="overflow-x:auto">
   <table>
     <thead><tr>
-      <th style="width:28%">SKU</th>
-      <th style="width:12%">Packs</th>
-      <th style="width:22%">Units</th>
-      <th style="width:16%">Status</th>
-      <th style="width:22%">Action</th>
+      <th style="width:28%">SKU</th><th style="width:12%">Packs</th>
+      <th style="width:22%">Units</th><th style="width:16%">Status</th><th style="width:22%">Action</th>
     </tr></thead>
     <tbody>
     ${SKUS.map(s => {
-      const inv   = state.inv[s.id];
-      const units = inv.packs * s.packSize;
-      const btn   = isPune
+      const packs = inv[s.id]?.packs||0;
+      const units = packs * s.packSize;
+      const btn = isPune
         ? `<button class="btn" style="font-size:11px;padding:4px 8px" data-action="adjust" data-sku="${s.id}">Adjust</button>`
         : `<button class="btn" style="font-size:11px;padding:4px 8px" data-action="jump-update" data-sku="${s.id}">Update</button>`;
       return `<tr>
         <td><strong style="font-weight:500">${s.name}</strong><br><span class="muted">${s.packSize} pcs/pack</span></td>
-        <td style="font-weight:600">${inv.packs}</td>
+        <td style="font-weight:600">${packs}</td>
         <td class="muted">${units.toLocaleString()} pcs</td>
-        <td>${statusBadge(inv.packs)}</td>
+        <td>${statusBadge(packs)}</td>
         <td>${btn}</td>
       </tr>`;
     }).join('')}
@@ -222,7 +280,6 @@ function renderInventoryTab(isPune) {
   </table>
   </div>
 </div>
-
 ${!isPune ? renderMumbaiUpdateForms() : ''}`;
 }
 
@@ -231,50 +288,32 @@ function renderMumbaiUpdateForms() {
 <div class="card" id="update-form-card">
   <div class="section-title">Update stock</div>
   <div class="grid2" style="margin-bottom:8px">
-    <div>
-      <label class="field-label">SKU</label>
-      <select id="upd-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
-    </div>
-    <div>
-      <label class="field-label">Method</label>
+    <div><label class="fl">SKU</label>
+      <select id="upd-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+    <div><label class="fl">Method</label>
       <select id="upd-method">
         <option value="set">Set current stock (packs on hand)</option>
         <option value="sell">Deduct — sold packs</option>
-      </select>
-    </div>
+      </select></div>
   </div>
   <div class="grid2" style="margin-bottom:8px">
-    <div>
-      <label class="field-label" id="upd-qty-label">Packs</label>
-      <input type="number" id="upd-qty" min="0" placeholder="0" />
-    </div>
-    <div>
-      <label class="field-label">Note (optional)</label>
-      <input id="upd-note" placeholder="e.g. sold to Sharma store" />
-    </div>
+    <div><label class="fl" id="upd-qty-label">Packs</label>
+      <input type="number" id="upd-qty" min="0" placeholder="0" /></div>
+    <div><label class="fl">Note (optional)</label>
+      <input id="upd-note" placeholder="e.g. sold to Sharma store" /></div>
   </div>
   <button class="btn btn-primary" id="upd-btn">Update stock</button>
   <div id="upd-msg"></div>
 </div>
-
 <div class="card">
   <div class="section-title">Place reorder request</div>
   <div class="grid3" style="margin-bottom:8px">
-    <div>
-      <label class="field-label">SKU</label>
-      <select id="ord-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
-    </div>
-    <div>
-      <label class="field-label">Packs needed</label>
-      <input type="number" id="ord-qty" min="1" placeholder="0" />
-    </div>
-    <div>
-      <label class="field-label">Urgency</label>
-      <select id="ord-urgency">
-        <option value="normal">Normal</option>
-        <option value="urgent">Urgent</option>
-      </select>
-    </div>
+    <div><label class="fl">SKU</label>
+      <select id="ord-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+    <div><label class="fl">Packs needed</label>
+      <input type="number" id="ord-qty" min="1" placeholder="0" /></div>
+    <div><label class="fl">Urgency</label>
+      <select id="ord-urgency"><option value="normal">Normal</option><option value="urgent">Urgent</option></select></div>
   </div>
   <input id="ord-note" placeholder="Any notes for Pune..." style="margin-bottom:8px" />
   <button class="btn btn-success" id="ord-btn">Place order request</button>
@@ -282,108 +321,109 @@ function renderMumbaiUpdateForms() {
 </div>`;
 }
 
-/* ── DISPATCH TAB ── */
 function renderDispatchTab() {
   return `
 <div class="card">
   <div class="section-title">Record dispatch to Mumbai</div>
   <div class="grid3" style="margin-bottom:8px">
-    <div>
-      <label class="field-label">SKU</label>
-      <select id="dis-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
-    </div>
-    <div>
-      <label class="field-label">Packs dispatched</label>
-      <input type="number" id="dis-qty" min="1" placeholder="0" />
-    </div>
-    <div>
-      <label class="field-label">Vehicle / batch ref</label>
-      <input id="dis-ref" placeholder="e.g. MH12-AB-1234" />
-    </div>
+    <div><label class="fl">SKU</label>
+      <select id="dis-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+    <div><label class="fl">Packs dispatched</label>
+      <input type="number" id="dis-qty" min="1" placeholder="0" /></div>
+    <div><label class="fl">Vehicle / batch ref</label>
+      <input id="dis-ref" placeholder="e.g. MH12-AB-1234" /></div>
   </div>
   <input id="dis-note" placeholder="Notes..." style="margin-bottom:10px" />
   <button class="btn btn-primary" id="dis-btn">Record dispatch → adds to Mumbai stock</button>
   <div id="dis-msg"></div>
 </div>
-
 <div class="card" style="padding:0.75rem 0">
   <div style="padding:0 1.25rem 8px"><span class="section-title">Dispatch history</span></div>
-  ${state.dispatches.length === 0
-    ? '<div class="muted" style="padding:0 1.25rem">No dispatches recorded yet.</div>'
+  ${dispatches.length===0
+    ? '<div class="muted" style="padding:0 1.25rem">No dispatches yet.</div>'
     : `<div style="overflow-x:auto"><table>
       <thead><tr><th>Time</th><th>SKU</th><th>Packs</th><th>Ref</th><th>By</th></tr></thead>
-      <tbody>${state.dispatches.slice().reverse().slice(0,25).map(d=>`<tr>
-        <td class="muted">${d.time}</td>
-        <td>${SKUS.find(s=>s.id===d.sku)?.name||d.sku}</td>
-        <td><strong>${d.qty}</strong></td>
-        <td class="muted">${d.ref||'—'}</td>
-        <td class="muted">${d.by}</td>
+      <tbody>${dispatches.slice(0,25).map(d=>`<tr>
+        <td class="muted">${new Date(d.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+        <td>${skuName(d.sku)}</td><td><strong>${d.qty}</strong></td>
+        <td class="muted">${d.ref||'—'}</td><td class="muted">${d.dispatched_by}</td>
       </tr>`).join('')}</tbody>
     </table></div>`}
 </div>`;
 }
 
-/* ── ORDERS TAB ── */
 function renderOrdersTab(isPune) {
-  const pending = state.orders.filter(o => o.status === 'pending');
-  const done    = state.orders.filter(o => o.status !== 'pending');
+  const pending = orders.filter(o=>o.status==='pending');
+  const done    = orders.filter(o=>o.status!=='pending');
   return `
-${pending.length === 0 ? '<div class="card muted" style="text-align:center;padding:1.5rem">No pending orders.</div>' : ''}
-${pending.map(o => `
+${pending.length===0 ? '<div class="card muted" style="text-align:center;padding:1.5rem">No pending orders.</div>' : ''}
+${pending.map(o=>`
 <div class="card" style="border-color:${o.urgency==='urgent'?'#f09595':'#e0ddd5'}">
   <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-    <div>
-      <strong>${SKUS.find(s=>s.id===o.sku)?.name||o.sku}</strong>
-      <span class="badge badge-${o.urgency}" style="margin-left:8px">${o.urgency}</span>
-    </div>
-    <span class="muted">${o.time}</span>
+    <div><strong>${skuName(o.sku)}</strong>
+      <span class="badge badge-${o.urgency}" style="margin-left:8px">${o.urgency}</span></div>
+    <span class="muted">${new Date(o.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
   </div>
-  <div class="muted" style="margin-bottom:10px">Requested: <strong style="color:#1a1a1a">${o.qty} packs</strong> · By: ${o.by}${o.note?` · "${o.note}"`:''}</div>
+  <div class="muted" style="margin-bottom:10px">Requested: <strong style="color:#1a1a1a">${o.qty} packs</strong> · By: ${o.placed_by}${o.note?` · "${o.note}"`:''}</div>
   ${isPune
     ? `<div style="display:flex;gap:8px">
-        <button class="btn btn-success" data-action="approve-order" data-id="${o.id}">✓ Approve &amp; dispatch</button>
+        <button class="btn btn-success" data-action="approve-order" data-id="${o.id}" data-sku="${o.sku}" data-qty="${o.qty}">✓ Approve &amp; dispatch</button>
         <button class="btn btn-danger"  data-action="reject-order"  data-id="${o.id}">✕ Reject</button>
       </div>`
     : '<span class="muted">Awaiting Pune approval…</span>'}
 </div>`).join('')}
-
-${done.length > 0 ? `<div class="card" style="padding:0.75rem 0">
+${done.length>0 ? `<div class="card" style="padding:0.75rem 0">
   <div style="padding:0 1.25rem 8px"><span class="section-title">Past orders</span></div>
   <div style="overflow-x:auto"><table>
     <thead><tr><th>SKU</th><th>Packs</th><th>Status</th><th>Urgency</th><th>Time</th></tr></thead>
-    <tbody>${done.slice().reverse().slice(0,20).map(o=>`<tr>
-      <td>${SKUS.find(s=>s.id===o.sku)?.name||o.sku}</td>
-      <td>${o.qty}</td>
-      <td><span class="badge ${o.status==='approved'?'badge-ok':'badge-critical'}">${o.status}</span></td>
+    <tbody>${done.slice(0,20).map(o=>`<tr>
+      <td>${skuName(o.sku)}</td><td>${o.qty}</td>
+      <td><span class="badge badge-${o.status}">${o.status}</span></td>
       <td><span class="badge badge-${o.urgency}">${o.urgency}</span></td>
-      <td class="muted">${o.time}</td>
+      <td class="muted">${new Date(o.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
     </tr>`).join('')}</tbody>
   </table></div>
 </div>` : ''}`;
 }
 
-/* ── LOG TAB ── */
 function renderLogTab() {
   return `<div class="card" style="padding:0.75rem 0">
   <div style="padding:0 1.25rem 8px"><span class="section-title">Activity log</span></div>
-  ${state.log.length === 0
+  ${log.length===0
     ? '<div class="muted" style="padding:0 1.25rem">No activity yet.</div>'
     : `<div style="overflow-x:auto"><table>
       <thead><tr><th style="width:22%">Time</th><th style="width:18%">Action</th><th style="width:20%">SKU</th><th>Detail</th><th style="width:14%">By</th></tr></thead>
-      <tbody>${state.log.slice().reverse().slice(0,50).map(l=>`<tr>
-        <td class="muted" style="font-size:11px">${l.time}</td>
-        <td>${l.action}</td>
-        <td>${l.sku ? SKUS.find(s=>s.id===l.sku)?.name||l.sku : '—'}</td>
-        <td class="muted">${l.detail}</td>
-        <td class="muted">${l.by}</td>
+      <tbody>${log.slice(0,50).map(l=>`<tr>
+        <td class="muted" style="font-size:11px">${new Date(l.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+        <td>${l.action}</td><td>${l.sku?skuName(l.sku):'—'}</td>
+        <td class="muted">${l.detail}</td><td class="muted">${l.done_by}</td>
       </tr>`).join('')}</tbody>
     </table></div>`}
 </div>`;
 }
 
-/* ── EVENT BINDING ── */
+function setMsg(id, text, isOk) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = isOk ? 'msg-ok' : 'msg-err';
+  el.textContent = text;
+}
+
+async function addLog(action, sku, detail) {
+  await sbPost('activity_log', {action, sku, detail, done_by:currentUser});
+}
+
 function bindAppEvents() {
-  document.getElementById('logout-btn')?.addEventListener('click', () => { currentUser=null; render(); });
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    currentUser = null; sessionStorage.removeItem('ed_user');
+    if (pollTimer) clearInterval(pollTimer);
+    render();
+  });
+
+  document.getElementById('refresh-btn')?.addEventListener('click', async () => {
+    document.getElementById('sync-label').textContent = '🔄 Syncing…';
+    await loadAll(); render();
+  });
 
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
     activeTab = t.dataset.tab; render();
@@ -394,93 +434,97 @@ function bindAppEvents() {
     document.getElementById('update-form-card').scrollIntoView({behavior:'smooth'});
   }));
 
-  document.querySelectorAll('[data-action="adjust"]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-action="adjust"]').forEach(b => b.addEventListener('click', async () => {
     const sku  = b.dataset.sku;
-    const name = SKUS.find(s=>s.id===sku).name;
-    const v    = prompt(`Adjust packs for ${name}\nCurrent: ${state.inv[sku].packs} packs\n\nEnter new pack count:`);
-    if (v === null) return;
+    const name = skuName(sku);
+    const cur  = inv[sku]?.packs||0;
+    const v    = prompt(`Adjust packs for ${name}\nCurrent: ${cur} packs\n\nEnter new pack count:`);
+    if (v===null) return;
     const n = parseInt(v);
-    if (isNaN(n) || n < 0) { alert('Please enter a valid number.'); return; }
-    const old = state.inv[sku].packs;
-    state.inv[sku].packs = n;
-    state.log.push({time:ts(), action:'Adjusted', sku, detail:`${old} → ${n} packs (Pune override)`, by:currentUser});
-    saveState(state); render();
+    if (isNaN(n)||n<0) { alert('Please enter a valid number.'); return; }
+    await sbPatch('inventory',{sku},{packs:n,updated_by:currentUser});
+    await addLog('Adjusted', sku, `${cur} → ${n} packs (Pune override)`);
+    await loadAll(); render();
   }));
 
   document.getElementById('upd-method')?.addEventListener('change', function() {
-    document.getElementById('upd-qty-label').textContent = this.value === 'sell' ? 'Packs sold' : 'Packs on hand now';
+    document.getElementById('upd-qty-label').textContent = this.value==='sell' ? 'Packs sold' : 'Packs on hand now';
   });
 
-  document.getElementById('upd-btn')?.addEventListener('click', () => {
+  document.getElementById('upd-btn')?.addEventListener('click', async () => {
     const sku    = document.getElementById('upd-sku').value;
     const method = document.getElementById('upd-method').value;
     const qty    = parseInt(document.getElementById('upd-qty').value);
     const note   = document.getElementById('upd-note').value.trim();
-    const msg    = document.getElementById('upd-msg');
-    if (isNaN(qty) || qty < 0) { msg.className='msg-err'; msg.textContent='Please enter a valid number.'; return; }
-    const old = state.inv[sku].packs;
-    if (method === 'sell') {
-      if (qty > old) { msg.className='msg-err'; msg.textContent='Cannot sell more packs than available in stock.'; return; }
-      state.inv[sku].packs = old - qty;
-      state.log.push({time:ts(), action:'Sold', sku, detail:`${qty} packs sold. Stock: ${old} → ${state.inv[sku].packs}${note ? '. ' + note : ''}`, by:currentUser});
+    if (isNaN(qty)||qty<0) { setMsg('upd-msg','Enter a valid number.',false); return; }
+    const old = inv[sku]?.packs||0;
+    let newPacks;
+    if (method==='sell') {
+      if (qty>old) { setMsg('upd-msg','Cannot sell more than available stock.',false); return; }
+      newPacks = old - qty;
+      await sbPatch('inventory',{sku},{packs:newPacks,updated_by:currentUser});
+      await addLog('Sold', sku, `${qty} packs sold. Stock: ${old} → ${newPacks}${note?'. '+note:''}`);
     } else {
-      state.inv[sku].packs = qty;
-      state.log.push({time:ts(), action:'Stock set', sku, detail:`Set to ${qty} packs (was ${old})${note ? '. ' + note : ''}`, by:currentUser});
+      newPacks = qty;
+      await sbPatch('inventory',{sku},{packs:newPacks,updated_by:currentUser});
+      await addLog('Stock set', sku, `Set to ${qty} packs (was ${old})${note?'. '+note:''}`);
     }
-    saveState(state);
-    msg.className='msg-ok'; msg.textContent='✓ Stock updated successfully!';
-    setTimeout(render, 900);
+    setMsg('upd-msg','✓ Stock updated!', true);
+    await loadAll(); render();
   });
 
-  document.getElementById('ord-btn')?.addEventListener('click', () => {
+  document.getElementById('ord-btn')?.addEventListener('click', async () => {
     const sku     = document.getElementById('ord-sku').value;
     const qty     = parseInt(document.getElementById('ord-qty').value);
     const urgency = document.getElementById('ord-urgency').value;
     const note    = document.getElementById('ord-note').value.trim();
-    const msg     = document.getElementById('ord-msg');
-    if (isNaN(qty) || qty < 1) { msg.className='msg-err'; msg.textContent='Please enter a valid quantity.'; return; }
-    state.orders.push({id:Date.now(), sku, qty, urgency, note, by:currentUser, time:ts(), status:'pending'});
-    state.log.push({time:ts(), action:'Order placed', sku, detail:`${qty} packs (${urgency})${note ? '. ' + note : ''}`, by:currentUser});
-    saveState(state);
-    msg.className='msg-ok'; msg.textContent='✓ Order request sent to Pune!';
-    setTimeout(render, 900);
+    if (isNaN(qty)||qty<1) { setMsg('ord-msg','Enter a valid quantity.',false); return; }
+    await sbPost('orders',{sku,qty,urgency,note,placed_by:currentUser,status:'pending'});
+    await addLog('Order placed', sku, `${qty} packs (${urgency})${note?'. '+note:''}`);
+    setMsg('ord-msg','✓ Order sent to Pune!', true);
+    await loadAll(); render();
   });
 
-  document.getElementById('dis-btn')?.addEventListener('click', () => {
+  document.getElementById('dis-btn')?.addEventListener('click', async () => {
     const sku = document.getElementById('dis-sku').value;
     const qty = parseInt(document.getElementById('dis-qty').value);
     const ref = document.getElementById('dis-ref').value.trim();
     const note= document.getElementById('dis-note').value.trim();
-    const msg = document.getElementById('dis-msg');
-    if (isNaN(qty) || qty < 1) { msg.className='msg-err'; msg.textContent='Please enter a valid quantity.'; return; }
-    state.inv[sku].packs += qty;
-    state.dispatches.push({time:ts(), sku, qty, ref, note, by:currentUser});
-    state.log.push({time:ts(), action:'Dispatched', sku, detail:`+${qty} packs to Mumbai${ref ? '. Ref: '+ref : ''}${note ? '. '+note : ''}`, by:currentUser});
-    saveState(state);
-    msg.className='msg-ok'; msg.textContent=`✓ Dispatched! Mumbai stock now: ${state.inv[sku].packs} packs`;
-    setTimeout(render, 1000);
+    if (isNaN(qty)||qty<1) { setMsg('dis-msg','Enter a valid quantity.',false); return; }
+    const cur = inv[sku]?.packs||0;
+    await sbPatch('inventory',{sku},{packs:cur+qty,updated_by:currentUser});
+    await sbPost('dispatches',{sku,qty,ref,note,dispatched_by:currentUser});
+    await addLog('Dispatched', sku, `+${qty} packs to Mumbai${ref?'. Ref: '+ref:''}${note?'. '+note:''}`);
+    setMsg('dis-msg',`✓ Dispatched! Mumbai stock now: ${cur+qty} packs`, true);
+    await loadAll(); render();
   });
 
-  document.querySelectorAll('[data-action="approve-order"]').forEach(b => b.addEventListener('click', () => {
-    const ord = state.orders.find(o => o.id == b.dataset.id);
-    if (!ord) return;
-    ord.status = 'approved';
-    state.inv[ord.sku].packs += ord.qty;
-    state.dispatches.push({time:ts(), sku:ord.sku, qty:ord.qty, ref:'Order #'+ord.id, note:'Auto from order approval', by:currentUser});
-    state.log.push({time:ts(), action:'Order approved', sku:ord.sku, detail:`+${ord.qty} packs dispatched to Mumbai`, by:currentUser});
-    saveState(state); render();
+  document.querySelectorAll('[data-action="approve-order"]').forEach(b => b.addEventListener('click', async () => {
+    const id  = b.dataset.id;
+    const sku = b.dataset.sku;
+    const qty = parseInt(b.dataset.qty);
+    const cur = inv[sku]?.packs||0;
+    await sbPatch('orders',{id},{status:'approved'});
+    await sbPatch('inventory',{sku},{packs:cur+qty,updated_by:currentUser});
+    await sbPost('dispatches',{sku,qty,ref:'Order #'+id,note:'Auto from order approval',dispatched_by:currentUser});
+    await addLog('Order approved', sku, `+${qty} packs dispatched to Mumbai`);
+    await loadAll(); render();
   }));
 
-  document.querySelectorAll('[data-action="reject-order"]').forEach(b => b.addEventListener('click', () => {
-    const ord = state.orders.find(o => o.id == b.dataset.id);
-    if (!ord) return;
-    ord.status = 'rejected';
-    state.log.push({time:ts(), action:'Order rejected', sku:ord.sku, detail:`Qty ${ord.qty} packs`, by:currentUser});
-    saveState(state); render();
+  document.querySelectorAll('[data-action="reject-order"]').forEach(b => b.addEventListener('click', async () => {
+    const id  = b.dataset.id;
+    const ord = orders.find(o=>o.id==id);
+    await sbPatch('orders',{id},{status:'rejected'});
+    await addLog('Order rejected', ord?.sku, `Qty ${ord?.qty} packs`);
+    await loadAll(); render();
   }));
 }
 
-render();
+if (currentUser) {
+  loadAll().then(() => { render(); startPolling(); });
+} else {
+  render();
+}
 </script>
 </body>
 </html>
