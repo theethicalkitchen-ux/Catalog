@@ -66,7 +66,21 @@ tr:last-child td{border-bottom:none}
 .ing-row input{flex:1}
 .rm-alarm{color:#791f1f;font-weight:500}
 .rm-ok{color:#27500a}
-@media(max-width:540px){.g2,.g3,.g4{grid-template-columns:1fr}th,td{padding:6px;font-size:12px}}
+@media(max-width:540px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  th,td{padding:5px 6px;font-size:12px}
+  .wrap{padding:.75rem .5rem}
+  .mod-tab{padding:7px 10px;font-size:12px}
+  .metric .val{font-size:18px}
+  .order-steps{flex-wrap:wrap;gap:2px}
+  .order-steps .step{font-size:10px;padding:3px 7px}
+  .hdr{flex-wrap:wrap;gap:6px}
+  .hdr>div:last-child{width:100%;justify-content:flex-end}
+  .ing-row{flex-wrap:wrap}
+  .ing-row input,.ing-row select{min-width:0!important;flex:1 1 80px}
+  .hide-mobile{display:none!important}
+  .rm-add-input{font-size:16px!important}
+}
 </style>
 </head>
 <body>
@@ -340,15 +354,15 @@ function renderShell(){
     <span class="muted" style="margin-left:8px">${u.name} · ${u.loc}</span>
   </div>
   <div class="row">
-    <span class="muted" id="sync-lbl">🟢 Live</span>
-    <button class="btn btn-sm" id="refresh-btn">↻</button>
+    <span class="muted hide-mobile" id="sync-lbl">🟢 Live</span>
+    <button class="btn btn-sm" id="refresh-btn" title="Refresh">↻</button>
     <button class="btn btn-sm" id="logout-btn">Sign out</button>
   </div>
 </div>
 
 ${isPune ? `<div class="mod-tabs">
-  <button class="mod-tab ${module==='mumbai'?'active':''}" data-mod="mumbai">🚚 Mumbai Distributor</button>
-  <button class="mod-tab ${module==='local'?'active':''}" data-mod="local">🏭 Local Production${alarms.length?` <span style="background:#fcebeb;color:#791f1f;border-radius:10px;padding:1px 6px;font-size:10px">${alarms.length}</span>`:''}</button>
+  <button class="mod-tab ${module==='mumbai'?'active':''}" data-mod="mumbai">🚚 <span class="hide-mobile">Mumbai </span>Distributor</button>
+  <button class="mod-tab ${module==='local'?'active':''}" data-mod="local">🏭 <span class="hide-mobile">Local </span>Production${alarms.length?` <span style="background:#fcebeb;color:#791f1f;border-radius:10px;padding:1px 6px;font-size:10px">${alarms.length}</span>`:''}</button>
 </div>` : ''}
 
 ${module==='mumbai' ? renderMumbaiModule(isPune, notif) : renderLocalModule(alarms)}`;
@@ -625,13 +639,13 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
   </div>
   <div id="rm-save-msg" style="padding:6px 1.25rem;font-size:12px;min-height:22px"></div>
   ${rawMaterials.length===0?'<div class="muted" style="padding:1rem 1.25rem">No raw materials yet. Click + Add material to start.</div>':''}
-  ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;min-width:520px">
+  ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;width:100%">
     <thead><tr>
       <th style="width:30%">Material</th>
       <th style="width:17%;text-align:right">Total stock</th>
-      <th style="width:8%;text-align:center">Unit</th>
+      <th style="width:8%;text-align:center" class="hide-mobile">Unit</th>
       <th style="width:22%;text-align:right;color:#0c447c">Add qty</th>
-      <th style="width:15%;text-align:right">Reorder at</th>
+      <th style="width:15%;text-align:right" class="hide-mobile">Reorder at</th>
       <th style="width:8%;text-align:center">Edit</th>
     </tr></thead>
     <tbody>
@@ -643,14 +657,14 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
           <span id="rm-total-${r.id}" style="font-size:17px;font-weight:700;color:${isLow?'#791f1f':'#1a1a1a'}">${r.stock_qty}</span>
           ${isLow?'<span class="badge b-low" style="margin-left:4px;font-size:10px;vertical-align:middle">Low</span>':''}
         </td>
-        <td style="text-align:center;color:#666;font-size:13px">${r.unit}</td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">${r.unit}</td>
         <td style="text-align:right;padding-right:8px">
           <input type="number" class="rm-add-input" data-id="${r.id}" data-current="${r.stock_qty}" data-price="${r.price_per_unit||0}"
             value="" min="0" step="0.001" placeholder="0"
             style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c"
             oninput="updateRMPreview(${r.id},this.value,${r.stock_qty},${r.price_per_unit||0})"/>
         </td>
-        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap">${r.reorder_threshold||'—'} ${r.reorder_threshold?r.unit:''}</td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">${r.reorder_threshold||'—'} ${r.reorder_threshold?r.unit:''}</td>
         <td style="text-align:center">
           <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}" title="Edit" style="padding:4px 7px">⚙</button>
         </td>
