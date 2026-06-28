@@ -590,18 +590,26 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
   </div>
   ${rawMaterials.length===0?'<div class="muted">No raw materials added yet.</div>':''}
   ${rawMaterials.map(r=>`
-  <div class="card-flat" style="border-color:${r.stock_qty<=r.reorder_threshold&&r.reorder_threshold>0?'#ef9f27':'#e8e5de'}">
-    <div style="display:flex;justify-content:space-between;align-items:start">
-      <div>
-        <strong>${r.name}</strong>
-        ${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'<span class="badge b-low" style="margin-left:6px">Reorder</span>':''}
-        <div class="muted" style="margin-top:2px">Stock: <strong style="color:#1a1a1a">${r.stock_qty} ${r.unit}</strong> · Reorder at: ${r.reorder_threshold} ${r.unit} · ${rupees(r.price_per_unit)}/${r.unit}</div>
-        <div class="muted">Value: ${rupees(r.stock_qty*r.price_per_unit)} · Supplier: ${r.supplier||'—'}</div>
+  <div class="card-flat" style="border-color:${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'#ef9f27':'#e8e5de'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <strong>${r.name}</strong>
+          ${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'<span class="badge b-low">Reorder</span>':''}
+          <span class="muted">· ${rupees(r.price_per_unit)}/${r.unit} · Supplier: ${r.supplier||'—'}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+          <span class="muted" style="white-space:nowrap">Stock:</span>
+          <input type="number" class="rm-stock-input" data-id="${r.id}" data-unit="${r.unit}" value="${r.stock_qty}" min="0" step="0.001"
+            style="width:90px;padding:4px 8px;font-size:13px;font-weight:500"/>
+          <span class="muted">${r.unit}</span>
+          <button class="btn btn-success btn-sm rm-stock-save" data-id="${r.id}" style="padding:4px 10px">Save</button>
+          <span class="muted" style="margin-left:4px">· Reorder at: ${r.reorder_threshold} ${r.unit} · Value: ${rupees(r.stock_qty*r.price_per_unit)}</span>
+        </div>
       </div>
-      <div class="row">
-        <button class="btn btn-sm" data-action="quick-stock" data-id="${r.id}" data-name="${r.name}" data-unit="${r.unit}" data-stock="${r.stock_qty}">± Stock</button>
+      <div class="row" style="flex-shrink:0">
         <button class="btn btn-sm" data-action="add-purchase" data-id="${r.id}" data-name="${r.name}" data-unit="${r.unit}">+ Purchase</button>
-        <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}">Edit</button>
+        <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}">⚙ Edit</button>
         <button class="btn btn-danger btn-sm" data-action="del-rm" data-id="${r.id}">✕</button>
       </div>
     </div>
@@ -955,16 +963,27 @@ function bindLocal(){
     await loadLocal();render();
   }));
 
-  // Quick stock override
-  document.querySelectorAll('[data-action="quick-stock"]').forEach(b=>b.addEventListener('click',async()=>{
-    const name=b.dataset.name, unit=b.dataset.unit, cur=parseFloat(b.dataset.stock)||0;
-    const v=prompt(`Manual stock adjustment — ${name}\nCurrent: ${cur} ${unit}\n\nEnter corrected qty (${unit}):`);
-    if(v===null) return;
-    const n=parseFloat(v);
-    if(isNaN(n)||n<0){alert('Invalid number');return;}
-    await sbPatch('raw_materials',{id:b.dataset.id},{stock_qty:n});
-    await addLog('Stock adjusted',null,`${name}: ${cur}→${n} ${unit} (manual override)`);
-    await loadLocal();render();
+  // Inline stock save — Save button on each RM card
+  document.querySelectorAll('.rm-stock-save').forEach(btn=>btn.addEventListener('click',async()=>{
+    const id  = btn.dataset.id;
+    const input = document.querySelector(`.rm-stock-input[data-id="${id}"]`);
+    const unit  = input.dataset.unit;
+    const n = parseFloat(input.value);
+    if(isNaN(n)||n<0){input.style.borderColor='#f09595';return;}
+    const rm = rawMaterials.find(r=>r.id==id);
+    const old = rm?.stock_qty||0;
+    btn.disabled=true; btn.textContent='✓';
+    await sbPatch('raw_materials',{id},{stock_qty:n});
+    await addLog('Stock adjusted',null,`${rm?.name}: ${old}→${n} ${unit} (manual)`);
+    await loadLocal(); render();
+  }));
+
+  // Also save on Enter key in stock input
+  document.querySelectorAll('.rm-stock-input').forEach(input=>input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      const btn=document.querySelector(`.rm-stock-save[data-id="${input.dataset.id}"]`);
+      btn?.click();
+    }
   }));
 
   // Purchase
