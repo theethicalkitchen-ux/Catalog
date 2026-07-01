@@ -758,6 +758,7 @@ const SB_KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
 
 // Live recipes from Supabase — loaded at boot, overrides PRODUCTS when available
 let SB_RECIPES = [];
+let SB_RAW_MATERIALS = []; // raw materials from Supabase with costing_price
 
 async function sbFetch(table, qs='') {
   try {
@@ -769,20 +770,26 @@ async function sbFetch(table, qs='') {
 }
 
 async function loadSBRecipes() {
-  const [recipes, ingredients, variants] = await Promise.all([
+  const [recipes, ingredients, variants, sbRMs] = await Promise.all([
     sbFetch('recipes', 'order=id.asc'),
     sbFetch('recipe_ingredients', 'order=recipe_id.asc'),
     sbFetch('recipe_variants', 'order=recipe_id.asc'),
+    sbFetch('raw_materials', 'order=name.asc'),
   ]);
 
-  // Show debug info on products screen
-  const dbgEl = document.getElementById('sb-recipe-debug');
-  if (dbgEl) {
-    dbgEl.textContent = `Supabase: ${recipes?.length||0} recipes, ${ingredients?.length||0} ingredients, ${variants?.length||0} variants`;
-    dbgEl.style.display = 'block';
-  }
+  // Store Supabase raw materials for name→price lookup
+  SB_RAW_MATERIALS = sbRMs || [];
 
-  if (!recipes || !recipes.length) return; // keep hardcoded fallback
+  // Seed state.rm with costing prices from Supabase by ingredient name
+  // This is the source of truth — overrides hardcoded defaults
+  SB_RAW_MATERIALS.forEach(rm => {
+    if (rm.costing_price > 0) {
+      // Store by both name and id so both lookup paths work
+      state.rm[rm.name] = rm.costing_price;
+    }
+  });
+
+  if (!recipes || !recipes.length) return; // keep hardcoded PRODUCTS as fallback
 
   SB_RECIPES = recipes.map(r => {
     const ings  = ingredients.filter(i => i.recipe_id === r.id);
@@ -940,19 +947,26 @@ async function syncFromCloud() {
 // ============================================================
 
 function getRMRate(id) {
-  // 1. Direct id match (hardcoded recipes use ids like 'siddhikala')
+  // 1. Direct state.rm match by id (hardcoded recipe ids like 'siddhikala')
   if (state.rm[id]) return parseFloat(state.rm[id]);
 
-  // 2. id is actually an ingredient name (Supabase recipes) — find matching RM by name
-  const allRMs = [...RAW_MATERIALS, ...(state.customRMs || [])];
-  const byName = allRMs.find(r => r.name.toLowerCase() === id.toLowerCase());
-  if (byName) {
-    // Found the RM — look up its rate by id, or use its default rate
-    if (state.rm[byName.id]) return parseFloat(state.rm[byName.id]);
-    return parseFloat(byName.rate || 0);
+  // 2. Direct state.rm match by name (Supabase ingredients stored by name)
+  if (state.rm[id] !== undefined) return parseFloat(state.rm[id]);
+
+  // 3. Look up in Supabase raw_materials by exact name match
+  const sbRM = SB_RAW_MATERIALS.find(r => r.name.toLowerCase() === id.toLowerCase());
+  if (sbRM) {
+    const rate = parseFloat(state.rm[sbRM.name] || sbRM.costing_price || 0);
+    return rate;
   }
 
-  // 3. Name-based match directly in state.rm keys
+  // 4. Look up in hardcoded RAW_MATERIALS by name
+  const allRMs = [...RAW_MATERIALS, ...(state.customRMs || [])];
+  const byName = allRMs.find(r => r.name.toLowerCase() === id.toLowerCase());
+  if (byName && state.rm[byName.id]) return parseFloat(state.rm[byName.id]);
+  if (byName) return parseFloat(byName.rate || 0);
+
+  // 5. Fuzzy name match in state.rm keys
   const stateByName = Object.entries(state.rm).find(([k]) =>
     k.toLowerCase() === id.toLowerCase()
   );
