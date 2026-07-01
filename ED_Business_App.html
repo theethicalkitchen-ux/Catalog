@@ -342,6 +342,7 @@
     <div class="page-subtitle">Live cost per piece based on current RM rates</div>
   </div>
   <div style="padding: 0 16px 16px;" id="product-list"></div>
+  <div id="sb-recipe-debug" style="display:none;margin:0 16px 16px;padding:8px 12px;background:#1a1d27;border:1px solid #2e3347;border-radius:8px;font-size:11px;color:#8b90a7;font-family:monospace"></div>
 </div>
 
 <!-- Recipe Edit Modal -->
@@ -769,6 +770,13 @@ async function loadSBRecipes() {
     sbFetch('recipe_ingredients', 'order=recipe_id.asc'),
     sbFetch('recipe_variants', 'order=recipe_id.asc'),
   ]);
+
+  // Show debug info on products screen
+  const dbgEl = document.getElementById('sb-recipe-debug');
+  if (dbgEl) {
+    dbgEl.textContent = `Supabase: ${recipes?.length||0} recipes, ${ingredients?.length||0} ingredients, ${variants?.length||0} variants`;
+    dbgEl.style.display = 'block';
+  }
 
   if (!recipes || !recipes.length) return; // keep hardcoded fallback
 
