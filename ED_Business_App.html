@@ -708,12 +708,40 @@ let state = {
   customRMs: [],   // [{id, name, unit, rate, cat}]
 };
 
-function loadState() {
+// ============================================================
+// SUPABASE SYNC
+// ============================================================
+const SB_URL = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
+const SB_KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
+
+async function sbGetState(key) {
   try {
-    const s = localStorage.getItem('ed_app_state');
-    if (s) state = { ...state, ...JSON.parse(s) };
+    const r = await fetch(`${SB_URL}/rest/v1/biz_app_state?key=eq.${key}&select=value`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    const data = await r.json();
+    return data && data[0] ? data[0].value : null;
+  } catch(e) { return null; }
+}
+
+async function sbSetState(key, value) {
+  try {
+    await fetch(`${SB_URL}/rest/v1/biz_app_state?key=eq.${key}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    await fetch(`${SB_URL}/rest/v1/biz_app_state`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
   } catch(e) {}
-  // defaults
+}
+
+function applyDefaults() {
   if (!Object.keys(state.rm).length) {
     RAW_MATERIALS.forEach(rm => state.rm[rm.id] = rm.rate);
   }
@@ -738,8 +766,44 @@ function loadState() {
   if (!state.customRMs) state.customRMs = [];
 }
 
+function loadState() {
+  // Load from localStorage instantly (fast)
+  try {
+    const s = localStorage.getItem('ed_app_state');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+  applyDefaults();
+}
+
 function saveState() {
+  // Save to localStorage immediately
   localStorage.setItem('ed_app_state', JSON.stringify(state));
+  // Then sync to Supabase in background
+  sbSetState('app_state', state).catch(() => {});
+}
+
+async function syncFromCloud() {
+  // Pull latest from Supabase and merge — cloud wins for shared data
+  try {
+    const cloud = await sbGetState('app_state');
+    if (cloud) {
+      // Merge: keep local quotes, override shared data (rm, customRMs, infra)
+      const localQuotes = state.quotes || [];
+      state = { ...state, ...cloud };
+      // Merge quotes: combine local + cloud, deduplicate by id
+      const allQuotes = [...(cloud.quotes || []), ...localQuotes];
+      const seen = new Set();
+      state.quotes = allQuotes.filter(q => {
+        const key = q.id || q.buyer + q.ts;
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      });
+      applyDefaults();
+      localStorage.setItem('ed_app_state', JSON.stringify(state));
+      return true;
+    }
+  } catch(e) {}
+  return false;
 }
 
 // ============================================================
@@ -936,7 +1000,12 @@ function saveRM() {
   saveState();
   const now = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
   localStorage.setItem('ed_rm_saved_at', now);
-  document.getElementById('rm-saved-at').textContent = 'Last saved: ' + now;
+  document.getElementById('rm-saved-at').textContent = 'Saving to cloud…';
+  sbSetState('app_state', state).then(() => {
+    document.getElementById('rm-saved-at').textContent = 'Synced: ' + now;
+  }).catch(() => {
+    document.getElementById('rm-saved-at').textContent = 'Saved locally: ' + now;
+  });
   showToast('RM rates saved ✓');
   renderProducts();
 }
@@ -1418,10 +1487,24 @@ document.getElementById('quote-modal').addEventListener('click', function(e) {
 // ============================================================
 // BOOT
 // ============================================================
-loadState();
+loadState();        // instant — from localStorage
 renderRM();
 initQuoteScreen();
 renderProducts();
+
+// Then sync from cloud and refresh if anything changed
+syncFromCloud().then(changed => {
+  if (changed) {
+    renderRM();
+    renderProducts();
+    showToast('Synced from cloud ✓');
+  }
+});
+
+// Re-sync every 30 seconds in background
+setInterval(() => {
+  syncFromCloud().then(changed => { if (changed) { renderRM(); renderProducts(); } });
+}, 30000);
 </script>
 </body>
 </html>
