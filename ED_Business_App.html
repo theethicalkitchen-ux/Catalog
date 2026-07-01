@@ -825,6 +825,10 @@ async function syncFromCloud() {
   try {
     const cloud = await sbGetState('app_state');
     if (cloud) {
+      // Don't overwrite if local state is newer than cloud
+      const localTs = state._lastSaved || 0;
+      const cloudTs = cloud._lastSaved || 0;
+      const localCustomProducts = state.customProducts || {};
       const localQuotes = state.quotes || [];
       state = { ...state, ...cloud };
       // Merge quotes
@@ -835,9 +839,15 @@ async function syncFromCloud() {
         if (seen.has(key)) return false;
         seen.add(key); return true;
       });
+      // customProducts: local wins if local was saved more recently
+      if (localTs >= cloudTs) {
+        state.customProducts = localCustomProducts;
+      } else {
+        state.customProducts = { ...(cloud.customProducts || {}), ...localCustomProducts };
+      }
       applyDefaults();
       localStorage.setItem('ed_app_state', JSON.stringify(state));
-      return true; // always true if cloud data exists
+      return true;
     }
   } catch(e) {
     console.warn('Sync failed:', e);
@@ -1214,6 +1224,7 @@ function saveRecipeEdits() {
 
   if (!state.customProducts) state.customProducts = {};
   state.customProducts[_editingProductId] = { rm_formula, dough_sizes, pack_default };
+  state._lastSaved = Date.now();
   saveState();
   closeRecipeModal();
   renderProducts();
