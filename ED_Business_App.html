@@ -282,8 +282,53 @@
       <div class="card-label">Additives & Enhancers</div>
       <div class="rm-list" id="rm-additive"></div>
     </div>
-    <div style="margin-top: 4px;">
+    <div class="card" id="custom-rm-card" style="display:none">
+      <div class="card-label">Custom Materials</div>
+      <div class="rm-list" id="rm-custom"></div>
+    </div>
+    <!-- Add new material form -->
+    <div class="card" id="add-rm-form" style="display:none;border:1.5px solid var(--accent)">
+      <div class="card-label" style="color:var(--accent)">Add new material</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Name</div>
+          <input id="new-rm-name" type="text" placeholder="e.g. Ajwain" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg-input);color:var(--text-primary)"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Category</div>
+          <select id="new-rm-cat" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg-input);color:var(--text-primary)">
+            <option value="flour">Flour & Grains</option>
+            <option value="other">Fats, Dairy & Other</option>
+            <option value="additive" selected>Additives & Enhancers</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Unit</div>
+          <select id="new-rm-unit" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg-input);color:var(--text-primary)">
+            <option value="₹/kg">₹/kg</option>
+            <option value="₹/litre">₹/litre</option>
+            <option value="₹/g">₹/g</option>
+            <option value="₹/pcs">₹/pcs</option>
+            <option value="₹/packet">₹/packet</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Rate (₹)</div>
+          <input id="new-rm-rate" type="number" placeholder="0" min="0" step="0.5" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg-input);color:var(--text-primary)"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveNewRM()" style="flex:1">Add material</button>
+        <button class="btn" onclick="cancelAddRM()" style="flex:0 0 auto;padding:10px 18px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);font-family:inherit;font-size:14px;cursor:pointer">Cancel</button>
+      </div>
+      <div id="add-rm-msg" style="font-size:12px;margin-top:8px;color:var(--accent)"></div>
+    </div>
+    <div style="margin-top:4px;display:flex;gap:10px">
       <button class="btn btn-primary" onclick="saveRM()">Save Rates</button>
+      <button class="btn" onclick="showAddRMForm()" id="add-rm-btn" style="padding:10px 18px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-family:inherit;font-size:14px;cursor:pointer;font-weight:500">+ Add material</button>
     </div>
     <div style="text-align:center; margin-top: 10px; font-size: 11px; color: var(--text-muted);" id="rm-saved-at"></div>
   </div>
@@ -660,6 +705,7 @@ let state = {
   labour: [],      // [{role, count, salary}]
   quotes: [],      // saved quotes
   currentMargin: 15,
+  customRMs: [],   // [{id, name, unit, rate, cat}]
 };
 
 function loadState() {
@@ -689,6 +735,7 @@ function loadState() {
     ];
   }
   if (!state.quotes) state.quotes = [];
+  if (!state.customRMs) state.customRMs = [];
 }
 
 function saveState() {
@@ -810,8 +857,75 @@ function renderRM() {
       el.appendChild(row);
     });
   }
+
+  // Render custom RMs
+  const customEl = document.getElementById('rm-custom');
+  const customCard = document.getElementById('custom-rm-card');
+  customEl.innerHTML = '';
+  if (state.customRMs && state.customRMs.length > 0) {
+    customCard.style.display = 'block';
+    state.customRMs.forEach(rm => {
+      if (!state.rm[rm.id]) state.rm[rm.id] = rm.rate;
+      const row = document.createElement('div');
+      row.className = 'rm-row';
+      row.innerHTML = `
+        <div style="flex:1">
+          <div class="rm-name">${rm.name}</div>
+          <div class="rm-unit">${rm.unit} · ${rm.cat === 'flour' ? 'Flour & Grains' : rm.cat === 'other' ? 'Fats & Dairy' : rm.cat === 'additive' ? 'Additive' : 'Custom'}</div>
+        </div>
+        <div class="rm-price-wrap">
+          <span class="rm-currency">₹</span>
+          <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] || rm.rate}"
+            data-rm="${rm.id}" oninput="onRMChange(this)">
+        </div>
+        <button onclick="deleteCustomRM('${rm.id}')" style="margin-left:8px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:4px;line-height:1" title="Delete">✕</button>`;
+      customEl.appendChild(row);
+    });
+  } else {
+    customCard.style.display = 'none';
+  }
+
   const saved = localStorage.getItem('ed_rm_saved_at');
   if (saved) document.getElementById('rm-saved-at').textContent = 'Last saved: ' + saved;
+}
+
+function showAddRMForm() {
+  document.getElementById('add-rm-form').style.display = 'block';
+  document.getElementById('add-rm-btn').style.display = 'none';
+  document.getElementById('new-rm-name').focus();
+  document.getElementById('add-rm-msg').textContent = '';
+}
+
+function cancelAddRM() {
+  document.getElementById('add-rm-form').style.display = 'none';
+  document.getElementById('add-rm-btn').style.display = 'inline-block';
+  document.getElementById('new-rm-name').value = '';
+  document.getElementById('new-rm-rate').value = '';
+}
+
+function saveNewRM() {
+  const name = document.getElementById('new-rm-name').value.trim();
+  const cat  = document.getElementById('new-rm-cat').value;
+  const unit = document.getElementById('new-rm-unit').value;
+  const rate = parseFloat(document.getElementById('new-rm-rate').value) || 0;
+  if (!name) { document.getElementById('add-rm-msg').textContent = 'Please enter a name.'; return; }
+  const id = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+  if (!state.customRMs) state.customRMs = [];
+  state.customRMs.push({ id, name, unit, rate, cat });
+  state.rm[id] = rate;
+  saveState();
+  cancelAddRM();
+  renderRM();
+  showToast('Material added ✓');
+}
+
+function deleteCustomRM(id) {
+  if (!confirm('Remove this material?')) return;
+  state.customRMs = state.customRMs.filter(r => r.id !== id);
+  delete state.rm[id];
+  saveState();
+  renderRM();
+  showToast('Material removed');
 }
 
 function onRMChange(el) {
