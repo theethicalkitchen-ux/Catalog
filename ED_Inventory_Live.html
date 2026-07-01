@@ -108,7 +108,13 @@ const USERS = {
 const LOW=5, CRIT=2;
 
 // State
-let user=sessionStorage.getItem('ed_user')||null;
+// Safe storage wrapper — works for both file:// and https://
+const _store={_d:{},
+  getItem(k){try{return sessionStorage.getItem(k);}catch(e){return this._d[k]||null;}},
+  setItem(k,v){try{sessionStorage.setItem(k,v);}catch(e){this._d[k]=v;}},
+  removeItem(k){try{sessionStorage.removeItem(k);}catch(e){delete this._d[k];}}
+};
+let user=_store.getItem('ed_user')||null;
 let module='mumbai'; // 'mumbai' or 'local'
 let activeTab='inventory';
 let pollTimer=null;
@@ -321,7 +327,7 @@ async function doLogin(){
   btn.innerHTML='<span class="spinner"></span>Signing in…';btn.disabled=true;
   try{
     await loadAll();
-    user=un;sessionStorage.setItem('ed_user',un);
+    user=un;_store.setItem('ed_user',un);
     module=USERS[un].role==='mumbai'?'mumbai':'mumbai';
     activeTab='inventory';render();startPolling();
   }catch(e){
@@ -375,7 +381,7 @@ ${module==='mumbai' ? renderMumbaiModule(isPune, notif) : renderLocalModule(alar
 
 function bindShell(){
   document.getElementById('logout-btn')?.addEventListener('click',()=>{
-    user=null;sessionStorage.removeItem('ed_user');
+    user=null;_store.removeItem('ed_user');
     if(pollTimer)clearInterval(pollTimer);render();
   });
   document.getElementById('refresh-btn')?.addEventListener('click',async()=>{
