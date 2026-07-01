@@ -1157,7 +1157,20 @@ function getProduct(p) {
 
 // All RM options for ingredient dropdowns
 function getAllRMs() {
-  return [...RAW_MATERIALS, ...(state.customRMs || [])];
+  const base = [...RAW_MATERIALS, ...(state.customRMs || [])];
+  const baseNames = new Set(base.map(r => r.name.toLowerCase()));
+
+  // Add any ingredient names from Supabase recipes not already in the list
+  const extra = [];
+  SB_RECIPES.forEach(r => {
+    Object.keys(r.rm_formula).forEach(ingName => {
+      if (!baseNames.has(ingName.toLowerCase())) {
+        extra.push({ id: ingName, name: ingName, unit: '₹/kg', rate: 0, cat: 'other' });
+        baseNames.add(ingName.toLowerCase());
+      }
+    });
+  });
+  return [...base, ...extra];
 }
 
 // Recipe edit modal state
@@ -1208,9 +1221,17 @@ function makeIngRow(rmId, grams, allRMs) {
   allRMs.forEach(r => {
     const opt = document.createElement('option');
     opt.value = r.id; opt.textContent = r.name;
-    if (r.id === rmId) opt.selected = true;
+    // Match by id OR by name (for Supabase recipes which use ingredient names as keys)
+    if (r.id === rmId || r.name.toLowerCase() === rmId.toLowerCase()) opt.selected = true;
     sel.appendChild(opt);
   });
+
+  // If no RM matched (ingredient not in RM list), add it as a plain text option
+  if (!sel.querySelector('option[selected]') && rmId) {
+    const opt = document.createElement('option');
+    opt.value = rmId; opt.textContent = rmId; opt.selected = true;
+    sel.insertBefore(opt, sel.firstChild);
+  }
 
   const inp = document.createElement('input');
   inp.type = 'number'; inp.value = grams || ''; inp.min = 0; inp.step = 0.1;
