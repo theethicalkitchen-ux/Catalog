@@ -1776,7 +1776,10 @@ function switchScreen(name, btn) {
   document.getElementById('screen-' + name).classList.add('active');
   if (btn) btn.classList.add('active');
 
-  if (name === 'products') renderProducts();
+  if (name === 'products') {
+    renderProducts(); // render immediately with cached data
+    loadSBRecipes().then(() => { renderProducts(); initQuoteScreen(); }); // then refresh from Supabase
+  }
   if (name === 'history') renderHistory();
   if (name === 'infra') renderInfra();
 }
