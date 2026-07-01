@@ -781,13 +781,14 @@ async function loadSBRecipes() {
   SB_RAW_MATERIALS = sbRMs || [];
 
   // Seed state.rm with costing prices from Supabase by ingredient name
-  // This is the source of truth — overrides hardcoded defaults
   SB_RAW_MATERIALS.forEach(rm => {
     if (rm.costing_price > 0) {
-      // Store by both name and id so both lookup paths work
       state.rm[rm.name] = rm.costing_price;
     }
   });
+
+  // Ensure all alias name keys are seeded
+  seedRMNameKeys();
 
   if (!recipes || !recipes.length) return; // keep hardcoded PRODUCTS as fallback
 
@@ -866,6 +867,22 @@ async function sbSetState(key, value) {
   } catch(e) {}
 }
 
+// Seeds state.rm with name-based keys from the alias map
+// so getRMRate("Siddhikala Wheat") works even when state.rm only has "siddhikala"
+function seedRMNameKeys() {
+  Object.entries(RM_NAME_ALIASES).forEach(([ingName, rmId]) => {
+    if (state.rm[rmId] !== undefined && state.rm[ingName] === undefined) {
+      state.rm[ingName] = state.rm[rmId];
+    }
+  });
+  // Also seed from RAW_MATERIALS names
+  RAW_MATERIALS.forEach(rm => {
+    if (state.rm[rm.id] !== undefined && state.rm[rm.name] === undefined) {
+      state.rm[rm.name] = state.rm[rm.id];
+    }
+  });
+}
+
 function applyDefaults() {
   if (!Object.keys(state.rm).length) {
     RAW_MATERIALS.forEach(rm => state.rm[rm.id] = rm.rate);
@@ -893,12 +910,12 @@ function applyDefaults() {
 }
 
 function loadState() {
-  // Load from localStorage instantly (fast)
   try {
     const s = localStorage.getItem('ed_app_state');
     if (s) state = { ...state, ...JSON.parse(s) };
   } catch(e) {}
   applyDefaults();
+  seedRMNameKeys(); // ensure name-based keys exist for Supabase recipes
 }
 
 function saveState() {
@@ -912,12 +929,17 @@ async function syncFromCloud() {
   try {
     const cloud = await sbGetState('app_state');
     if (cloud) {
-      // Don't overwrite if local state is newer than cloud
       const localTs = state._lastSaved || 0;
       const cloudTs = cloud._lastSaved || 0;
       const localCustomProducts = state.customProducts || {};
       const localQuotes = state.quotes || [];
+      const localRM = { ...state.rm }; // preserve local rm rates
+
       state = { ...state, ...cloud };
+
+      // Merge rm: cloud wins for ids that exist in cloud, local wins for everything else
+      state.rm = { ...cloud.rm, ...localRM };
+
       // Merge quotes
       const allQuotes = [...(cloud.quotes || []), ...localQuotes];
       const seen = new Set();
@@ -926,12 +948,17 @@ async function syncFromCloud() {
         if (seen.has(key)) return false;
         seen.add(key); return true;
       });
+
       // customProducts: local wins if local was saved more recently
       if (localTs >= cloudTs) {
         state.customProducts = localCustomProducts;
       } else {
         state.customProducts = { ...(cloud.customProducts || {}), ...localCustomProducts };
       }
+
+      // Seed by-name keys from alias map so Supabase ingredient names resolve correctly
+      seedRMNameKeys();
+
       applyDefaults();
       localStorage.setItem('ed_app_state', JSON.stringify(state));
       return true;
