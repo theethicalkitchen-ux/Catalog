@@ -777,18 +777,9 @@ async function loadSBRecipes() {
     sbFetch('raw_materials', 'order=name.asc'),
   ]);
 
-  // Store Supabase raw materials for name→price lookup
+  // Store for rate lookups - do NOT modify state.rm here
   SB_RAW_MATERIALS = sbRMs || [];
 
-  // Seed state.rm with costing prices from Supabase by ingredient name
-  SB_RAW_MATERIALS.forEach(rm => {
-    if (rm.costing_price > 0) {
-      state.rm[rm.name] = rm.costing_price;
-    }
-  });
-
-  // Ensure all alias name keys are seeded
-  seedRMNameKeys();
 
   if (!recipes || !recipes.length) return; // keep hardcoded PRODUCTS as fallback
 
@@ -867,22 +858,6 @@ async function sbSetState(key, value) {
   } catch(e) {}
 }
 
-// Seeds state.rm with name-based keys from the alias map
-// so getRMRate("Siddhikala Wheat") works even when state.rm only has "siddhikala"
-function seedRMNameKeys() {
-  Object.entries(RM_NAME_ALIASES).forEach(([ingName, rmId]) => {
-    if (state.rm[rmId] !== undefined && state.rm[ingName] === undefined) {
-      state.rm[ingName] = state.rm[rmId];
-    }
-  });
-  // Also seed from RAW_MATERIALS names
-  RAW_MATERIALS.forEach(rm => {
-    if (state.rm[rm.id] !== undefined && state.rm[rm.name] === undefined) {
-      state.rm[rm.name] = state.rm[rm.id];
-    }
-  });
-}
-
 function applyDefaults() {
   if (!Object.keys(state.rm).length) {
     RAW_MATERIALS.forEach(rm => state.rm[rm.id] = rm.rate);
@@ -915,7 +890,6 @@ function loadState() {
     if (s) state = { ...state, ...JSON.parse(s) };
   } catch(e) {}
   applyDefaults();
-  seedRMNameKeys(); // ensure name-based keys exist for Supabase recipes
 }
 
 function saveState() {
@@ -957,7 +931,6 @@ async function syncFromCloud() {
       }
 
       // Seed by-name keys from alias map so Supabase ingredient names resolve correctly
-      seedRMNameKeys();
 
       applyDefaults();
       localStorage.setItem('ed_app_state', JSON.stringify(state));
@@ -1003,25 +976,20 @@ function getRMRate(id) {
   if (!id) return 0;
   const key = id.toLowerCase().trim();
 
-  // 1. Direct match in state.rm (by id or name)
-  if (state.rm[id] !== undefined && state.rm[id] !== null) return parseFloat(state.rm[id]) || 0;
+  // 1. Direct match by id in state.rm (e.g. 'siddhikala' -> 45)
+  if (state.rm[id] !== undefined) return parseFloat(state.rm[id]) || 0;
 
-  // 2. Alias map — resolve ingredient name to RM id
-  const aliasId = RM_NAME_ALIASES[key];
-  if (aliasId && state.rm[aliasId] !== undefined) return parseFloat(state.rm[aliasId]) || 0;
+  // 2. Resolve via alias map: ingredient name -> rm id -> rate
+  const rmId = RM_NAME_ALIASES[key];
+  if (rmId !== undefined && state.rm[rmId] !== undefined) return parseFloat(state.rm[rmId]) || 0;
 
-  // 3. Fuzzy match against RAW_MATERIALS names
-  const allRMs = [...RAW_MATERIALS, ...(state.customRMs || [])];
-  const byName = allRMs.find(r => r.name.toLowerCase() === key);
-  if (byName) return parseFloat(state.rm[byName.id] || byName.rate || 0);
+  // 3. Match by name in RAW_MATERIALS -> get its id -> look up rate
+  const hardcoded = RAW_MATERIALS.find(r => r.name.toLowerCase() === key);
+  if (hardcoded) return parseFloat(state.rm[hardcoded.id] || hardcoded.rate || 0);
 
-  // 4. Fuzzy match in state.rm keys
-  const stateEntry = Object.entries(state.rm).find(([k]) => k.toLowerCase() === key);
-  if (stateEntry) return parseFloat(stateEntry[1]) || 0;
-
-  // 5. Supabase raw_materials costing_price as last resort
-  const sbRM = SB_RAW_MATERIALS.find(r => r.name.toLowerCase() === key);
-  if (sbRM && sbRM.costing_price > 0) return parseFloat(sbRM.costing_price);
+  // 4. Match by name in customRMs
+  const custom = (state.customRMs || []).find(r => r.name.toLowerCase() === key);
+  if (custom) return parseFloat(state.rm[custom.id] || custom.rate || 0);
 
   return 0;
 }
