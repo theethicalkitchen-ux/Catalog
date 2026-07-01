@@ -122,7 +122,8 @@ let expandedOrders=new Set();
 let editingRM=null, editingRecipe=null;
 let purchaseFormOpen=null;
 let rmFormOpen=false;
-let rmDirty=new Set(); // RM ids with unsaved edits
+let recipeFormOpen=false;
+let rmDirty=new Set();
 
 function updateRMPreview(id, addedStr, current, price){
   const added = parseFloat(addedStr)||0;
@@ -332,8 +333,9 @@ function startPolling(){
   pollTimer=setInterval(async()=>{
     if(!user){clearInterval(pollTimer);return;}
     await loadAll();
-    // Don't re-render if user has unsaved RM edits — would wipe their inputs
+    // Don't re-render if user has unsaved RM edits or recipe form open
     if(activeTab==='rm' && rmDirty.size>0) return;
+    if(activeTab==='recipes' && recipeFormOpen) return;
     render();
   },20000);
 }
@@ -383,6 +385,7 @@ function bindShell(){
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
     activeTab=t.dataset.tab;
     rmFormOpen=false; editingRM=null; purchaseFormOpen=null; rmDirty.clear();
+    recipeFormOpen=false; editingRecipe=null;
     render();
   }));
 
@@ -748,35 +751,33 @@ function renderRecipesTab(){
   }).join('')}
 </div>
 
-<div class="card" id="recipe-form-card" style="display:none">
-  <div class="sec" style="margin-bottom:12px" id="recipe-form-title">Add recipe</div>
-  <div class="g3" style="margin-bottom:8px">
-    <div><label class="fl">Recipe ID</label><input id="rec-id" placeholder="CH-001"/></div>
-    <div><label class="fl">Product</label><select id="rec-product">
-      <option>Chapati</option><option>Bhature</option><option>Puri</option>
-      <option>Dal Pakwan</option><option>Wrap</option><option>Other</option>
-    </select></div>
-    <div><label class="fl">Version</label><input id="rec-version" placeholder="1.0"/></div>
+${recipeFormOpen ? `<div class="card" id="recipe-form-card" style="border-color:#85b7eb">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span class="sec" style="margin:0">${editingRecipe?'Edit — '+editingRecipe.name:'Add recipe'}</span>
   </div>
-  <div style="margin-bottom:8px"><label class="fl">Recipe name</label><input id="rec-name" placeholder="e.g. Chapati — Siddhikala Wheat"/></div>
-  <div style="margin-bottom:8px"><label class="fl">Notes / trial result</label><textarea id="rec-notes" rows="2" placeholder="Optional notes…"></textarea></div>
-
+  <div class="g3" style="margin-bottom:8px">
+    <div><label class="fl">Recipe ID</label><input id="rec-id" placeholder="CH-001" value="${editingRecipe?.id||''}" ${editingRecipe?'disabled':''}/></div>
+    <div><label class="fl">Product</label><select id="rec-product">
+      ${['Chapati','Bhature','Puri','Dal Pakwan','Wrap','Other'].map(p=>`<option ${editingRecipe?.product===p?'selected':''}>${p}</option>`).join('')}
+    </select></div>
+    <div><label class="fl">Version</label><input id="rec-version" placeholder="1.0" value="${editingRecipe?.version||''}"/></div>
+  </div>
+  <div style="margin-bottom:8px"><label class="fl">Recipe name</label><input id="rec-name" placeholder="e.g. Chapati — Siddhikala Wheat" value="${editingRecipe?.name||''}"/></div>
+  <div style="margin-bottom:8px"><label class="fl">Notes / trial result</label><textarea id="rec-notes" rows="2" placeholder="Optional notes…">${editingRecipe?.notes||''}</textarea></div>
   <div style="margin-bottom:8px"><label class="fl" style="font-size:12px;font-weight:500;color:#1a1a1a">Ingredients (per 1kg of primary flour/base)</label>
     <div id="ing-rows"></div>
     <button class="btn btn-sm" id="add-ing-row" style="margin-top:6px">+ Add ingredient</button>
   </div>
-
   <div style="margin-bottom:12px"><label class="fl" style="font-size:12px;font-weight:500;color:#1a1a1a">Variants (dough ball sizes)</label>
     <div id="var-rows"></div>
     <button class="btn btn-sm" id="add-var-row" style="margin-top:6px">+ Add variant</button>
   </div>
-
   <div class="row">
     <button class="btn btn-primary" id="recipe-save-btn">Save recipe</button>
     <button class="btn" id="recipe-cancel-btn">Cancel</button>
   </div>
   <div id="recipe-msg"></div>
-</div>
+</div>` : ''}
 
 <div class="card">
   <div class="sec" style="margin-bottom:12px">SKU → Recipe mapping</div>
@@ -1053,32 +1054,29 @@ function bindLocal(){
   }));
 
   // Recipe add/edit
+  // Recipe add/edit
   document.querySelector('[data-action="add-recipe"]')?.addEventListener('click',()=>{
-    editingRecipe=null;
-    document.getElementById('recipe-form-title').textContent='Add recipe';
-    ['rec-id','rec-name','rec-version','rec-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('rec-product').value='Chapati';
-    initIngRows([]); initVarRows([]);
-    document.getElementById('recipe-form-card').style.display='block';
-    document.getElementById('recipe-form-card').scrollIntoView({behavior:'smooth'});
+    editingRecipe=null; recipeFormOpen=true;
+    render();
+    setTimeout(()=>{
+      document.getElementById('recipe-form-card')?.scrollIntoView({behavior:'smooth'});
+      initIngRows([]); initVarRows([]);
+    },50);
   });
   document.querySelectorAll('[data-action="edit-recipe"]').forEach(b=>b.addEventListener('click',()=>{
     const r=recipes.find(x=>x.id===b.dataset.id);if(!r)return;
-    editingRecipe=r;
-    document.getElementById('recipe-form-title').textContent='Edit — '+r.name;
-    document.getElementById('rec-id').value=r.id;document.getElementById('rec-id').disabled=true;
-    document.getElementById('rec-name').value=r.name;
-    document.getElementById('rec-product').value=r.product;
-    document.getElementById('rec-version').value=r.version||'1.0';
-    document.getElementById('rec-notes').value=r.notes||'';
-    initIngRows(recipeIngredients.filter(i=>i.recipe_id===r.id));
-    initVarRows(recipeVariants.filter(v=>v.recipe_id===r.id));
-    document.getElementById('recipe-form-card').style.display='block';
-    document.getElementById('recipe-form-card').scrollIntoView({behavior:'smooth'});
+    editingRecipe=r; recipeFormOpen=true;
+    render();
+    setTimeout(()=>{
+      document.getElementById('recipe-form-card')?.scrollIntoView({behavior:'smooth'});
+      initIngRows(recipeIngredients.filter(i=>i.recipe_id===r.id));
+      initVarRows(recipeVariants.filter(v=>v.recipe_id===r.id));
+    },50);
   }));
   document.getElementById('recipe-cancel-btn')?.addEventListener('click',()=>{
-    document.getElementById('recipe-form-card').style.display='none';editingRecipe=null;
+    recipeFormOpen=false; editingRecipe=null;
     const idEl=document.getElementById('rec-id');if(idEl)idEl.disabled=false;
+    render();
   });
   document.getElementById('add-ing-row')?.addEventListener('click',()=>{addIngRow();});
   document.getElementById('add-var-row')?.addEventListener('click',()=>{addVarRow();});
@@ -1228,10 +1226,11 @@ async function saveRecipe(){
   for(const ing of ingredients) await sbPost('recipe_ingredients',{recipe_id:id,...ing});
   for(const v of variants) await sbPost('recipe_variants',{recipe_id:id,...v});
 
-  document.getElementById('recipe-form-card').style.display='none';
+  recipeFormOpen=false;
+  editingRecipe=null;
   document.getElementById('rec-id').disabled=false;
-  editingRecipe=null;btn.disabled=false;btn.textContent='Save recipe';
-  await loadLocal();render();
+  btn.disabled=false; btn.textContent='Save recipe';
+  await loadLocal(); render();
 }
 
 /* ── BOOT ── */
