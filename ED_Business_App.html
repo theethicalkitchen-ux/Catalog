@@ -345,6 +345,35 @@
   <div style="padding: 0 16px 16px;" id="product-list"></div>
 </div>
 
+<!-- Recipe Edit Modal -->
+<div id="recipe-edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;overflow-y:auto;padding:16px">
+  <div style="background:var(--bg-card);border-radius:16px;max-width:500px;margin:0 auto;padding:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Edit Recipe</div>
+        <div style="font-size:17px;font-weight:600;color:var(--text-primary)" id="rec-modal-title">—</div>
+      </div>
+      <button onclick="closeRecipeModal()" style="background:none;border:none;font-size:22px;color:var(--text-muted);cursor:pointer;padding:4px">✕</button>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Ingredients — grams per 1kg primary flour</div>
+    <div id="rec-modal-ingredients" style="margin-bottom:16px"></div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Dough sizes</div>
+    <div id="rec-modal-sizes" style="margin-bottom:8px"></div>
+    <button onclick="addRecipeSize()" style="font-size:12px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:8px;padding:6px 12px;cursor:pointer;width:100%;margin-bottom:16px">+ Add size</button>
+
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Default pack size (pcs)</div>
+    <input type="number" id="rec-modal-pack" min="1" step="1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;background:var(--bg-input);color:var(--text-primary);margin-bottom:16px"/>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="saveRecipeEdits()" style="flex:1">Save recipe</button>
+      <button onclick="resetRecipeToDefault()" style="flex:0 0 auto;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);font-family:inherit;font-size:13px;cursor:pointer">Reset to default</button>
+    </div>
+    <div id="rec-modal-msg" style="font-size:12px;margin-top:8px;color:var(--accent)"></div>
+  </div>
+</div>
+
 <!-- SCREEN: Quote -->
 <div id="screen-quote" class="screen">
   <div class="page-header">
@@ -707,6 +736,7 @@ let state = {
   quotes: [],      // saved quotes
   currentMargin: 15,
   customRMs: [],   // [{id, name, unit, rate, cat}]
+  customProducts: {}, // productId -> overrides {rm_formula, dough_sizes, pack_default}
 };
 
 // ============================================================
@@ -765,6 +795,7 @@ function applyDefaults() {
   }
   if (!state.quotes) state.quotes = [];
   if (!state.customRMs) state.customRMs = [];
+  if (!state.customProducts) state.customProducts = {};
 }
 
 function loadState() {
@@ -1030,6 +1061,150 @@ function saveRM() {
   renderProducts();
 }
 
+// Get product with any custom overrides applied
+function getProduct(p) {
+  const overrides = state.customProducts && state.customProducts[p.id];
+  if (!overrides) return p;
+  return { ...p, ...overrides };
+}
+
+// All RM options for ingredient dropdowns
+function getAllRMs() {
+  return [...RAW_MATERIALS, ...(state.customRMs || [])];
+}
+
+// Recipe edit modal state
+let _editingProductId = null;
+
+function openRecipeModal(productId) {
+  const base = PRODUCTS.find(p => p.id === productId);
+  if (!base) return;
+  const p = getProduct(base);
+  _editingProductId = productId;
+
+  document.getElementById('rec-modal-title').textContent = p.name;
+  document.getElementById('rec-modal-pack').value = p.pack_default;
+  document.getElementById('rec-modal-msg').textContent = '';
+
+  // Render ingredient rows
+  const ingEl = document.getElementById('rec-modal-ingredients');
+  ingEl.innerHTML = '';
+  const allRMs = getAllRMs();
+  Object.entries(p.rm_formula).forEach(([rmId, grams]) => {
+    ingEl.appendChild(makeIngRow(rmId, grams, allRMs));
+  });
+
+  // Render size rows
+  const sizeEl = document.getElementById('rec-modal-sizes');
+  sizeEl.innerHTML = '';
+  p.dough_sizes.forEach(s => sizeEl.appendChild(makeSizeRow(s.grams, s.inches)));
+
+  document.getElementById('recipe-edit-modal').style.display = 'block';
+  document.getElementById('recipe-edit-modal').scrollTop = 0;
+}
+
+function closeRecipeModal() {
+  document.getElementById('recipe-edit-modal').style.display = 'none';
+  _editingProductId = null;
+}
+
+function makeIngRow(rmId, grams, allRMs) {
+  const div = document.createElement('div');
+  div.className = 'ing-edit-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 100px 36px;gap:8px;margin-bottom:8px;align-items:center';
+  const sel = document.createElement('select');
+  sel.style.cssText = 'padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:13px;font-family:inherit';
+  allRMs.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id; opt.textContent = r.name;
+    if (r.id === rmId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  const inp = document.createElement('input');
+  inp.type = 'number'; inp.value = grams; inp.min = 0; inp.step = 0.1;
+  inp.placeholder = 'g';
+  inp.style.cssText = 'padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:13px;text-align:right';
+  const del = document.createElement('button');
+  del.textContent = '✕';
+  del.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:4px';
+  del.onclick = () => div.remove();
+  div.appendChild(sel); div.appendChild(inp); div.appendChild(del);
+  return div;
+}
+
+function makeSizeRow(grams, inches) {
+  const div = document.createElement('div');
+  div.className = 'size-edit-row';
+  div.style.cssText = 'display:grid;grid-template-columns:100px 1fr 36px;gap:8px;margin-bottom:8px;align-items:center';
+  const g = document.createElement('input');
+  g.type='number'; g.value=grams; g.min=1; g.step=1; g.placeholder='g';
+  g.style.cssText = 'padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:13px;text-align:right';
+  const s = document.createElement('input');
+  s.type='text'; s.value=inches; s.placeholder='e.g. 8"';
+  s.style.cssText = 'padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:13px';
+  const del = document.createElement('button');
+  del.textContent='✕';
+  del.style.cssText='background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:4px';
+  del.onclick=()=>div.remove();
+  div.appendChild(g); div.appendChild(s); div.appendChild(del);
+  return div;
+}
+
+function addRecipeSize() {
+  document.getElementById('rec-modal-sizes').appendChild(makeSizeRow('',''));
+}
+
+function saveRecipeEdits() {
+  if (!_editingProductId) return;
+
+  // Collect ingredients
+  const rm_formula = {};
+  document.querySelectorAll('.ing-edit-row').forEach(row => {
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input[type="number"]');
+    if (sel && inp && sel.value && parseFloat(inp.value) > 0) {
+      rm_formula[sel.value] = parseFloat(inp.value);
+    }
+  });
+
+  // Collect sizes
+  const dough_sizes = [];
+  document.querySelectorAll('.size-edit-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const g = parseFloat(inputs[0].value);
+    const s = inputs[1].value.trim();
+    if (g > 0 && s) dough_sizes.push({ grams: g, inches: s });
+  });
+
+  const pack_default = parseInt(document.getElementById('rec-modal-pack').value) || 10;
+
+  if (!Object.keys(rm_formula).length) {
+    document.getElementById('rec-modal-msg').textContent = 'Add at least one ingredient.';
+    return;
+  }
+  if (!dough_sizes.length) {
+    document.getElementById('rec-modal-msg').textContent = 'Add at least one dough size.';
+    return;
+  }
+
+  if (!state.customProducts) state.customProducts = {};
+  state.customProducts[_editingProductId] = { rm_formula, dough_sizes, pack_default };
+  saveState();
+  closeRecipeModal();
+  renderProducts();
+  showToast('Recipe saved ✓');
+}
+
+function resetRecipeToDefault() {
+  if (!_editingProductId) return;
+  if (!confirm('Reset to default recipe? Your edits will be lost.')) return;
+  if (state.customProducts) delete state.customProducts[_editingProductId];
+  saveState();
+  closeRecipeModal();
+  renderProducts();
+  showToast('Recipe reset to default');
+}
+
 // ============================================================
 // RENDER PRODUCTS SCREEN
 // ============================================================
@@ -1037,26 +1212,28 @@ function saveRM() {
 function renderProducts() {
   const el = document.getElementById('product-list');
   el.innerHTML = '';
-  PRODUCTS.forEach(p => {
-    const cost = calcProductCostSummary(p);
+  PRODUCTS.forEach(base => {
+    const p = getProduct(base);
+    const isCustomised = state.customProducts && state.customProducts[base.id];
     const pkg = parseFloat(state.infra.pkg || 0.25);
     const rmCost = calcRMCostPerPiece(p, p.dough_sizes[0].grams, null);
     const infCost = getInfraCostPerPiece(null, p.default_type);
+    const totalCost = rmCost + infCost.total + pkg;
     const tag = p.default_type === 'rte' ? 'tag-rte' : 'tag-rtc';
     const tagLabel = p.default_type === 'rte' ? 'RTE' : 'RTC';
 
     const div = document.createElement('div');
     div.className = 'product-card';
-    div.onclick = () => showProductDetail(p);
     div.innerHTML = `
       <span class="product-tag ${tag}">${tagLabel}</span>
+      ${isCustomised ? '<span style="font-size:10px;background:#eaf3de;color:#27500a;border-radius:4px;padding:2px 6px;margin-left:4px;float:right">edited</span>' : ''}
       <div class="product-header">
         <div>
           <div class="product-name">${p.name}</div>
-          <div class="product-id">${p.id}</div>
+          <div class="product-id">${base.id}</div>
         </div>
         <div style="text-align:right;">
-          <div class="product-cost">₹${cost.toFixed(2)}</div>
+          <div class="product-cost">₹${totalCost.toFixed(2)}</div>
           <div class="product-cost-label">cost / piece<br><span style="font-size:9px;">(${p.dough_sizes[0].grams}g, ${tagLabel})</span></div>
         </div>
       </div>
@@ -1064,7 +1241,18 @@ function renderProducts() {
         <div class="product-meta-item">RM: <span>₹${rmCost.toFixed(2)}</span></div>
         <div class="product-meta-item">Infra: <span>₹${infCost.total.toFixed(2)}</span></div>
         <div class="product-meta-item">Pack: <span>₹${pkg.toFixed(2)}</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="event.stopPropagation();showProductDetail(${JSON.stringify(base).replace(/"/g,'&quot;')})" 
+          style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);font-size:12px;font-family:inherit;cursor:pointer">
+          View breakdown
+        </button>
+        <button onclick="event.stopPropagation();openRecipeModal('${base.id}')"
+          style="flex:1;padding:8px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-size:12px;font-family:inherit;cursor:pointer;font-weight:500">
+          ✏ Edit recipe
+        </button>
       </div>`;
+    div.querySelector('.product-header').style.cursor = 'default';
     el.appendChild(div);
   });
 }
@@ -1132,7 +1320,7 @@ function initQuoteScreen() {
 
 function updateQuoteOptions() {
   const pid = document.getElementById('q-product').value;
-  const p = PRODUCTS.find(x => x.id === pid);
+  const _base = PRODUCTS.find(x => x.id === pid); const p = _base ? getProduct(_base) : null;
   const doughSel = document.getElementById('q-dough');
   const attaWrap = document.getElementById('q-atta');
   const attaRow = document.getElementById('q-atta-custom-wrap').closest ? null : null;
@@ -1180,7 +1368,7 @@ function calculateQuote() {
     return;
   }
 
-  const p = PRODUCTS.find(x => x.id === pid);
+  const _base = PRODUCTS.find(x => x.id === pid); const p = _base ? getProduct(_base) : null;
   if (!p) return;
 
   // Atta rate
