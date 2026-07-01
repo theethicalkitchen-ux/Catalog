@@ -751,6 +751,75 @@ let state = {
 const SB_URL = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
 const SB_KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
 
+// Live recipes from Supabase — loaded at boot, overrides PRODUCTS when available
+let SB_RECIPES = [];
+
+async function sbFetch(table, qs='') {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?${qs}`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    return r.ok ? r.json() : [];
+  } catch(e) { return []; }
+}
+
+async function loadSBRecipes() {
+  const [recipes, ingredients, variants] = await Promise.all([
+    sbFetch('recipes', 'order=id.asc'),
+    sbFetch('recipe_ingredients', 'order=recipe_id.asc'),
+    sbFetch('recipe_variants', 'order=recipe_id.asc'),
+  ]);
+
+  if (!recipes || !recipes.length) return; // keep hardcoded fallback
+
+  SB_RECIPES = recipes.map(r => {
+    const ings  = ingredients.filter(i => i.recipe_id === r.id);
+    const vars  = variants.filter(v => v.recipe_id === r.id);
+
+    // Build rm_formula: { ingredient_name: qty_per_kg }
+    const rm_formula = {};
+    ings.forEach(i => { rm_formula[i.ingredient_name] = i.qty_per_kg; });
+
+    // Build dough_sizes from variants
+    const dough_sizes = vars.map(v => ({
+      grams: v.dough_ball_g,
+      inches: v.output_size,
+      packSize: v.pack_size_pieces,
+    }));
+
+    // Identify primary flour (largest ingredient by qty)
+    let primary_flour = '';
+    let flour_grams = 1000;
+    let maxQty = 0;
+    ings.forEach(i => {
+      if (i.unit === 'g' && i.qty_per_kg > maxQty) {
+        maxQty = i.qty_per_kg;
+        primary_flour = i.ingredient_name;
+        flour_grams = i.qty_per_kg;
+      }
+    });
+
+    return {
+      id: r.id,
+      name: r.name,
+      type: r.product,
+      default_type: 'rtc',
+      primary_flour,
+      flour_grams,
+      rm_formula,
+      dough_sizes: dough_sizes.length ? dough_sizes : [{ grams: 50, inches: '—' }],
+      pack_default: vars[0]?.pack_size_pieces || 10,
+      atta_swappable: false,
+      _fromSupabase: true,
+    };
+  });
+}
+
+// Returns live Supabase recipes if loaded, else falls back to hardcoded PRODUCTS
+function getProducts() {
+  return SB_RECIPES.length ? SB_RECIPES : PRODUCTS;
+}
+
 async function sbGetState(key) {
   try {
     const r = await fetch(`${SB_URL}/rest/v1/biz_app_state?key=eq.${key}&select=value`, {
@@ -859,7 +928,19 @@ async function syncFromCloud() {
 // ============================================================
 
 function getRMRate(id) {
-  return parseFloat(state.rm[id] || 0);
+  // Direct id match (hardcoded recipes)
+  if (state.rm[id]) return parseFloat(state.rm[id]);
+  // Name-based match (Supabase recipes use ingredient names as keys)
+  const byName = Object.entries(state.rm).find(([k]) =>
+    k.toLowerCase() === id.toLowerCase()
+  );
+  if (byName) return parseFloat(byName[1]);
+  // Also check custom RMs
+  const customRM = (state.customRMs || []).find(r =>
+    r.name.toLowerCase() === id.toLowerCase() || r.id === id
+  );
+  if (customRM) return parseFloat(state.rm[customRM.id] || customRM.rate || 0);
+  return 0;
 }
 
 function calcRMCostPerKgDough(product) {
@@ -1075,7 +1156,7 @@ function getAllRMs() {
 let _editingProductId = null;
 
 function openRecipeModal(productId) {
-  const base = PRODUCTS.find(p => p.id === productId);
+  const base = getProducts().find(p => p.id === productId);
   if (!base) return;
   const p = getProduct(base);
   _editingProductId = productId;
@@ -1229,7 +1310,7 @@ function resetRecipeToDefault() {
 function renderProducts() {
   const el = document.getElementById('product-list');
   el.innerHTML = '';
-  PRODUCTS.forEach(base => {
+  getProducts().forEach(base => {
     const p = getProduct(base);
     const isCustomised = state.customProducts && state.customProducts[base.id];
     const pkg = parseFloat(state.infra.pkg || 0.25);
@@ -1275,7 +1356,7 @@ function renderProducts() {
 }
 
 function showProductDetail(productId) {
-  const base = PRODUCTS.find(x => x.id === productId);
+  const base = getProducts().find(x => x.id === productId);
   if (!base) return;
   const p = getProduct(base); // applies any custom recipe overrides
   const modal = document.getElementById('quote-modal');
@@ -1330,7 +1411,7 @@ function closeModal() {
 function initQuoteScreen() {
   const sel = document.getElementById('q-product');
   sel.innerHTML = '<option value="">Select product…</option>';
-  PRODUCTS.forEach(p => {
+  getProducts().forEach(p => {
     const o = document.createElement('option');
     o.value = p.id;
     o.textContent = p.name;
@@ -1340,7 +1421,7 @@ function initQuoteScreen() {
 
 function updateQuoteOptions() {
   const pid = document.getElementById('q-product').value;
-  const _base = PRODUCTS.find(x => x.id === pid); const p = _base ? getProduct(_base) : null;
+  const _base = getProducts().find(x => x.id === pid); const p = _base ? getProduct(_base) : null;
   const doughSel = document.getElementById('q-dough');
   const attaWrap = document.getElementById('q-atta');
   const attaRow = document.getElementById('q-atta-custom-wrap').closest ? null : null;
@@ -1388,7 +1469,7 @@ function calculateQuote() {
     return;
   }
 
-  const _base = PRODUCTS.find(x => x.id === pid); const p = _base ? getProduct(_base) : null;
+  const _base = getProducts().find(x => x.id === pid); const p = _base ? getProduct(_base) : null;
   if (!p) return;
 
   // Atta rate
@@ -1720,7 +1801,13 @@ renderRM();
 initQuoteScreen();
 renderProducts();
 
-// Then sync from cloud and refresh if anything changed
+// Load live recipes from Supabase, then refresh products + quote screen
+loadSBRecipes().then(() => {
+  renderProducts();
+  initQuoteScreen();
+});
+
+// Then sync state from cloud
 syncFromCloud().then(changed => {
   if (changed) {
     renderRM();
@@ -1732,6 +1819,7 @@ syncFromCloud().then(changed => {
 // Re-sync every 30 seconds in background
 setInterval(() => {
   syncFromCloud().then(changed => { if (changed) { renderRM(); renderProducts(); } });
+  loadSBRecipes().then(() => { renderProducts(); initQuoteScreen(); });
 }, 30000);
 </script>
 </body>
