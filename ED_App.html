@@ -1,0 +1,1707 @@
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SB = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
+const KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
+
+const USERS = {
+  'nishant': {pw:'ed2024',  role:'owner',   name:'Nishant',        loc:'Pune'},
+  'amit':    {pw:'amit123', role:'owner',   name:'Amit Patil',     loc:'Pune'},
+  'mumbai1': {pw:'mbai001', role:'mumbai',  name:'Mumbai Manager', loc:'Mumbai'},
+  'mumbai2': {pw:'mbai002', role:'mumbai',  name:'Mumbai Staff',   loc:'Mumbai'},
+};
+
+const SKUS = [
+  {id:'chap8',       name:'Chapati 8"',  packSize:25},
+  {id:'chap9',       name:'Chapati 9"',  packSize:25},
+  {id:'puri_plain',  name:'Puri plain',  packSize:50},
+  {id:'puri_masala', name:'Puri masala', packSize:50},
+  {id:'dal_pakwan',  name:'Dal pakwan',  packSize:20},
+  {id:'bhature',     name:'Bhature',     packSize:20},
+];
+
+const ATTA_OPTIONS = {
+  siddhikala: { name: 'Siddhikala', rate: 45 },
+  khapli:     { name: 'Khapli', rate: 80 },
+  custom:     { name: 'Custom', rate: null },
+};
+
+const LOW=5, CRIT=2;
+
+// ============================================================
+// STORAGE (safe for file:// and https://)
+// ============================================================
+const _store = {_d:{},
+  getItem(k){try{return sessionStorage.getItem(k);}catch(e){return this._d[k]||null;}},
+  setItem(k,v){try{sessionStorage.setItem(k,v);}catch(e){this._d[k]=v;}},
+  removeItem(k){try{sessionStorage.removeItem(k);}catch(e){delete this._d[k];}}
+};
+
+// ============================================================
+// SUPABASE HELPERS
+// ============================================================
+const H = () => ({'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'});
+
+async function sbGet(table, qs=''){
+  const r = await fetch(`${SB}/rest/v1/${table}?${qs}`, {headers:H()});
+  if(!r.ok) return [];
+  return r.json();
+}
+async function sbPost(table, body){
+  const r = await fetch(`${SB}/rest/v1/${table}`, {
+    method:'POST', headers:{...H(),'Prefer':'return=representation'}, body:JSON.stringify(body)
+  });
+  return r.json();
+}
+async function sbPatch(table, match, body){
+  const qs = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  const r = await fetch(`${SB}/rest/v1/${table}?${qs}`, {
+    method:'PATCH', headers:{...H(),'Prefer':'return=representation'}, body:JSON.stringify(body)
+  });
+  return r.json();
+}
+async function sbDelete(table, match){
+  const qs = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  await fetch(`${SB}/rest/v1/${table}?${qs}`, {method:'DELETE', headers:H()});
+}
+async function sbGetState(key){
+  try{
+    const r = await fetch(`${SB}/rest/v1/biz_app_state?key=eq.${key}&select=value`, {headers:H()});
+    const d = await r.json();
+    return d&&d[0] ? d[0].value : null;
+  }catch(e){return null;}
+}
+async function sbSetState(key, value){
+  try{
+    await fetch(`${SB}/rest/v1/biz_app_state?key=eq.${key}`, {method:'DELETE', headers:H()});
+    await fetch(`${SB}/rest/v1/biz_app_state`, {
+      method:'POST',
+      headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({key, value, updated_at:new Date().toISOString()})
+    });
+  }catch(e){}
+}
+
+// ============================================================
+// APP STATE
+// ============================================================
+let user = _store.getItem('ed_user') || null;
+let activeModule = 'distributor'; // distributor | production | business
+let activeScreen = 'rm';          // business sub-screen
+let activeTab = 'inventory';       // distributor/production sub-tab
+let pollTimer = null;
+
+// Inventory data (from Supabase tables)
+let inv={}, orders=[], dispatches=[], actlog=[];
+let rawMaterials=[], recipes=[], recipeIngredients=[], recipeVariants=[], skuMap=[], productionPlans=[];
+
+// Business state (from biz_app_state)
+let bizState = {
+  rm:{}, infra:{}, labour:[], quotes:[], currentMargin:15,
+  customProducts:{}, _lastSaved:0
+};
+
+// UI state
+let expandedOrders = new Set();
+let editingRecipe = null;
+let recipeFormOpen = false;
+let rmModalOpen = false;
+let rmModalData = null;
+let rmDirty = new Set();
+let _editingProductId = null;
+
+// ============================================================
+// UTILS
+// ============================================================
+function skuName(id){ return SKUS.find(s=>s.id===id)?.name||id; }
+function ft(ts){ return new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+function fd(d){ return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+function rupees(n){ return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function statusBadge(p){
+  if(p<=CRIT) return `<span class="badge badge-crit">Critical</span>`;
+  if(p<=LOW)  return `<span class="badge badge-low">Low</span>`;
+  return `<span class="badge badge-ok">OK</span>`;
+}
+function setMsg(id,txt,ok){
+  const el=document.getElementById(id); if(!el) return;
+  el.style.color=ok?'var(--green)':'var(--red)'; el.textContent=txt;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function markRMDirty(id){
+  rmDirty.add(parseInt(id));
+  const inp=document.querySelector(`.rm-add-inp[data-id="${id}"]`);
+  if(inp) inp.style.borderColor='var(--saffron)';
+  const btn=document.getElementById('rm-save-all-btn');
+  if(btn){
+    btn.style.background='rgba(245,158,11,.2)';btn.style.color='var(--saffron)';
+    btn.textContent=`Save ${rmDirty.size} update${rmDirty.size>1?'s':''}`;
+  }
+}
+
+function ingQtyInRMUnit(qty_per_kg, ing_unit, batch_kg, rm_unit){
+  const raw=qty_per_kg*batch_kg;
+  const i=ing_unit?.toLowerCase(); const r=rm_unit?.toLowerCase();
+  if(i===r) return raw;
+  if(i==='g'&&r==='kg') return raw/1000;
+  if(i==='kg'&&r==='g') return raw*1000;
+  if(i==='ml'&&r==='litre') return raw/1000;
+  if(i==='litre'&&r==='ml') return raw*1000;
+  return raw;
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadInventory(){
+  const [a,b,c,d] = await Promise.all([
+    sbGet('inventory',''),
+    sbGet('orders','order=id.desc&limit=60'),
+    sbGet('dispatches','order=id.desc&limit=40'),
+    sbGet('activity_log','order=id.desc&limit=80'),
+  ]);
+  inv={}; (a||[]).forEach(r=>inv[r.sku]={packs:r.packs});
+  orders=b||[]; dispatches=c||[]; actlog=d||[];
+}
+
+async function loadProduction(){
+  const [a,b,c,d,e,f] = await Promise.all([
+    sbGet('raw_materials','order=name.asc'),
+    sbGet('recipes','order=id.asc'),
+    sbGet('recipe_ingredients','order=recipe_id.asc'),
+    sbGet('recipe_variants','order=recipe_id.asc'),
+    sbGet('sku_recipe_map',''),
+    sbGet('production_plans','order=planned_date.asc&limit=50'),
+  ]);
+  rawMaterials=a||[]; recipes=b||[]; recipeIngredients=c||[];
+  recipeVariants=d||[]; skuMap=e||[]; productionPlans=f||[];
+
+  // Sync costing prices from raw_materials into bizState
+  rawMaterials.forEach(rm => {
+    if(rm.costing_price>0 && !bizState.rm[rm.id]) bizState.rm[rm.id]=rm.costing_price;
+  });
+}
+
+async function loadBizState(){
+  try{
+    const local = localStorage.getItem('ed_biz_state');
+    if(local) bizState = {...bizState, ...JSON.parse(local)};
+  }catch(e){}
+  applyBizDefaults();
+
+  // Sync from cloud
+  const cloud = await sbGetState('app_state');
+  if(cloud){
+    const localTs = bizState._lastSaved||0;
+    const cloudTs = cloud._lastSaved||0;
+    const localCP = bizState.customProducts||{};
+    const localQ  = bizState.quotes||[];
+    bizState = {...bizState, ...cloud};
+    // Merge
+    if(localTs>=cloudTs) bizState.customProducts=localCP;
+    else bizState.customProducts={...(cloud.customProducts||{}), ...localCP};
+    const allQ=[...(cloud.quotes||[]),...localQ];
+    const seen=new Set();
+    bizState.quotes=allQ.filter(q=>{const k=q.id||(q.buyer+q.ts);if(seen.has(k))return false;seen.add(k);return true;});
+    applyBizDefaults();
+    localStorage.setItem('ed_biz_state',JSON.stringify(bizState));
+  }
+}
+
+function applyBizDefaults(){
+  if(!bizState.rm||!Object.keys(bizState.rm).length) bizState.rm={};
+  if(!bizState.infra||!Object.keys(bizState.infra).length){
+    bizState.infra={shift_vol:8000,shifts:2,days:26,rent:30000,elec:83200,lpg:83200,maint:20000,capex:40000,pkg:0.25,elec_rte:0.384,elec_rtc:0.384,roasting:0.375};
+  }
+  if(!bizState.labour||!bizState.labour.length){
+    bizState.labour=[
+      {role:'Dough Mixing Labour',count:1,salary:12000},
+      {role:'Machine Labour (Pressing)',count:2,salary:12000},
+      {role:'Packaging Labour',count:2,salary:12000},
+      {role:'Sealing Labour',count:1,salary:12000},
+      {role:'Supervisor',count:1,salary:20000},
+      {role:'Labour Head',count:1,salary:25000},
+    ];
+  }
+  if(!bizState.quotes) bizState.quotes=[];
+  if(!bizState.customProducts) bizState.customProducts={};
+  if(!bizState.currentMargin) bizState.currentMargin=15;
+}
+
+function saveBizState(){
+  bizState._lastSaved=Date.now();
+  localStorage.setItem('ed_biz_state',JSON.stringify(bizState));
+  sbSetState('app_state',bizState).catch(()=>{});
+}
+
+async function addLog(action,sku,detail){
+  await sbPost('activity_log',{action,sku,detail,done_by:user});
+}
+
+async function loadAll(){
+  await Promise.all([loadInventory(), loadProduction(), loadBizState()]);
+}
+
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async()=>{
+    if(!user){clearInterval(pollTimer);return;}
+    if(activeModule==='production'&&(rmDirty.size>0||rmModalOpen)) return;
+    if(activeModule==='production'&&recipeFormOpen) return;
+    if(activeModule==='production'&&activeTab==='plan') return;
+    if(activeModule==='distributor'&&expandedOrders.size>0) return;
+    await loadAll(); render();
+  }, 20000);
+}
+
+// ============================================================
+// RM ALARM ENGINE
+// ============================================================
+function computeRMNeeds(){
+  if(!rawMaterials.length||!recipes.length) return [];
+  const demands=[];
+  orders.filter(o=>o.status==='pending'||o.status==='approved').forEach(o=>{
+    const map=skuMap.find(m=>m.sku===o.sku);
+    if(!map) return;
+    const variant=recipeVariants.find(v=>v.id===map.recipe_variant_id);
+    if(!variant||!variant.pieces_per_kg||!variant.pack_size_pieces) return;
+    const totalPieces=o.qty*(variant.pack_size_pieces||1);
+    const kgNeeded=totalPieces/variant.pieces_per_kg;
+    demands.push({recipe_id:variant.recipe_id, kg:kgNeeded});
+  });
+  productionPlans.filter(p=>p.status==='planned').forEach(p=>{
+    demands.push({recipe_id:p.recipe_id, kg:p.planned_kg});
+  });
+  if(!demands.length) return [];
+  const rmNeeded={};
+  demands.forEach(d=>{
+    const ings=recipeIngredients.filter(i=>i.recipe_id===d.recipe_id);
+    ings.forEach(ing=>{
+      const rm=rawMaterials.find(r=>r.name.toLowerCase()===ing.ingredient_name.toLowerCase());
+      if(!rm) return;
+      const needed=ingQtyInRMUnit(ing.qty_per_kg,ing.unit,d.kg,rm.unit);
+      if(!rmNeeded[rm.id]) rmNeeded[rm.id]={rm,needed:0};
+      rmNeeded[rm.id].needed+=needed;
+    });
+  });
+  return Object.values(rmNeeded).filter(x=>x.needed>x.rm.stock_qty).map(x=>({...x,shortage:x.needed-x.rm.stock_qty}));
+}
+
+// ============================================================
+// BUSINESS COSTING HELPERS
+// ============================================================
+function getRMRate(id){
+  // First check bizState overrides, then costing_price from Supabase
+  if(bizState.rm[id]) return parseFloat(bizState.rm[id]);
+  const rm = rawMaterials.find(r=>r.id==id||r.name.toLowerCase()===id.toLowerCase());
+  if(rm&&rm.costing_price>0) return rm.costing_price;
+  return 0;
+}
+
+function getEffectiveRecipe(recipeId){
+  // Returns {rm_formula, dough_sizes, pack_default, name, ...}
+  // Merges Supabase recipe with any customProduct overrides
+  const base = recipes.find(r=>r.id===recipeId);
+  if(!base) return null;
+  const ings = recipeIngredients.filter(i=>i.recipe_id===recipeId);
+  const variants = recipeVariants.filter(v=>v.recipe_id===recipeId);
+
+  // Build rm_formula from recipe_ingredients (ingredient_name -> qty_per_kg)
+  const rm_formula={};
+  ings.forEach(i=>{ rm_formula[i.ingredient_name]=i.qty_per_kg; });
+
+  // dough_sizes from variants
+  const dough_sizes = variants.map(v=>({grams:v.dough_ball_g, inches:v.output_size, pack:v.pack_size_pieces}));
+
+  const base_recipe = {
+    id:base.id, name:base.name, product:base.product,
+    rm_formula, dough_sizes,
+    pack_default: dough_sizes[0]?.pack||10,
+    flour_grams: ings.reduce((a,i)=>a+i.qty_per_kg,0)||1000,
+  };
+
+  // Apply any custom overrides
+  const overrides = bizState.customProducts&&bizState.customProducts[recipeId];
+  if(!overrides) return base_recipe;
+  return {...base_recipe, ...overrides};
+}
+
+function calcCostPerPiece(recipe, doughGrams){
+  if(!recipe||!doughGrams) return 0;
+  let total=0;
+  for(const [ingName, grams] of Object.entries(recipe.rm_formula)){
+    const rm = rawMaterials.find(r=>r.name.toLowerCase()===ingName.toLowerCase());
+    const rate = rm ? getRMRate(rm.id) : 0;
+    total += (grams/1000)*rate;
+  }
+  const piecesPerKg = (recipe.flour_grams||1000)/doughGrams;
+  return total/piecesPerKg;
+}
+
+function getInfraCostPerPiece(type){
+  const inf=bizState.infra;
+  const monthlyCapacity=(inf.shift_vol||8000)*(inf.shifts||2)*(inf.days||26);
+  const labourMonthly=(bizState.labour||[]).reduce((s,l)=>s+(l.count*l.salary),0);
+  const fixedPool=labourMonthly+parseFloat(inf.rent||0)+parseFloat(inf.maint||0)+parseFloat(inf.capex||0);
+  const labourRentPerPiece=fixedPool/monthlyCapacity;
+  const elecPerPiece=parseFloat(type==='rte'?inf.elec_rte:inf.elec_rtc)||0;
+  const roastingPerPiece=type==='rte'?(parseFloat(inf.roasting)||0):0;
+  const maintPerPiece=parseFloat(inf.maint||0)/monthlyCapacity;
+  return{labour_rent:labourRentPerPiece,elec:elecPerPiece,roasting:roastingPerPiece,maint:maintPerPiece,
+    total:labourRentPerPiece+elecPerPiece+roastingPerPiece+maintPerPiece};
+}
+
+// ============================================================
+// RENDER ROOT
+// ============================================================
+function render(){
+  const app=document.getElementById('app');
+  if(!user){app.innerHTML=renderLogin();bindLogin();return;}
+  app.innerHTML=renderShell();
+  bindShell();
+}
+
+// ── LOGIN ──────────────────────────────────────────────────
+function renderLogin(){
+  return `<div class="login-wrap">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Ethical Delights</div>
+      <div style="font-size:22px;font-weight:700">ED Operations</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px">Inventory · Production · Business</div>
+    </div>
+    <div class="field"><label>Username</label><input id="un" placeholder="Enter username" autocapitalize="none"/></div>
+    <div class="field"><label>Password</label><input id="pw" type="password" placeholder="Enter password"/></div>
+    <button class="btn btn-primary" id="login-btn" style="width:100%">Sign in</button>
+    <div id="login-err" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center"></div>
+  </div>
+</div>`;
+}
+function bindLogin(){
+  document.getElementById('un').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pw').focus();});
+  document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('login-btn').addEventListener('click',doLogin);
+}
+async function doLogin(){
+  const un=document.getElementById('un').value.trim().toLowerCase();
+  const pw=document.getElementById('pw').value;
+  if(!USERS[un]||USERS[un].pw!==pw){document.getElementById('login-err').textContent='Incorrect username or password.';return;}
+  const btn=document.getElementById('login-btn');
+  btn.textContent='Signing in…';btn.disabled=true;
+  try{
+    await loadAll();
+    user=un; _store.setItem('ed_user',un);
+    activeModule=USERS[un].role==='mumbai'?'distributor':'distributor';
+    render(); startPolling();
+  }catch(e){
+    document.getElementById('login-err').textContent='Could not connect. Check internet.';
+    btn.textContent='Sign in';btn.disabled=false;
+  }
+}
+
+// ── SHELL ──────────────────────────────────────────────────
+function renderShell(){
+  const u=USERS[user];
+  const isOwner=u.role==='owner';
+  const alarms=computeRMNeeds();
+  const pendingOrders=orders.filter(o=>o.status==='pending').length;
+  const deliverPending=orders.filter(o=>o.status==='dispatched').length;
+  const notif=isOwner?pendingOrders:deliverPending;
+
+  return `
+${renderModuleContent(isOwner,alarms)}
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item ${activeModule==='distributor'?'active':''}" data-mod="distributor">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+    Distributor${notif>0?` (${notif})`:''}
+  </button>
+  ${isOwner?`
+  <button class="nav-item ${activeModule==='production'?'active':''}" data-mod="production">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    Production${alarms.length>0?` ⚠`:''} 
+  </button>
+  <button class="nav-item ${activeModule==='business'?'active':''}" data-mod="business">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    Business
+  </button>`:''}
+</nav>`;
+}
+
+function renderModuleContent(isOwner,alarms){
+  if(activeModule==='distributor') return renderDistributorModule(isOwner);
+  if(activeModule==='production'&&isOwner) return renderProductionModule(alarms);
+  if(activeModule==='business'&&isOwner) return renderBusinessModule();
+  return '';
+}
+
+// ============================================================
+// DISTRIBUTOR MODULE
+// ============================================================
+function renderDistributorModule(isPune){
+  const lowAlerts=SKUS.filter(s=>(inv[s.id]?.packs||0)<=LOW);
+  const dispatchPending=orders.filter(o=>o.status==='approved').length;
+  const tabs=['inventory','orders','log'];
+
+  return `
+<div class="page-header">
+  <div class="page-eyebrow">${USERS[user].name} · ${USERS[user].loc}</div>
+  <div class="page-title">Mumbai Distributor</div>
+</div>
+
+${lowAlerts.length?`<div class="alert alert-warn" style="margin:10px 16px">⚠️ Low stock: ${lowAlerts.map(s=>s.name).join(', ')}</div>`:''}
+${isPune&&dispatchPending>0?`<div class="alert alert-info" style="margin:0 16px 10px">📦 ${dispatchPending} order${dispatchPending>1?'s':''} approved — dispatch pending</div>`:''}
+${!isPune&&orders.filter(o=>o.status==='dispatched').length>0?`<div class="alert alert-info" style="margin:0 16px 10px">🚚 Shipment on the way — mark as delivered when received</div>`:''}
+
+<div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0">
+  ${tabs.map(t=>`<button class="mod-btn ${activeTab===t?'active':''}" data-tab="${t}" style="font-size:13px">${t==='inventory'?'📦 Stock':t==='orders'?'📋 Orders':'🕒 Log'}</button>`).join('')}
+</div>
+
+<div class="page-body">
+${activeTab==='inventory'?renderDistributorInventory(isPune):''}
+${activeTab==='orders'?renderDistributorOrders(isPune):''}
+${activeTab==='log'?renderDistributorLog():''}
+</div>`;
+}
+
+function renderDistributorInventory(isPune){
+  const total=SKUS.reduce((a,s)=>a+(inv[s.id]?.packs||0),0);
+  return `
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+  <div class="stat-box"><div class="stat-val">${total}</div><div class="stat-label">Total packs</div></div>
+  <div class="stat-box"><div class="stat-val" style="color:${SKUS.filter(s=>(inv[s.id]?.packs||0)<=CRIT).length>0?'var(--red)':'var(--text)'}">${SKUS.filter(s=>(inv[s.id]?.packs||0)<=CRIT).length}</div><div class="stat-label">Critical SKUs</div></div>
+</div>
+<div class="card" style="padding:0">
+  <table style="width:100%">
+    <thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="padding:10px 14px">SKU</th><th style="text-align:right;padding:10px 8px">Packs</th><th style="text-align:center;padding:10px 8px">Status</th><th style="padding:10px 8px"></th>
+    </tr></thead>
+    <tbody>
+    ${SKUS.map(s=>{
+      const p=inv[s.id]?.packs||0;
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 14px"><div style="font-size:14px;font-weight:500">${s.name}</div><div style="font-size:11px;color:var(--text-muted)">${s.packSize} pcs/pack</div></td>
+        <td style="text-align:right;padding:10px 8px;font-size:18px;font-weight:700">${p}</td>
+        <td style="text-align:center;padding:10px 8px">${statusBadge(p)}</td>
+        <td style="padding:10px 8px">${isPune
+          ?`<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" data-action="adj" data-sku="${s.id}">Adjust</button>`
+          :`<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" data-action="mset" data-sku="${s.id}">Set</button>`
+        }</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+</div>
+${!isPune?`<div class="card">
+  <div class="card-label">Place reorder request</div>
+  <div class="two-col" style="margin-bottom:10px">
+    <div class="field" style="margin:0"><label>SKU</label><select id="ord-sku">${SKUS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+    <div class="field" style="margin:0"><label>Packs needed</label><input type="number" id="ord-qty" min="1" placeholder="0"/></div>
+  </div>
+  <div class="two-col" style="margin-bottom:12px">
+    <div class="field" style="margin:0"><label>Urgency</label><select id="ord-urgency"><option value="normal">Normal</option><option value="urgent">Urgent</option></select></div>
+    <div class="field" style="margin:0"><label>Note</label><input id="ord-note" placeholder="Optional"/></div>
+  </div>
+  <button class="btn btn-primary" id="ord-btn" style="width:100%">Place order →</button>
+  <div id="ord-msg" style="font-size:12px;margin-top:8px"></div>
+</div>`:''}`;
+}
+
+function renderDistributorOrders(isPune){
+  const pending=orders.filter(o=>o.status==='pending');
+  const approved=orders.filter(o=>o.status==='approved');
+  const dispatched=orders.filter(o=>o.status==='dispatched');
+  const done=orders.filter(o=>o.status==='delivered'||o.status==='rejected');
+
+  function stepBar(st){
+    const steps=['Ordered','Approved','Dispatched','Delivered'];
+    const idx={pending:0,approved:1,dispatched:2,delivered:3,rejected:0}[st]||0;
+    const rej=st==='rejected';
+    return `<div class="order-steps">${steps.map((s,i)=>`<div class="step ${rej&&i===0?'active':i<idx?'done':i===idx?'active':''}">${i<idx?'✓ ':''}${s}</div>`).join('')}${rej?'<span style="color:var(--red);font-size:11px;margin-left:6px">Rejected</span>':''}</div>`;
+  }
+
+  function oCard(o){
+    const isExp=expandedOrders.has(o.id);
+    const urgColor=o.urgency==='urgent'?'var(--red)':'var(--border)';
+    let act='';
+    if(o.status==='pending'&&isPune) act=`<div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-success" style="flex:1;padding:9px" data-action="approve" data-id="${o.id}">✓ Approve</button>
+      <button class="btn btn-danger" style="flex:1;padding:9px" data-action="reject" data-id="${o.id}">✕ Reject</button></div>`;
+    else if(o.status==='pending'&&!isPune) act=`<div style="color:var(--text-muted);font-size:12px;margin-top:8px">Awaiting Pune approval…</div>`;
+    else if(o.status==='approved'&&isPune){
+      act=isExp?`<div style="background:var(--surface2);border-radius:10px;padding:14px;margin-top:10px">
+        <div style="font-size:12px;font-weight:600;color:#60a5fa;margin-bottom:10px">Record dispatch</div>
+        <div class="two-col" style="margin-bottom:10px">
+          <div class="field" style="margin:0"><label>SKU</label><input value="${skuName(o.sku)}" disabled/></div>
+          <div class="field" style="margin:0"><label>Packs</label><input value="${o.qty}" disabled/></div>
+        </div>
+        <div class="two-col" style="margin-bottom:12px">
+          <div class="field" style="margin:0"><label>Vehicle ref</label><input id="dref-${o.id}" placeholder="MH12-AB-1234"/></div>
+          <div class="field" style="margin:0"><label>Note</label><input id="dnote-${o.id}" placeholder="Optional"/></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1;padding:9px" data-action="do-dispatch" data-id="${o.id}" data-sku="${o.sku}" data-qty="${o.qty}">🚚 Confirm dispatch</button>
+          <button class="btn btn-ghost" style="padding:9px 14px" data-action="collapse" data-id="${o.id}">Cancel</button>
+        </div>
+        <div id="dmsg-${o.id}" style="font-size:12px;margin-top:8px"></div>
+      </div>`
+      :`<div style="margin-top:10px"><button class="btn btn-primary" style="padding:9px 16px" data-action="expand-dispatch" data-id="${o.id}">🚚 Record dispatch</button></div>`;
+    }
+    else if(o.status==='approved'&&!isPune) act=`<div style="color:#60a5fa;font-size:12px;margin-top:8px">✓ Approved — Pune preparing dispatch</div>`;
+    else if(o.status==='dispatched'&&!isPune) act=`<div style="margin-top:10px"><button class="btn btn-success" style="width:100%;padding:10px" data-action="mark-delivered" data-id="${o.id}" data-sku="${o.sku}" data-qty="${o.qty}">✓ Mark as delivered — update stock</button></div>`;
+    else if(o.status==='dispatched'&&isPune) act=`<div style="color:#a78bfa;font-size:12px;margin-top:8px">🚚 Dispatched — waiting for Mumbai to confirm</div>`;
+
+    return `<div class="order-card" style="border-color:${urgColor}">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
+        <div><strong style="font-size:15px">${skuName(o.sku)}</strong>
+          <span class="badge ${o.urgency==='urgent'?'badge-crit':'badge-ok'}" style="margin-left:6px">${o.urgency}</span></div>
+        <span style="font-size:11px;color:var(--text-muted)">${ft(o.created_at)}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:6px"><strong style="color:var(--text)">${o.qty} packs</strong> · By: ${o.placed_by}${o.note?` · "${o.note}"`:''}</div>
+      ${o.dispatched_ref?`<div style="font-size:12px;color:var(--text-muted)">Ref: ${o.dispatched_ref}</div>`:''}
+      ${stepBar(o.status)}${act}
+    </div>`;
+  }
+
+  const active=[...pending,...approved,...dispatched];
+  const hist=[...done];
+  return `
+${active.length===0&&hist.length===0?'<div style="color:var(--text-muted);text-align:center;padding:32px">No orders yet.</div>':''}
+${active.map(oCard).join('')}
+${hist.length?`<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px">Completed</div>${hist.slice(0,10).map(oCard).join('')}`:''}`;
+}
+
+function renderDistributorLog(){
+  return `${actlog.length===0?'<div style="color:var(--text-muted);text-align:center;padding:32px">No activity yet.</div>':`
+  <table><thead><tr><th>Time</th><th>Action</th><th>Detail</th></tr></thead>
+  <tbody>${actlog.slice(0,40).map(l=>`<tr>
+    <td style="font-size:11px;color:var(--text-muted);white-space:nowrap">${ft(l.created_at)}</td>
+    <td style="font-size:12px">${l.action}</td>
+    <td style="font-size:12px;color:var(--text-dim)">${l.detail}</td>
+  </tr>`).join('')}</tbody></table>`}`;
+}
+
+// ============================================================
+// PRODUCTION MODULE
+// ============================================================
+function renderProductionModule(alarms){
+  const tabs=['rm','recipes','plan','report'];
+  return `
+<div class="page-header">
+  <div class="page-eyebrow">${USERS[user].name}</div>
+  <div class="page-title">Local Production</div>
+</div>
+${alarms.length?`<div class="alert alert-danger" style="margin:10px 16px">⚠️ RM shortage for ${alarms.length} material${alarms.length>1?'s':''} — see Report</div>`:''}
+<div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+  ${tabs.map(t=>`<button class="mod-btn ${activeTab===t?'active':''}" data-tab="${t}" style="font-size:12px">${{rm:'🧪 Materials',recipes:'📖 Recipes',plan:'📅 Plan',report:'📊 Report'}[t]}</button>`).join('')}
+</div>
+<div class="page-body">
+${activeTab==='rm'?renderRMTab():''}
+${activeTab==='recipes'?renderRecipesTab():''}
+${activeTab==='plan'?renderPlanTab():''}
+${activeTab==='report'?renderReportTab(alarms):''}
+</div>`;
+}
+
+function renderRMTab(){
+  const lowRM=rawMaterials.filter(r=>r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0);
+  return `
+${lowRM.length?`<div class="alert alert-warn">⚠️ Reorder needed: ${lowRM.map(r=>r.name).join(', ')}</div>`:''}
+<div class="card" style="padding:0">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 14px 10px;border-bottom:1px solid var(--border)">
+    <div><div style="font-size:14px;font-weight:600">Raw materials</div><div style="font-size:11px;color:var(--text-muted)">Add qty to receive stock</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" id="rm-save-all-btn" style="padding:8px 14px;font-size:13px">Save all</button>
+      <button class="btn btn-ghost" data-action="add-rm" style="padding:8px 14px;font-size:13px">+ Add</button>
+    </div>
+  </div>
+  <div id="rm-save-msg" style="padding:4px 14px;font-size:12px;min-height:20px"></div>
+  ${rawMaterials.length===0?'<div style="padding:16px 14px;color:var(--text-muted)">No materials yet. Click + Add.</div>':''}
+  ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;width:100%">
+    <thead><tr>
+      <th style="width:34%;padding:8px 14px">Material</th>
+      <th style="width:20%;text-align:right;padding:8px 8px">Stock</th>
+      <th style="width:9%;text-align:center;padding:8px 4px">Unit</th>
+      <th style="width:24%;text-align:right;padding:8px 8px">+ Add qty</th>
+      <th style="width:13%;text-align:center;padding:8px 6px">Edit</th>
+    </tr></thead>
+    <tbody>${rawMaterials.map(r=>{
+      const isLow=r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0;
+      return `<tr style="${isLow?'background:rgba(245,158,11,.05)':''}">
+        <td style="padding:10px 14px"><div style="font-size:13px;font-weight:500">${r.name}</div>${isLow?`<span class="badge badge-low" style="font-size:9px">Reorder</span>`:''}${r.costing_price>0?`<div style="font-size:10px;color:var(--text-muted)">₹${r.costing_price}/${r.unit}</div>`:''}</td>
+        <td style="text-align:right;padding:10px 8px">
+          <span id="rm-total-${r.id}" style="font-size:17px;font-weight:700;color:${isLow?'var(--red)':'var(--text)'}">${r.stock_qty}</span>
+        </td>
+        <td style="text-align:center;color:var(--text-muted);font-size:12px;padding:10px 4px">${r.unit}</td>
+        <td style="padding:8px">
+          <input type="number" class="rm-add-inp" data-id="${r.id}" data-current="${r.stock_qty}"
+            value="" min="0" step="0.001" placeholder="0"
+            style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #3b82f6;border-radius:6px;background:rgba(59,130,246,.1);text-align:right;color:#60a5fa;font-family:inherit"
+            oninput="updateRMPreview(${r.id},this.value,${r.stock_qty})"/>
+        </td>
+        <td style="text-align:center;padding:8px">
+          <button class="btn btn-ghost" data-action="edit-rm" data-id="${r.id}" style="padding:6px 10px;font-size:13px">⚙</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`:''}
+</div>
+
+${rmModalOpen?`<div class="modal-overlay open" id="rm-modal-overlay">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600">${rmModalData?'Edit — '+rmModalData.name:'Add material'}</div>
+      <button class="btn btn-ghost" id="rm-modal-close" style="padding:6px 10px">✕</button>
+    </div>
+    <div class="two-col" style="margin-bottom:10px">
+      <div class="field" style="margin:0"><label>Name</label><input id="rm-modal-name" value="${rmModalData?.name||''}" placeholder="e.g. Maida"/></div>
+      <div class="field" style="margin:0"><label>Unit</label><select id="rm-modal-unit">${['kg','g','litre','ml','pcs'].map(u=>`<option ${(rmModalData?.unit||'kg')===u?'selected':''} value="${u}">${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="two-col" style="margin-bottom:10px">
+      <div class="field" style="margin:0"><label>Current stock</label><input type="number" id="rm-modal-stock" value="${rmModalData?.stock_qty??''}" min="0" step="0.001" placeholder="0"/></div>
+      <div class="field" style="margin:0"><label>Reorder at</label><input type="number" id="rm-modal-thresh" value="${rmModalData?.reorder_threshold??''}" min="0" placeholder="0"/></div>
+    </div>
+    <div class="two-col" style="margin-bottom:16px">
+      <div class="field" style="margin:0"><label>Costing price (₹/unit)</label><input type="number" id="rm-modal-price" value="${rmModalData?.costing_price??''}" min="0" placeholder="0"/></div>
+      <div class="field" style="margin:0"><label>Supplier</label><input id="rm-modal-supplier" value="${rmModalData?.supplier||''}" placeholder="Optional"/></div>
+    </div>
+    <input type="hidden" id="rm-modal-id" value="${rmModalData?.id||''}"/>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-primary" id="rm-modal-save-btn">Save</button>
+      ${rmModalData?`<button class="btn btn-danger" id="rm-modal-del-btn">Delete</button>`:''}
+    </div>
+    <div id="rm-modal-msg" style="font-size:12px;margin-top:8px"></div>
+  </div>
+</div>`:''}`;
+}
+
+function updateRMPreview(id, addedStr, current){
+  const added=parseFloat(addedStr)||0;
+  const newTotal=current+added;
+  const el=document.getElementById(`rm-total-${id}`);
+  if(el){el.textContent=newTotal%1===0?newTotal:newTotal.toFixed(3).replace(/\.?0+$/,'');el.style.color=added>0?'#60a5fa':'var(--text)';}
+  if(added!==0) rmDirty.add(id); else rmDirty.delete(id);
+  const btn=document.getElementById('rm-save-all-btn');
+  if(btn){
+    if(rmDirty.size>0){btn.style.background='rgba(245,158,11,.2)';btn.style.color='var(--saffron)';btn.textContent=`Save ${rmDirty.size} update${rmDirty.size>1?'s':''}`;}
+    else{btn.style.background='';btn.style.color='';btn.textContent='Save all';}
+  }
+}
+
+function renderRecipesTab(){
+  return `
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <div style="font-size:14px;font-weight:600">${recipes.length} recipes</div>
+  <button class="btn btn-primary" data-action="add-recipe" style="padding:8px 14px;font-size:13px">+ Add recipe</button>
+</div>
+${recipes.length===0?'<div style="color:var(--text-muted);text-align:center;padding:32px">No recipes yet. Click + Add recipe.</div>':''}
+${recipes.map(r=>{
+  const ings=recipeIngredients.filter(i=>i.recipe_id===r.id);
+  const variants=recipeVariants.filter(v=>v.recipe_id===r.id);
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+      <div>
+        <div style="font-size:15px;font-weight:600">${r.name}</div>
+        <div style="font-size:11px;color:var(--text-muted);font-family:monospace">${r.id} · v${r.version||'1.0'}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost" data-action="edit-recipe" data-id="${r.id}" style="padding:6px 10px;font-size:12px">Edit</button>
+        <button class="btn btn-danger" data-action="del-recipe" data-id="${r.id}" style="padding:6px 10px;font-size:12px">✕</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
+      ${ings.map(i=>`<span style="background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px">${i.ingredient_name}: ${i.qty_per_kg}${i.unit}</span>`).join('')}
+      ${ings.length===0?'<span style="color:var(--text-muted);font-size:12px">No ingredients</span>':''}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${variants.map(v=>`<span style="background:rgba(96,165,250,.1);color:#60a5fa;border-radius:6px;padding:3px 8px;font-size:11px">${v.dough_ball_g}g → ${v.output_size} · ${v.pieces_per_kg}pcs/kg</span>`).join('')}
+      ${variants.length===0?'<span style="color:var(--text-muted);font-size:12px">No variants</span>':''}
+    </div>
+  </div>`;
+}).join('')}
+
+${recipeFormOpen?`<div class="card" style="border:1px solid #3b82f6;margin-top:4px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="font-size:15px;font-weight:600">${editingRecipe?'Edit — '+editingRecipe.name:'Add recipe'}</div>
+    <button class="btn btn-ghost" id="recipe-cancel-btn" style="padding:6px 10px">✕ Cancel</button>
+  </div>
+  <div class="three-col" style="margin-bottom:10px">
+    <div class="field" style="margin:0"><label>Recipe ID</label><input id="rec-id" placeholder="CH-002" value="${editingRecipe?.id||''}" ${editingRecipe?'disabled':''}/></div>
+    <div class="field" style="margin:0"><label>Product</label><select id="rec-product">${['Chapati','Bhature','Puri','Dal Pakwan','Wrap','Other'].map(p=>`<option ${editingRecipe?.product===p?'selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="field" style="margin:0"><label>Version</label><input id="rec-version" placeholder="1.0" value="${editingRecipe?.version||''}"/></div>
+  </div>
+  <div class="field"><label>Recipe name</label><input id="rec-name" placeholder="e.g. Chapati — Siddhikala Wheat" value="${editingRecipe?.name||''}"/></div>
+  <div class="field"><label>Notes</label><textarea id="rec-notes" rows="2" placeholder="Trial results, observations…" style="width:100%;resize:vertical">${editingRecipe?.notes||''}</textarea></div>
+
+  <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Ingredients — per 1kg primary flour/base</div>
+  <div id="ing-rows" style="margin-bottom:6px"></div>
+  <button class="btn btn-ghost" id="add-ing-row" style="width:100%;margin-bottom:14px;font-size:12px">+ Add ingredient</button>
+
+  <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Variants (dough sizes)</div>
+  <div id="var-rows" style="margin-bottom:6px"></div>
+  <button class="btn btn-ghost" id="add-var-row" style="width:100%;margin-bottom:14px;font-size:12px">+ Add variant</button>
+
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-primary" id="recipe-save-btn" style="flex:1">Save recipe</button>
+  </div>
+  <div id="recipe-msg" style="font-size:12px;margin-top:8px"></div>
+</div>`:''}
+
+<div class="card" style="margin-top:4px">
+  <div class="card-label">SKU → Recipe mapping</div>
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Map Mumbai SKUs to recipe variants for stock alarms.</div>
+  ${SKUS.map(s=>{
+    const map=skuMap.find(m=>m.sku===s.id);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:110px;font-size:13px;font-weight:500">${s.name}</div>
+      <select data-action="map-sku" data-sku="${s.id}" style="flex:1;font-size:12px">
+        <option value="">— Not mapped —</option>
+        ${recipeVariants.map(v=>{
+          const r=recipes.find(x=>x.id===v.recipe_id);
+          return `<option value="${v.id}" ${map?.recipe_variant_id===v.id?'selected':''}>${r?.name||v.recipe_id} · ${v.dough_ball_g}g · ${v.output_size}</option>`;
+        }).join('')}
+      </select>
+    </div>`;
+  }).join('')}
+  <div id="map-msg" style="font-size:12px;margin-top:6px"></div>
+</div>`;
+}
+
+function renderPlanTab(){
+  const active=productionPlans.filter(p=>p.status==='planned');
+  const done=productionPlans.filter(p=>p.status==='done');
+  return `
+<div class="card">
+  <div class="card-label">New production plan</div>
+  <div class="three-col" style="margin-bottom:10px">
+    <div class="field" style="margin:0"><label>Recipe</label>
+      <select id="plan-recipe"><option value="">Select…</option>${recipes.map(r=>`<option value="${r.id}">${r.id} — ${r.name}</option>`).join('')}</select></div>
+    <div class="field" style="margin:0"><label>Planned kg</label><input type="number" id="plan-kg" min="0.1" step="0.1" placeholder="5"/></div>
+    <div class="field" style="margin:0"><label>Date</label><input type="date" id="plan-date" value="${new Date().toISOString().split('T')[0]}"/></div>
+  </div>
+  <button class="btn btn-primary" id="plan-save-btn" style="width:100%">Add to plan</button>
+  <div id="plan-msg" style="font-size:12px;margin-top:8px"></div>
+</div>
+${active.length===0?'<div style="color:var(--text-muted);text-align:center;padding:24px">No planned production.</div>':''}
+${active.map(p=>{
+  const r=recipes.find(x=>x.id===p.recipe_id);
+  const ings=recipeIngredients.filter(i=>i.recipe_id===p.recipe_id);
+  const checks=ings.map(ing=>{
+    const rm=rawMaterials.find(r=>r.name.toLowerCase()===ing.ingredient_name.toLowerCase());
+    const needed=ingQtyInRMUnit(ing.qty_per_kg,ing.unit,p.planned_kg,rm?.unit||ing.unit);
+    const have=rm?.stock_qty||0;
+    return{name:ing.ingredient_name,needed,have,unit:rm?.unit||ing.unit,ok:have>=needed};
+  });
+  const hasAlarm=checks.some(c=>!c.ok);
+  return `<div class="card" style="border-color:${hasAlarm?'rgba(239,68,68,.4)':'rgba(34,197,94,.3)'}">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+      <div><div style="font-size:14px;font-weight:600">${r?.name||p.recipe_id}</div>
+        <span class="badge ${hasAlarm?'badge-crit':'badge-ok'}" style="margin-top:4px">${hasAlarm?'RM shortage':'Ready'}</span></div>
+      <span style="font-size:12px;color:var(--text-muted)">${fd(p.planned_date)}</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px">${p.planned_kg} kg · by ${p.created_by}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+      ${checks.map(c=>`<span style="font-size:11px;padding:3px 7px;border-radius:5px;background:${c.ok?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${c.ok?'var(--green)':'var(--red)'}">
+        ${c.name}: need ${c.needed.toFixed(1)} / have ${c.have} ${c.unit} ${c.ok?'✓':'✗'}
+      </span>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-success" data-action="mark-plan-done" data-id="${p.id}" style="flex:1;padding:8px;font-size:13px">✓ Mark done</button>
+      <button class="btn btn-danger" data-action="del-plan" data-id="${p.id}" style="padding:8px 12px;font-size:13px">✕</button>
+    </div>
+  </div>`;
+}).join('')}
+${done.length?`<div class="card" style="padding:0">
+  <div style="padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600">Completed</div>
+  <table><tbody>${done.slice(0,15).map(p=>{const r=recipes.find(x=>x.id===p.recipe_id);return`<tr><td>${r?.name||p.recipe_id}</td><td>${p.planned_kg}kg</td><td style="color:var(--text-muted)">${fd(p.planned_date)}</td></tr>`;}).join('')}</tbody></table>
+</div>`:''}`;
+}
+
+function renderReportTab(alarms){
+  const production=recipes.map(r=>{
+    const ings=recipeIngredients.filter(i=>i.recipe_id===r.id);
+    if(!ings.length) return null;
+    let maxKg=Infinity;
+    ings.forEach(ing=>{
+      const rm=rawMaterials.find(x=>x.name.toLowerCase()===ing.ingredient_name.toLowerCase());
+      if(!rm||!ing.qty_per_kg) return;
+      const needed=ingQtyInRMUnit(ing.qty_per_kg,ing.unit,1,rm.unit);
+      if(needed>0) maxKg=Math.min(maxKg,rm.stock_qty/needed);
+    });
+    return{recipe:r,maxKg:maxKg===Infinity?0:maxKg};
+  }).filter(Boolean);
+
+  return `
+${alarms.length?`<div class="card" style="border-color:rgba(239,68,68,.4)">
+  <div class="card-label" style="color:var(--red)">⚠️ RM shortages</div>
+  <table><thead><tr><th>Material</th><th>Have</th><th>Need</th><th>Short</th></tr></thead>
+  <tbody>${alarms.map(a=>`<tr style="background:rgba(239,68,68,.05)">
+    <td style="font-weight:500">${a.rm.name}</td>
+    <td>${a.rm.stock_qty} ${a.rm.unit}</td>
+    <td style="color:var(--red)">${a.needed.toFixed(2)}</td>
+    <td style="color:var(--red);font-weight:600">${a.shortage.toFixed(2)} short</td>
+  </tr>`).join('')}</tbody></table>
+</div>`:`<div class="alert alert-ok">✓ All materials sufficient for active orders & plans.</div>`}
+
+<div class="card">
+  <div class="card-label">What can we produce now?</div>
+  <table><thead><tr><th>Recipe</th><th>Max kg</th></tr></thead>
+  <tbody>${production.map(p=>`<tr>
+    <td>${p.recipe.name}</td>
+    <td style="font-weight:600;color:${p.maxKg<1?'var(--red)':p.maxKg>=5?'var(--green)':'var(--saffron)'}">${p.maxKg.toFixed(1)} kg</td>
+  </tr>`).join('')}${production.length===0?'<tr><td colspan="2" style="color:var(--text-muted)">No recipes with ingredients mapped.</td></tr>':''}</tbody></table>
+</div>
+
+<div class="card">
+  <div class="card-label">Stock snapshot</div>
+  <table><thead><tr><th>Material</th><th>Stock</th><th>Reorder at</th><th>Status</th></tr></thead>
+  <tbody>${rawMaterials.map(r=>`<tr style="${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'background:rgba(245,158,11,.05)':''}">
+    <td style="font-weight:500">${r.name}</td>
+    <td>${r.stock_qty} ${r.unit}</td>
+    <td style="color:var(--text-muted)">${r.reorder_threshold} ${r.unit}</td>
+    <td>${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'<span class="badge badge-low">Reorder</span>':'<span class="badge badge-ok">OK</span>'}</td>
+  </tr>`).join('')}</tbody></table>
+</div>`;
+}
+
+// ============================================================
+// BUSINESS MODULE
+// ============================================================
+function renderBusinessModule(){
+  const bizScreens=['rm','products','quote','infra','history'];
+  return `
+<div class="page-header">
+  <div class="page-eyebrow">${USERS[user].name}</div>
+  <div class="page-title">Business</div>
+</div>
+<div style="display:flex;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none">
+  ${[['rm','Rates'],['products','Products'],['quote','Quote'],['infra','Infra'],['history','History']].map(([s,l])=>
+    `<button class="mod-btn ${activeScreen===s?'active':''}" data-screen="${s}" style="font-size:12px;white-space:nowrap">${l}</button>`
+  ).join('')}
+</div>
+<div class="page-body">
+${activeScreen==='rm'?renderBizRates():''}
+${activeScreen==='products'?renderBizProducts():''}
+${activeScreen==='quote'?renderBizQuote():''}
+${activeScreen==='infra'?renderBizInfra():''}
+${activeScreen==='history'?renderBizHistory():''}
+</div>`;
+}
+
+function renderBizRates(){
+  // Group raw materials by type
+  const groups = {
+    'Flour & Grains': rawMaterials.filter(r=>['kg','g'].includes(r.unit)&&(r.name.toLowerCase().includes('wheat')||r.name.toLowerCase().includes('maida')||r.name.toLowerCase().includes('rava')||r.name.toLowerCase().includes('flour')||r.name.toLowerCase().includes('aloo'))),
+    'Fats & Dairy': rawMaterials.filter(r=>['litre','ml'].includes(r.unit)||(r.name.toLowerCase().includes('oil')||r.name.toLowerCase().includes('butter')||r.name.toLowerCase().includes('curd')||r.name.toLowerCase().includes('milk'))),
+    'Additives': rawMaterials.filter(r=>!( r.name.toLowerCase().includes('wheat')||r.name.toLowerCase().includes('maida')||r.name.toLowerCase().includes('rava')||r.name.toLowerCase().includes('flour')||r.name.toLowerCase().includes('aloo')||r.name.toLowerCase().includes('oil')||r.name.toLowerCase().includes('butter')||r.name.toLowerCase().includes('curd')||r.name.toLowerCase().includes('milk')||['litre','ml'].includes(r.unit))),
+  };
+
+  function rmRateRows(list){
+    return list.map(rm=>{
+      const rate = bizState.rm[rm.id]||rm.costing_price||0;
+      return `<div class="rm-row">
+        <div><div class="rm-name">${rm.name}</div><div class="rm-unit">₹/${rm.unit}</div></div>
+        <div class="rm-price-wrap">
+          <span class="rm-currency">₹</span>
+          <input class="rm-price-input" type="number" step="0.5" value="${rate}" data-rmid="${rm.id}" oninput="onBizRMChange(this)">
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  return `
+<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px" id="biz-rm-saved-at">Costing rates — edit and save to update all product costs</div>
+${Object.entries(groups).filter(([,list])=>list.length>0).map(([label,list])=>`
+<div class="card">
+  <div class="card-label">${label}</div>
+  ${rmRateRows(list)}
+</div>`).join('')}
+<div style="display:flex;gap:10px;margin-top:4px">
+  <button class="btn btn-primary" onclick="saveBizRates()">Save rates</button>
+</div>`;
+}
+
+function onBizRMChange(el){
+  bizState.rm[el.dataset.rmid] = parseFloat(el.value)||0;
+}
+
+function saveBizRates(){
+  // Also update costing_price in Supabase raw_materials
+  const updates = [];
+  for(const [id, rate] of Object.entries(bizState.rm)){
+    if(rawMaterials.find(r=>r.id==id)) updates.push(sbPatch('raw_materials',{id},{costing_price:rate}));
+  }
+  Promise.all(updates).catch(()=>{});
+  saveBizState();
+  const now=new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+  const el=document.getElementById('biz-rm-saved-at');
+  if(el) el.textContent='Synced: '+now;
+  renderBizProductsIfActive();
+  showToast('Rates saved & synced ✓');
+}
+
+function renderBizProductsIfActive(){
+  if(activeModule==='business'&&activeScreen==='products') render();
+}
+
+function renderBizProducts(){
+  if(!recipes.length) return '<div style="color:var(--text-muted);text-align:center;padding:32px">No recipes yet. Add recipes in the Production module first.</div>';
+  return recipes.map(r=>{
+    const recipe=getEffectiveRecipe(r.id);
+    if(!recipe||!recipe.dough_sizes.length) return '';
+    const firstSize=recipe.dough_sizes[0];
+    const rmCost=calcCostPerPiece(recipe,firstSize.grams);
+    const infCost=getInfraCostPerPiece('rtc');
+    const pkg=parseFloat(bizState.infra.pkg||0.25);
+    const total=rmCost+infCost.total+pkg;
+    const isCustomised=bizState.customProducts&&bizState.customProducts[r.id];
+
+    return `<div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      ${isCustomised?'<span style="font-size:9px;background:rgba(34,197,94,.15);color:var(--green);border-radius:4px;padding:2px 6px;margin-left:4px">edited</span>':''}
+      <div class="product-header">
+        <div>
+          <div class="product-name">${r.name}</div>
+          <div class="product-id">${r.id}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="product-cost">₹${total.toFixed(2)}</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px">${firstSize.grams}g</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹${rmCost.toFixed(2)}</span></div>
+        <div class="product-meta-item">Infra: <span>₹${infCost.total.toFixed(2)}</span></div>
+        <div class="product-meta-item">Pack: <span>₹${pkg.toFixed(2)}</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="showBizProductDetail('${r.id}')" class="btn btn-ghost" style="flex:1;padding:8px;font-size:12px">View breakdown</button>
+        <button onclick="openBizRecipeEdit('${r.id}')" class="btn btn-ghost" style="flex:1;padding:8px;font-size:12px;border-color:var(--saffron);color:var(--saffron)">✏ Edit recipe</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showBizProductDetail(recipeId){
+  const recipe=getEffectiveRecipe(recipeId);
+  if(!recipe) return;
+  const modal=document.getElementById('biz-product-modal');
+  const content=document.getElementById('biz-modal-content');
+  if(!modal||!content) return;
+
+  let rows='';
+  for(const [ingName, grams] of Object.entries(recipe.rm_formula)){
+    const rm=rawMaterials.find(r=>r.name.toLowerCase()===ingName.toLowerCase());
+    const rate=rm?getRMRate(rm.id):0;
+    const cost=(grams/1000)*rate;
+    rows+=`<div class="cost-row"><div class="cost-label">${ingName}<small>${grams}g/kg @ ₹${rate}/${rm?.unit||'kg'}</small></div><div class="cost-val mono">₹${cost.toFixed(3)}</div></div>`;
+  }
+
+  const sizes=recipe.dough_sizes.map(s=>{
+    const rm=calcCostPerPiece(recipe,s.grams);
+    const inf=getInfraCostPerPiece('rtc');
+    const pkg=parseFloat(bizState.infra.pkg||0.25);
+    return `<tr><td>${s.grams}g / ${s.inches}</td><td class="mono">₹${rm.toFixed(2)}</td><td class="mono">₹${(inf.total+pkg).toFixed(2)}</td><td class="mono" style="color:var(--saffron);font-weight:600">₹${(rm+inf.total+pkg).toFixed(2)}</td></tr>`;
+  }).join('');
+
+  content.innerHTML=`
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px">${recipe.name}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${recipeId}</div>
+    <div class="card-label">Ingredient costs (per kg dough)</div>
+    <div style="margin-bottom:16px">${rows}</div>
+    <div class="card-label">Cost by dough size</div>
+    <table class="price-table">
+      <tr><th>Size</th><th>RM/pc</th><th>Infra+Pkg</th><th>Total/pc</th></tr>${sizes}
+    </table>`;
+  modal.classList.add('open');
+}
+
+// Biz recipe edit — opens modal that edits bizState.customProducts overrides
+let _bizEditId=null;
+function openBizRecipeEdit(recipeId){
+  _bizEditId=recipeId;
+  const recipe=getEffectiveRecipe(recipeId);
+  if(!recipe) return;
+  const modal=document.getElementById('biz-recipe-modal');
+  const content=document.getElementById('biz-recipe-content');
+  if(!modal||!content) return;
+
+  document.getElementById('biz-rec-title').textContent=recipe.name;
+  document.getElementById('biz-rec-pack').value=recipe.pack_default||10;
+
+  // Render ingredient rows
+  const ingEl=document.getElementById('biz-ing-rows');
+  ingEl.innerHTML='';
+  Object.entries(recipe.rm_formula).forEach(([name,grams])=>{
+    ingEl.appendChild(makeBizIngRow(name,grams));
+  });
+  // Render size rows
+  const sizeEl=document.getElementById('biz-size-rows');
+  sizeEl.innerHTML='';
+  recipe.dough_sizes.forEach(s=>sizeEl.appendChild(makeBizSizeRow(s.grams,s.inches)));
+
+  document.getElementById('biz-rec-msg').textContent='';
+  modal.classList.add('open');
+}
+
+const INPSTYLE='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;width:100%';
+
+function makeBizIngRow(name,grams){
+  const div=document.createElement('div');
+  div.className='ing-row';
+  div.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  const rmOpts=rawMaterials.map(r=>`<option value="${r.name}" ${r.name===name?'selected':''}>${r.name}</option>`).join('');
+  const inp=document.createElement('input');
+  inp.type='number';inp.value=grams||'';inp.min=0;inp.step=0.1;inp.placeholder='g';
+  inp.style.cssText=INPSTYLE+';flex:0 0 80px;text-align:right';
+  const sel=document.createElement('select');
+  sel.style.cssText=INPSTYLE+';flex:1';
+  sel.innerHTML=rmOpts||`<option value="${name}">${name}</option>`;
+  const unit=document.createElement('span');
+  unit.textContent='g';unit.style.cssText='color:var(--text-muted);font-size:11px;flex-shrink:0';
+  const del=document.createElement('button');
+  del.textContent='✕';del.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;padding:6px 8px;font-size:12px';
+  del.onclick=()=>div.remove();
+  div.appendChild(sel);div.appendChild(inp);div.appendChild(unit);div.appendChild(del);
+  return div;
+}
+function makeBizSizeRow(grams,inches){
+  const div=document.createElement('div');
+  div.style.cssText='display:grid;grid-template-columns:90px 1fr 36px;gap:6px;margin-bottom:6px;align-items:center';
+  const g=document.createElement('input');
+  g.type='number';g.value=grams||'';g.min=1;g.step=1;g.placeholder='g';
+  g.style.cssText=INPSTYLE+';text-align:right';
+  const s=document.createElement('input');
+  s.type='text';s.value=inches||'';s.placeholder='e.g. 8"';s.style.cssText=INPSTYLE;
+  const del=document.createElement('button');
+  del.textContent='✕';del.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;padding:6px;font-size:12px';
+  del.onclick=()=>div.remove();
+  div.appendChild(g);div.appendChild(s);div.appendChild(del);
+  return div;
+}
+
+function renderBizQuote(){
+  return `<div style="color:var(--text-muted);font-size:13px;padding:20px 0">
+  <div style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-label">Buyer details</div>
+    <div class="field"><label>Buyer name</label><input type="text" id="q-buyer" placeholder="e.g. Vinod — Thane" oninput="loadBuyerHistory()"/></div>
+    <div class="field" style="margin:0"><label>City</label><input type="text" id="q-city" placeholder="e.g. Thane"/></div>
+  </div>
+  <div class="card">
+    <div class="card-label">Product configuration</div>
+    <div class="field"><label>Product / Recipe</label>
+      <select id="q-product" onchange="updateBizQuoteOptions()">
+        <option value="">Select recipe…</option>
+        ${recipes.map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field"><label>Dough size</label><select id="q-dough" onchange="calculateBizQuote()"><option value="">Select size…</option></select></div>
+    <div class="two-col">
+      <div class="field" style="margin:0"><label>Qty/month (pcs)</label><input type="number" id="q-qty" placeholder="50000" oninput="calculateBizQuote()"/></div>
+      <div class="field" style="margin:0"><label>Pack size (pcs)</label><input type="number" id="q-pack" placeholder="10" oninput="calculateBizQuote()"/></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Margin</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="margin-btns">
+      ${[10,12,15,18,20,25].map(m=>`<button onclick="setBizMargin(${m},this)" class="btn btn-ghost" style="padding:8px 14px;font-size:13px${bizState.currentMargin===m?';background:var(--saffron);color:#000;border-color:var(--saffron)':''}">${m}%</button>`).join('')}
+    </div>
+  </div>
+  <div class="card" id="q-result" style="display:none">
+    <div class="card-label">Quote result</div>
+    <div id="q-result-content"></div>
+    <button class="btn btn-primary" onclick="saveBizQuote()" style="width:100%;margin-top:12px">Save quote</button>
+  </div>
+  </div></div>`;
+}
+
+function updateBizQuoteOptions(){
+  const pid=document.getElementById('q-product').value;
+  const recipe=getEffectiveRecipe(pid);
+  const sel=document.getElementById('q-dough');
+  sel.innerHTML='<option value="">Select size…</option>';
+  if(recipe){
+    recipe.dough_sizes.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s.grams;o.textContent=`${s.grams}g / ${s.inches}`;
+      sel.appendChild(o);
+    });
+    document.getElementById('q-pack').value=recipe.pack_default||10;
+  }
+  calculateBizQuote();
+}
+
+function calculateBizQuote(){
+  const pid=document.getElementById('q-product').value;
+  const doughG=parseFloat(document.getElementById('q-dough').value);
+  const qty=parseFloat(document.getElementById('q-qty').value)||0;
+  const pack=parseFloat(document.getElementById('q-pack').value)||10;
+  const resultEl=document.getElementById('q-result');
+  if(!pid||!doughG){if(resultEl)resultEl.style.display='none';return;}
+
+  const recipe=getEffectiveRecipe(pid);
+  if(!recipe){return;}
+  const rmCost=calcCostPerPiece(recipe,doughG);
+  const infCost=getInfraCostPerPiece('rtc');
+  const pkgCost=parseFloat(bizState.infra.pkg||0.25);
+  const totalCost=rmCost+infCost.total+pkgCost;
+  const margin=bizState.currentMargin/100;
+  const sellingPrice=totalCost/(1-margin);
+  const pricePerPack=sellingPrice*pack;
+  const monthly=sellingPrice*qty;
+
+  if(resultEl){
+    resultEl.style.display='block';
+    document.getElementById('q-result-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="stat-box"><div class="stat-val" style="font-size:16px">₹${totalCost.toFixed(2)}</div><div class="stat-label">Cost/piece</div></div>
+      <div class="stat-box"><div class="stat-val" style="font-size:16px;color:var(--green)">₹${sellingPrice.toFixed(2)}</div><div class="stat-label">Selling price/piece</div></div>
+      <div class="stat-box"><div class="stat-val" style="font-size:16px">₹${pricePerPack.toFixed(2)}</div><div class="stat-label">Per pack (${pack}pcs)</div></div>
+      <div class="stat-box"><div class="stat-val" style="font-size:14px">₹${(monthly/100000).toFixed(2)}L</div><div class="stat-label">Monthly revenue</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted)">Margin: ${bizState.currentMargin}% · RM: ₹${rmCost.toFixed(2)} · Infra: ₹${infCost.total.toFixed(2)} · Pack: ₹${pkgCost.toFixed(2)}</div>`;
+  }
+}
+
+function setBizMargin(pct,btn){
+  bizState.currentMargin=pct;
+  document.querySelectorAll('#margin-btns .btn').forEach(b=>{
+    b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.style.background='var(--saffron)';btn.style.color='#000';btn.style.borderColor='var(--saffron)';
+  calculateBizQuote();
+}
+
+function saveBizQuote(){
+  const buyer=document.getElementById('q-buyer').value.trim();
+  const city=document.getElementById('q-city').value.trim();
+  const pid=document.getElementById('q-product').value;
+  const doughG=parseFloat(document.getElementById('q-dough').value);
+  const qty=parseFloat(document.getElementById('q-qty').value)||0;
+  const pack=parseFloat(document.getElementById('q-pack').value)||10;
+  if(!buyer||!pid||!doughG){showToast('Fill buyer, product and size first');return;}
+  const recipe=getEffectiveRecipe(pid);
+  const rmCost=calcCostPerPiece(recipe,doughG);
+  const infCost=getInfraCostPerPiece('rtc');
+  const pkgCost=parseFloat(bizState.infra.pkg||0.25);
+  const totalCost=rmCost+infCost.total+pkgCost;
+  const sellingPrice=totalCost/(1-bizState.currentMargin/100);
+  bizState.quotes.push({
+    id:Date.now(),buyer,city,recipeId:pid,recipeName:recipe.name,
+    doughG,packSize:pack,qty,margin:bizState.currentMargin,
+    costPerPiece:totalCost,sellingPerPiece:sellingPrice,
+    ts:new Date().toISOString()
+  });
+  saveBizState();
+  showToast('Quote saved ✓');
+}
+
+function renderBizInfra(){
+  const inf=bizState.infra;
+  const labour=bizState.labour||[];
+  const monthlyCapacity=(inf.shift_vol||8000)*(inf.shifts||2)*(inf.days||26);
+  const labourMonthly=labour.reduce((s,l)=>s+(l.count*l.salary),0);
+  const totalFixed=labourMonthly+parseFloat(inf.rent||0)+parseFloat(inf.maint||0)+parseFloat(inf.capex||0);
+  const fixedPerPiece=totalFixed/monthlyCapacity;
+
+  return `
+<div class="card">
+  <div class="infra-section-title">Factory capacity</div>
+  <div class="two-col" style="margin-bottom:10px">
+    <div class="field" style="margin:0"><label>Pieces/shift</label><input type="number" id="inf-shift-vol" value="${inf.shift_vol||8000}" oninput="updateBizInfra()"/></div>
+    <div class="field" style="margin:0"><label>Shifts/day</label><input type="number" id="inf-shifts" value="${inf.shifts||2}" oninput="updateBizInfra()"/></div>
+  </div>
+  <div class="field"><label>Working days/month</label><input type="number" id="inf-days" value="${inf.days||26}" oninput="updateBizInfra()"/></div>
+  <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+    <div style="font-size:20px;font-weight:700">${monthlyCapacity.toLocaleString()}</div>
+    <div style="font-size:11px;color:var(--text-muted)">pieces/month capacity</div>
+  </div>
+</div>
+<div class="card">
+  <div class="infra-section-title">Fixed costs (₹/month)</div>
+  <div class="two-col" style="margin-bottom:10px">
+    <div class="field" style="margin:0"><label>Rent</label><input type="number" id="inf-rent" value="${inf.rent||30000}" oninput="updateBizInfra()"/></div>
+    <div class="field" style="margin:0"><label>Electricity</label><input type="number" id="inf-elec" value="${inf.elec||83200}" oninput="updateBizInfra()"/></div>
+  </div>
+  <div class="two-col" style="margin-bottom:10px">
+    <div class="field" style="margin:0"><label>Maintenance</label><input type="number" id="inf-maint" value="${inf.maint||20000}" oninput="updateBizInfra()"/></div>
+    <div class="field" style="margin:0"><label>Capex/depreciation</label><input type="number" id="inf-capex" value="${inf.capex||40000}" oninput="updateBizInfra()"/></div>
+  </div>
+  <div class="two-col">
+    <div class="field" style="margin:0"><label>Elec cost RTC (₹/pc)</label><input type="number" step="0.001" id="inf-elec-rtc" value="${inf.elec_rtc||0.384}" oninput="updateBizInfra()"/></div>
+    <div class="field" style="margin:0"><label>Packaging cost (₹/pc)</label><input type="number" step="0.01" id="inf-pkg" value="${inf.pkg||0.25}" oninput="updateBizInfra()"/></div>
+  </div>
+</div>
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div class="infra-section-title" style="margin:0">Labour</div>
+    <button class="btn btn-ghost" onclick="addBizLabour()" style="padding:6px 12px;font-size:12px">+ Add row</button>
+  </div>
+  <div id="biz-labour-rows">
+  ${labour.map((l,i)=>`<div style="display:grid;grid-template-columns:1fr 60px 90px 36px;gap:6px;margin-bottom:6px;align-items:center">
+    <input value="${l.role}" oninput="updateBizLabourRow(${i},'role',this.value)" style="${INPSTYLE}"/>
+    <input type="number" value="${l.count}" oninput="updateBizLabourRow(${i},'count',this.value)" style="${INPSTYLE};text-align:center"/>
+    <input type="number" value="${l.salary}" oninput="updateBizLabourRow(${i},'salary',this.value)" style="${INPSTYLE};text-align:right"/>
+    <button onclick="removeBizLabour(${i})" class="remove-btn">✕</button>
+  </div>`).join('')}
+  </div>
+  <div style="font-size:12px;color:var(--text-muted);margin-top:8px">Total: ₹${labourMonthly.toLocaleString()}/month · ₹${fixedPerPiece.toFixed(3)}/piece</div>
+</div>
+<button class="btn btn-primary" onclick="saveBizInfra()" style="width:100%">Save infrastructure</button>`;
+}
+
+function updateBizInfra(){
+  bizState.infra.shift_vol=parseFloat(document.getElementById('inf-shift-vol')?.value)||8000;
+  bizState.infra.shifts=parseFloat(document.getElementById('inf-shifts')?.value)||2;
+  bizState.infra.days=parseFloat(document.getElementById('inf-days')?.value)||26;
+  bizState.infra.rent=parseFloat(document.getElementById('inf-rent')?.value)||0;
+  bizState.infra.elec=parseFloat(document.getElementById('inf-elec')?.value)||0;
+  bizState.infra.maint=parseFloat(document.getElementById('inf-maint')?.value)||0;
+  bizState.infra.capex=parseFloat(document.getElementById('inf-capex')?.value)||0;
+  bizState.infra.elec_rtc=parseFloat(document.getElementById('inf-elec-rtc')?.value)||0;
+  bizState.infra.pkg=parseFloat(document.getElementById('inf-pkg')?.value)||0.25;
+}
+function updateBizLabourRow(i,field,val){
+  if(!bizState.labour[i]) return;
+  bizState.labour[i][field]=field==='role'?val:parseFloat(val)||0;
+}
+function addBizLabour(){
+  bizState.labour.push({role:'New role',count:1,salary:12000});
+  render();
+}
+function removeBizLabour(i){
+  bizState.labour.splice(i,1);
+  render();
+}
+function saveBizInfra(){
+  updateBizInfra();
+  saveBizState();
+  showToast('Infrastructure saved ✓');
+}
+
+function renderBizHistory(){
+  const quotes=bizState.quotes||[];
+  if(!quotes.length) return '<div style="color:var(--text-muted);text-align:center;padding:32px">No saved quotes yet.</div>';
+  const byBuyer={};
+  quotes.forEach(q=>{if(!byBuyer[q.buyer])byBuyer[q.buyer]=[];byBuyer[q.buyer].push(q);});
+  return Object.entries(byBuyer).map(([buyer,qs])=>`
+  <div class="history-card" onclick="showBuyerDetail('${buyer}')">
+    <div style="font-size:15px;font-weight:600">${buyer}</div>
+    <div class="history-date">${qs[0].city||''} · ${qs.length} quote${qs.length>1?'s':''}</div>
+    <div style="font-size:13px;color:var(--text-dim);margin-top:6px">Latest: ${qs[qs.length-1].recipeName} · ₹${qs[qs.length-1].sellingPerPiece?.toFixed(2)}/pc</div>
+  </div>`).join('');
+}
+
+function showBuyerDetail(buyer){
+  const qs=(bizState.quotes||[]).filter(q=>q.buyer===buyer);
+  const modal=document.getElementById('biz-product-modal');
+  const content=document.getElementById('biz-modal-content');
+  if(!modal||!content) return;
+  content.innerHTML=`
+    <div style="font-size:18px;font-weight:700;margin-bottom:16px">${buyer}</div>
+    ${qs.map(q=>`<div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:600">${q.recipeName}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${ft(q.ts)}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-dim)">${q.doughG}g · Pack ${q.packSize}pcs · Margin ${q.margin}%</div>
+      <div style="font-size:16px;font-weight:700;color:var(--green);margin-top:6px">₹${q.sellingPerPiece?.toFixed(2)}/pc · ₹${(q.sellingPerPiece*q.packSize)?.toFixed(2)}/pack</div>
+    </div>`).join('')}`;
+  modal.classList.add('open');
+}
+
+// ============================================================
+// BIND ALL EVENTS
+// ============================================================
+function bindShell(){
+  // Module nav
+  document.querySelectorAll('[data-mod]').forEach(b=>b.addEventListener('click',()=>{
+    activeModule=b.dataset.mod;
+    activeTab='inventory'; activeScreen='rm';
+    recipeFormOpen=false;editingRecipe=null;rmModalOpen=false;rmModalData=null;rmDirty.clear();
+    render();
+  }));
+  // Sub tabs (distributor + production)
+  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
+    activeTab=b.dataset.tab;
+    recipeFormOpen=false;editingRecipe=null;rmDirty.clear();
+    render();
+  }));
+  // Business sub-screens
+  document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>{
+    activeScreen=b.dataset.screen; render();
+  }));
+  // Logout
+  document.querySelectorAll('[data-action="logout"]').forEach(b=>b.addEventListener('click',()=>{
+    user=null;_store.removeItem('ed_user');if(pollTimer)clearInterval(pollTimer);render();
+  }));
+
+  bindDistributorEvents();
+  if(USERS[user]?.role==='owner'){
+    bindProductionEvents();
+    bindBusinessEvents();
+  }
+}
+
+function bindDistributorEvents(){
+  document.querySelectorAll('[data-action="adj"]').forEach(b=>b.addEventListener('click',async()=>{
+    const sku=b.dataset.sku,cur=inv[sku]?.packs||0;
+    const v=prompt(`Adjust packs for ${skuName(sku)}\nCurrent: ${cur}\n\nNew count:`);
+    if(v===null)return;const n=parseInt(v);if(isNaN(n)||n<0){alert('Invalid');return;}
+    await sbPatch('inventory',{sku},{packs:n,updated_by:user});
+    await addLog('Adjusted',sku,`${cur}→${n} packs`);await loadInventory();render();
+  }));
+  document.querySelectorAll('[data-action="mset"]').forEach(b=>b.addEventListener('click',async()=>{
+    const sku=b.dataset.sku,cur=inv[sku]?.packs||0;
+    const v=prompt(`Set packs for ${skuName(sku)}\nCurrent: ${cur}\n\nActual count:`);
+    if(v===null)return;const n=parseInt(v);if(isNaN(n)||n<0){alert('Invalid');return;}
+    await sbPatch('inventory',{sku},{packs:n,updated_by:user});
+    await addLog('Stock set',sku,`Set to ${n} packs`);await loadInventory();render();
+  }));
+  document.getElementById('ord-btn')?.addEventListener('click',async()=>{
+    const sku=document.getElementById('ord-sku').value;
+    const qty=parseInt(document.getElementById('ord-qty').value);
+    const urgency=document.getElementById('ord-urgency').value;
+    const note=document.getElementById('ord-note').value.trim();
+    if(isNaN(qty)||qty<1){setMsg('ord-msg','Enter valid quantity.',false);return;}
+    const btn=document.getElementById('ord-btn');btn.disabled=true;btn.textContent='Placing…';
+    await sbPost('orders',{sku,qty,urgency,note,placed_by:user,status:'pending'});
+    await addLog('Order placed',sku,`${qty} packs (${urgency})`);
+    setMsg('ord-msg','✓ Order sent to Pune!',true);await loadInventory();render();
+  });
+  document.querySelectorAll('[data-action="approve"]').forEach(b=>b.addEventListener('click',async()=>{
+    b.disabled=true;b.textContent='Approving…';
+    const id=b.dataset.id;const o=orders.find(x=>x.id==id);
+    await sbPatch('orders',{id},{status:'approved'});
+    await addLog('Order approved',o?.sku,`${o?.qty} packs approved`);await loadInventory();render();
+  }));
+  document.querySelectorAll('[data-action="reject"]').forEach(b=>b.addEventListener('click',async()=>{
+    if(!confirm('Reject this order?'))return;
+    const id=b.dataset.id;const o=orders.find(x=>x.id==id);
+    await sbPatch('orders',{id},{status:'rejected'});
+    await addLog('Order rejected',o?.sku,`Rejected`);await loadInventory();render();
+  }));
+  document.querySelectorAll('[data-action="expand-dispatch"]').forEach(b=>b.addEventListener('click',()=>{expandedOrders.add(parseInt(b.dataset.id));render();}));
+  document.querySelectorAll('[data-action="collapse"]').forEach(b=>b.addEventListener('click',()=>{expandedOrders.delete(parseInt(b.dataset.id));render();}));
+  document.querySelectorAll('[data-action="do-dispatch"]').forEach(b=>b.addEventListener('click',async()=>{
+    const id=b.dataset.id,sku=b.dataset.sku,qty=parseInt(b.dataset.qty);
+    const ref=document.getElementById(`dref-${id}`)?.value.trim()||'';
+    const note=document.getElementById(`dnote-${id}`)?.value.trim()||'';
+    b.disabled=true;b.textContent='Dispatching…';
+    await sbPatch('orders',{id},{status:'dispatched',dispatched_ref:ref||null,dispatched_at:new Date().toISOString()});
+    await sbPost('dispatches',{sku,qty,ref,note,dispatched_by:user});
+    await addLog('Dispatched',sku,`${qty} packs sent to Mumbai`);
+    expandedOrders.delete(parseInt(id));await loadInventory();render();
+  }));
+  document.querySelectorAll('[data-action="mark-delivered"]').forEach(b=>b.addEventListener('click',async()=>{
+    const id=b.dataset.id,sku=b.dataset.sku,qty=parseInt(b.dataset.qty);
+    if(!confirm(`Mark delivered? Adds ${qty} packs of ${skuName(sku)} to Mumbai stock.`))return;
+    b.disabled=true;b.textContent='Updating…';
+    const cur=inv[sku]?.packs||0;
+    await sbPatch('orders',{id},{status:'delivered',delivered_at:new Date().toISOString()});
+    await sbPatch('inventory',{sku},{packs:cur+qty,updated_by:user});
+    await addLog('Delivered',sku,`+${qty} packs. Stock: ${cur}→${cur+qty}`);await loadInventory();render();
+  }));
+}
+
+function bindProductionEvents(){
+  // RM save all
+  document.getElementById('rm-save-all-btn')?.addEventListener('click',async()=>{
+    const inputs=[...document.querySelectorAll('.rm-add-inp')].filter(i=>parseFloat(i.value)!==0&&i.value!=='');
+    if(!inputs.length){setMsg('rm-save-msg','Nothing to save — enter qty to add.',false);return;}
+    const btn=document.getElementById('rm-save-all-btn');btn.disabled=true;btn.textContent='Saving…';
+    let saved=0;
+    for(const inp of inputs){
+      const id=parseInt(inp.dataset.id);
+      const added=parseFloat(inp.value)||0;
+      const current=parseFloat(inp.dataset.current)||0;
+      const newTotal=current+added;
+      const rm=rawMaterials.find(r=>r.id===id);
+      await sbPatch('raw_materials',{id},{stock_qty:newTotal});
+      await addLog('Stock updated',null,`${rm?.name}: +${added} → ${newTotal} ${rm?.unit}`);
+      saved++;
+    }
+    rmDirty.clear();
+    setMsg('rm-save-msg',`✓ ${saved} material${saved>1?'s':''} updated.`,true);
+    btn.style.background='';btn.style.color='';btn.textContent='Save all';btn.disabled=false;
+    await loadProduction();render();
+  });
+  // RM modal
+  function openRMModal(rm){rmModalData=rm||null;rmModalOpen=true;render();setTimeout(()=>document.getElementById('rm-modal-name')?.focus(),50);}
+  function closeRMModal(){rmModalOpen=false;rmModalData=null;render();}
+  document.querySelector('[data-action="add-rm"]')?.addEventListener('click',()=>openRMModal(null));
+  document.querySelectorAll('[data-action="edit-rm"]').forEach(b=>b.addEventListener('click',()=>{
+    openRMModal(rawMaterials.find(r=>r.id==b.dataset.id));
+  }));
+  document.getElementById('rm-modal-overlay')?.addEventListener('click',e=>{if(e.target.id==='rm-modal-overlay')closeRMModal();});
+  document.getElementById('rm-modal-close')?.addEventListener('click',closeRMModal);
+  document.getElementById('rm-modal-del-btn')?.addEventListener('click',async()=>{
+    const id=document.getElementById('rm-modal-id').value;
+    const name=document.getElementById('rm-modal-name').value;
+    if(!confirm(`Delete "${name}"?`))return;
+    await sbDelete('raw_materials',{id});closeRMModal();await loadProduction();render();
+  });
+  document.getElementById('rm-modal-save-btn')?.addEventListener('click',async()=>{
+    const id=document.getElementById('rm-modal-id').value;
+    const name=document.getElementById('rm-modal-name').value.trim();
+    const unit=document.getElementById('rm-modal-unit').value;
+    const stock=parseFloat(document.getElementById('rm-modal-stock').value)||0;
+    const thresh=parseFloat(document.getElementById('rm-modal-thresh').value)||0;
+    const price=parseFloat(document.getElementById('rm-modal-price').value)||0;
+    const supplier=document.getElementById('rm-modal-supplier').value.trim();
+    if(!name){setMsg('rm-modal-msg','Name required.',false);return;}
+    const btn=document.getElementById('rm-modal-save-btn');btn.disabled=true;btn.textContent='Saving…';
+    if(id){await sbPatch('raw_materials',{id},{name,unit,stock_qty:stock,reorder_threshold:thresh,costing_price:price,supplier});}
+    else{await sbPost('raw_materials',{name,unit,stock_qty:stock,reorder_threshold:thresh,costing_price:price,supplier});}
+    closeRMModal();await loadProduction();render();
+  });
+
+  // Recipe form
+  document.querySelector('[data-action="add-recipe"]')?.addEventListener('click',()=>{
+    editingRecipe=null;recipeFormOpen=true;render();
+    setTimeout(()=>{
+      document.getElementById('recipe-form-card')?.scrollIntoView({behavior:'smooth'});
+      initIngRows([]);initVarRows([]);
+    },50);
+  });
+  document.querySelectorAll('[data-action="edit-recipe"]').forEach(b=>b.addEventListener('click',()=>{
+    const r=recipes.find(x=>x.id===b.dataset.id);if(!r)return;
+    editingRecipe=r;recipeFormOpen=true;render();
+    setTimeout(()=>{
+      document.getElementById('recipe-form-card')?.scrollIntoView({behavior:'smooth'});
+      initIngRows(recipeIngredients.filter(i=>i.recipe_id===r.id));
+      initVarRows(recipeVariants.filter(v=>v.recipe_id===r.id));
+    },50);
+  }));
+  document.getElementById('recipe-cancel-btn')?.addEventListener('click',()=>{recipeFormOpen=false;editingRecipe=null;const el=document.getElementById('rec-id');if(el)el.disabled=false;render();});
+  document.getElementById('add-ing-row')?.addEventListener('click',addIngRow);
+  document.getElementById('add-var-row')?.addEventListener('click',addVarRow);
+  document.getElementById('recipe-save-btn')?.addEventListener('click',saveRecipe);
+  document.querySelectorAll('[data-action="del-recipe"]').forEach(b=>b.addEventListener('click',async()=>{
+    const r=recipes.find(x=>x.id===b.dataset.id);
+    if(!confirm(`Delete recipe "${r?.name}"?`))return;
+    await sbDelete('recipe_ingredients',{recipe_id:b.dataset.id});
+    await sbDelete('recipe_variants',{recipe_id:b.dataset.id});
+    await sbDelete('recipes',{id:b.dataset.id});
+    await loadProduction();render();
+  }));
+  document.querySelectorAll('[data-action="map-sku"]').forEach(sel=>sel.addEventListener('change',async()=>{
+    const sku=sel.dataset.sku;const varId=sel.value?parseInt(sel.value):null;
+    const existing=skuMap.find(m=>m.sku===sku);
+    if(existing){if(varId)await sbPatch('sku_recipe_map',{sku},{recipe_variant_id:varId});else await sbDelete('sku_recipe_map',{sku});}
+    else{if(varId)await sbPost('sku_recipe_map',{sku,recipe_variant_id:varId});}
+    setMsg('map-msg','✓ Saved',true);await loadProduction();
+    setTimeout(()=>{const el=document.getElementById('map-msg');if(el)el.textContent='';},2000);
+  }));
+  // Plan
+  document.getElementById('plan-save-btn')?.addEventListener('click',async()=>{
+    const recipe_id=document.getElementById('plan-recipe').value;
+    const kg=parseFloat(document.getElementById('plan-kg').value);
+    const date=document.getElementById('plan-date').value;
+    if(!recipe_id){setMsg('plan-msg','Select a recipe.',false);return;}
+    if(isNaN(kg)||kg<=0){setMsg('plan-msg','Enter valid kg.',false);return;}
+    if(!date){setMsg('plan-msg','Select a date.',false);return;}
+    await sbPost('production_plans',{recipe_id,planned_kg:kg,planned_date:date,status:'planned',created_by:user});
+    setMsg('plan-msg','✓ Plan added.',true);await loadProduction();render();
+  });
+  document.querySelectorAll('[data-action="mark-plan-done"]').forEach(b=>b.addEventListener('click',async()=>{
+    const planId=b.dataset.id;const plan=productionPlans.find(p=>p.id==planId);if(!plan)return;
+    const ings=recipeIngredients.filter(i=>i.recipe_id===plan.recipe_id);
+    const deductions=[];
+    ings.forEach(ing=>{
+      const rm=rawMaterials.find(r=>r.name.toLowerCase()===ing.ingredient_name.toLowerCase());
+      if(!rm)return;
+      deductions.push({rm,needed:ingQtyInRMUnit(ing.qty_per_kg,ing.unit,plan.planned_kg,rm.unit)});
+    });
+    const summary=deductions.map(d=>`${d.rm.name}: −${d.needed.toFixed(3)} ${d.rm.unit}`).join('\n');
+    if(!confirm(`Mark production done?\n\nWill deduct:\n${summary}`))return;
+    b.disabled=true;b.textContent='Saving…';
+    for(const d of deductions){await sbPatch('raw_materials',{id:d.rm.id},{stock_qty:Math.max(0,(d.rm.stock_qty||0)-d.needed)});}
+    await sbPatch('production_plans',{id:planId},{status:'done'});
+    await addLog('Production done',null,`${plan.planned_kg}kg of ${plan.recipe_id}`);
+    await loadProduction();render();
+  }));
+  document.querySelectorAll('[data-action="del-plan"]').forEach(b=>b.addEventListener('click',async()=>{
+    if(!confirm('Cancel this plan?'))return;
+    await sbDelete('production_plans',{id:b.dataset.id});await loadProduction();render();
+  }));
+}
+
+function bindBusinessEvents(){
+  // Modals close
+  document.getElementById('biz-product-modal')?.addEventListener('click',e=>{
+    if(e.target.id==='biz-product-modal') document.getElementById('biz-product-modal').classList.remove('open');
+  });
+  document.getElementById('biz-close-modal')?.addEventListener('click',()=>{
+    document.getElementById('biz-product-modal').classList.remove('open');
+  });
+  document.getElementById('biz-recipe-modal')?.addEventListener('click',e=>{
+    if(e.target.id==='biz-recipe-modal') document.getElementById('biz-recipe-modal').classList.remove('open');
+  });
+  document.getElementById('biz-close-recipe-modal')?.addEventListener('click',()=>{
+    document.getElementById('biz-recipe-modal').classList.remove('open');
+  });
+  document.getElementById('biz-recipe-save-btn')?.addEventListener('click',saveBizRecipeEdit);
+  document.getElementById('biz-rec-add-ing')?.addEventListener('click',()=>{
+    document.getElementById('biz-ing-rows').appendChild(makeBizIngRow('',''));
+  });
+  document.getElementById('biz-rec-add-size')?.addEventListener('click',()=>{
+    document.getElementById('biz-size-rows').appendChild(makeBizSizeRow('',''));
+  });
+  document.getElementById('biz-rec-reset')?.addEventListener('click',()=>{
+    if(!_bizEditId)return;
+    if(!confirm('Reset to default recipe?'))return;
+    if(bizState.customProducts)delete bizState.customProducts[_bizEditId];
+    saveBizState();
+    document.getElementById('biz-recipe-modal').classList.remove('open');
+    render();showToast('Reset to default');
+  });
+}
+
+function saveBizRecipeEdit(){
+  if(!_bizEditId)return;
+  const rm_formula={};
+  document.querySelectorAll('#biz-ing-rows .ing-row').forEach(row=>{
+    const sel=row.querySelector('select');
+    const inp=row.querySelector('input[type="number"]');
+    if(sel&&inp&&sel.value&&parseFloat(inp.value)>0) rm_formula[sel.value]=parseFloat(inp.value);
+  });
+  const dough_sizes=[];
+  document.querySelectorAll('#biz-size-rows div').forEach(row=>{
+    const inputs=row.querySelectorAll('input');
+    const g=parseFloat(inputs[0]?.value);const s=inputs[1]?.value.trim();
+    if(g>0&&s)dough_sizes.push({grams:g,inches:s});
+  });
+  const pack_default=parseInt(document.getElementById('biz-rec-pack').value)||10;
+  if(!Object.keys(rm_formula).length){document.getElementById('biz-rec-msg').style.color='var(--red)';document.getElementById('biz-rec-msg').textContent='Add at least one ingredient.';return;}
+  if(!dough_sizes.length){document.getElementById('biz-rec-msg').style.color='var(--red)';document.getElementById('biz-rec-msg').textContent='Add at least one size.';return;}
+  if(!bizState.customProducts)bizState.customProducts={};
+  bizState.customProducts[_bizEditId]={rm_formula,dough_sizes,pack_default};
+  bizState._lastSaved=Date.now();
+  saveBizState();
+  document.getElementById('biz-recipe-modal').classList.remove('open');
+  render();showToast('Recipe saved ✓');
+}
+
+// ============================================================
+// RECIPE FORM HELPERS (production module)
+// ============================================================
+function initIngRows(ings){
+  const c=document.getElementById('ing-rows');if(!c)return;
+  c.innerHTML='';
+  if(!ings.length)addIngRow();
+  else ings.forEach(i=>addIngRow(i.ingredient_name,i.qty_per_kg,i.unit));
+}
+function addIngRow(name='',qty='',unit='g'){
+  const c=document.getElementById('ing-rows');if(!c)return;
+  const d=document.createElement('div');d.className='ing-row';
+  const rmOpts=rawMaterials.map(r=>`<option value="${r.name}" ${r.name===name?'selected':''}>${r.name}</option>`).join('');
+  d.innerHTML=`
+    <select style="flex:2;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit">${rmOpts||`<option value="${name}">${name||'Select RM'}</option>`}</select>
+    <input type="number" placeholder="qty/kg" value="${qty}" step="0.01" style="flex:1;min-width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit;text-align:right"/>
+    <select style="flex:0 0 50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit">${['g','ml','kg','litre','pcs'].map(u=>`<option ${u===unit?'selected':''}>${u}</option>`).join('')}</select>
+    <button class="btn btn-ghost" onclick="this.closest('.ing-row').remove()" style="padding:6px 8px;flex-shrink:0;font-size:12px">✕</button>`;
+  c.appendChild(d);
+}
+function addVarRow(dough='',size='',pcs='',pack='',status='pending'){
+  const c=document.getElementById('var-rows');if(!c)return;
+  const d=document.createElement('div');d.className='ing-row';
+  d.innerHTML=`
+    <input type="number" placeholder="Dough(g)" value="${dough}" step="1" style="flex:1;min-width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit;text-align:right"/>
+    <input placeholder="Size (8 inch)" value="${size}" style="flex:2;min-width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit"/>
+    <input type="number" placeholder="pcs/kg" value="${pcs}" step="0.1" style="flex:1;min-width:55px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit;text-align:right"/>
+    <input type="number" placeholder="Pack" value="${pack}" step="1" style="flex:1;min-width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:inherit;text-align:right"/>
+    <button class="btn btn-ghost" onclick="this.closest('.ing-row').remove()" style="padding:6px 8px;flex-shrink:0;font-size:12px">✕</button>`;
+  c.appendChild(d);
+}
+function initVarRows(vars){
+  const c=document.getElementById('var-rows');if(!c)return;
+  c.innerHTML='';
+  if(!vars.length)addVarRow();
+  else vars.forEach(v=>addVarRow(v.dough_ball_g,v.output_size,v.pieces_per_kg,v.pack_size_pieces,v.status));
+}
+async function saveRecipe(){
+  const id=document.getElementById('rec-id').value.trim().toUpperCase();
+  const name=document.getElementById('rec-name').value.trim();
+  const product=document.getElementById('rec-product').value;
+  const version=document.getElementById('rec-version').value.trim()||'1.0';
+  const notes=document.getElementById('rec-notes').value.trim();
+  if(!id||!name){setMsg('recipe-msg','Recipe ID and name are required.',false);return;}
+  const ingRows=[...document.getElementById('ing-rows').querySelectorAll('.ing-row')];
+  const ingredients=ingRows.map(row=>{
+    const els=row.querySelectorAll('input,select');
+    return{ingredient_name:els[0].value.trim(),qty_per_kg:parseFloat(els[1].value)||0,unit:els[2].value};
+  }).filter(i=>i.ingredient_name&&i.qty_per_kg>0);
+  const varRows=[...document.getElementById('var-rows').querySelectorAll('.ing-row')];
+  const variants=varRows.map(row=>{
+    const els=row.querySelectorAll('input');
+    return{dough_ball_g:parseFloat(els[0].value)||0,output_size:els[1].value.trim(),pieces_per_kg:parseFloat(els[2].value)||0,pack_size_pieces:parseInt(els[3].value)||0,status:'approved'};
+  }).filter(v=>v.dough_ball_g>0&&v.output_size);
+  const btn=document.getElementById('recipe-save-btn');btn.disabled=true;btn.textContent='Saving…';
+  if(editingRecipe){
+    await sbPatch('recipes',{id},{name,product,version,notes});
+    await sbDelete('recipe_ingredients',{recipe_id:id});
+    await sbDelete('recipe_variants',{recipe_id:id});
+  }else{
+    await sbPost('recipes',{id,name,product,version,notes});
+  }
+  for(const ing of ingredients)await sbPost('recipe_ingredients',{recipe_id:id,...ing});
+  for(const v of variants)await sbPost('recipe_variants',{recipe_id:id,...v});
+  recipeFormOpen=false;editingRecipe=null;
+  document.getElementById('rec-id').disabled=false;
+  btn.disabled=false;btn.textContent='Save recipe';
+  await loadProduction();render();showToast('Recipe saved ✓');
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+if(user){loadAll().then(()=>{render();startPolling();});}
+else render();
+</script>
+
+<!-- PRODUCT DETAIL MODAL (Business) -->
+<div class="modal-overlay" id="biz-product-modal">
+  <div class="modal-box" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <button class="btn btn-ghost" id="biz-close-modal" style="position:absolute;top:16px;right:16px;padding:6px 10px">✕</button>
+    <div id="biz-modal-content"></div>
+  </div>
+</div>
+
+<!-- RECIPE EDIT MODAL (Business) -->
+<div class="modal-overlay" id="biz-recipe-modal">
+  <div class="modal-box" style="max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Edit Recipe</div>
+        <div style="font-size:16px;font-weight:600" id="biz-rec-title">—</div>
+      </div>
+      <button class="btn btn-ghost" id="biz-close-recipe-modal" style="padding:6px 10px">✕</button>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Ingredients — grams per 1kg batch</div>
+    <div id="biz-ing-rows" style="margin-bottom:6px"></div>
+    <button class="btn btn-ghost" id="biz-rec-add-ing" style="width:100%;margin-bottom:14px;font-size:12px">+ Add ingredient</button>
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Dough sizes</div>
+    <div id="biz-size-rows" style="margin-bottom:6px"></div>
+    <button class="btn btn-ghost" id="biz-rec-add-size" style="width:100%;margin-bottom:14px;font-size:12px">+ Add size</button>
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Default pack size (pcs)</div>
+    <input type="number" id="biz-rec-pack" min="1" step="1" style="margin-bottom:16px"/>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" id="biz-recipe-save-btn" style="flex:1">Save recipe</button>
+      <button class="btn btn-ghost" id="biz-rec-reset" style="padding:10px 14px;font-size:12px">Reset</button>
+    </div>
+    <div id="biz-rec-msg" style="font-size:12px;margin-top:8px"></div>
+  </div>
+</div>
+
+</body>
+</html>
