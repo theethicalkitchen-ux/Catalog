@@ -936,18 +936,24 @@ async function syncFromCloud() {
 // ============================================================
 
 function getRMRate(id) {
-  // Direct id match (hardcoded recipes)
+  // 1. Direct id match (hardcoded recipes use ids like 'siddhikala')
   if (state.rm[id]) return parseFloat(state.rm[id]);
-  // Name-based match (Supabase recipes use ingredient names as keys)
-  const byName = Object.entries(state.rm).find(([k]) =>
+
+  // 2. id is actually an ingredient name (Supabase recipes) — find matching RM by name
+  const allRMs = [...RAW_MATERIALS, ...(state.customRMs || [])];
+  const byName = allRMs.find(r => r.name.toLowerCase() === id.toLowerCase());
+  if (byName) {
+    // Found the RM — look up its rate by id, or use its default rate
+    if (state.rm[byName.id]) return parseFloat(state.rm[byName.id]);
+    return parseFloat(byName.rate || 0);
+  }
+
+  // 3. Name-based match directly in state.rm keys
+  const stateByName = Object.entries(state.rm).find(([k]) =>
     k.toLowerCase() === id.toLowerCase()
   );
-  if (byName) return parseFloat(byName[1]);
-  // Also check custom RMs
-  const customRM = (state.customRMs || []).find(r =>
-    r.name.toLowerCase() === id.toLowerCase() || r.id === id
-  );
-  if (customRM) return parseFloat(state.rm[customRM.id] || customRM.rate || 0);
+  if (stateByName) return parseFloat(stateByName[1]);
+
   return 0;
 }
 
@@ -1218,20 +1224,32 @@ function makeIngRow(rmId, grams, allRMs) {
 
   const sel = document.createElement('select');
   sel.style.cssText = INPUT_STYLE + ';flex:2';
+
+  // Find which RM this ingredient corresponds to (match by id or name)
+  const matchedRM = allRMs.find(r =>
+    r.id === rmId ||
+    r.name.toLowerCase() === rmId.toLowerCase()
+  );
+
+  // Add all RM options
   allRMs.forEach(r => {
     const opt = document.createElement('option');
-    opt.value = r.id; opt.textContent = r.name;
-    // Match by id OR by name (for Supabase recipes which use ingredient names as keys)
-    if (r.id === rmId || r.name.toLowerCase() === rmId.toLowerCase()) opt.selected = true;
+    opt.value = r.id;
+    opt.textContent = r.name;
     sel.appendChild(opt);
   });
 
-  // If no RM matched (ingredient not in RM list), add it as a plain text option
-  if (!sel.querySelector('option[selected]') && rmId) {
+  // If ingredient not in RM list at all, add it as a standalone option
+  if (!matchedRM && rmId) {
     const opt = document.createElement('option');
-    opt.value = rmId; opt.textContent = rmId; opt.selected = true;
+    opt.value = rmId;
+    opt.textContent = rmId;
     sel.insertBefore(opt, sel.firstChild);
   }
+
+  // Set selected value AFTER all options are appended
+  if (matchedRM) sel.value = matchedRM.id;
+  else if (rmId) sel.value = rmId;
 
   const inp = document.createElement('input');
   inp.type = 'number'; inp.value = grams || ''; inp.min = 0; inp.step = 0.1;
@@ -1393,11 +1411,13 @@ function showProductDetail(productId) {
 
   let rows = '';
   for (const [rmId, grams] of Object.entries(p.rm_formula)) {
-    const rm = [...RAW_MATERIALS, ...(state.customRMs||[])].find(r => r.id === rmId);
+    const allRMs = [...RAW_MATERIALS, ...(state.customRMs||[])];
+    const rm = allRMs.find(r => r.id === rmId || r.name.toLowerCase() === rmId.toLowerCase());
     const rate = getRMRate(rmId);
     const cost = (grams / 1000) * rate;
+    const displayName = rm ? rm.name : rmId; // show name if found, else show the key itself
     rows += `<div class="cost-row">
-      <div class="cost-label">${rm ? rm.name : rmId}<small>${grams}g per kg dough @ ₹${rate}/kg</small></div>
+      <div class="cost-label">${displayName}<small>${grams}g per kg dough @ ₹${rate}/kg</small></div>
       <div class="cost-val mono">₹${cost.toFixed(3)}</div>
     </div>`;
   }
