@@ -1268,7 +1268,7 @@ function renderProducts() {
         <div class="product-meta-item">Pack: <span>₹${pkg.toFixed(2)}</span></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button onclick="event.stopPropagation();showProductDetail(${JSON.stringify(base).replace(/"/g,'&quot;')})" 
+        <button onclick="event.stopPropagation();showProductDetail('${base.id}')"
           style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);font-size:12px;font-family:inherit;cursor:pointer">
           View breakdown
         </button>
@@ -1282,13 +1282,16 @@ function renderProducts() {
   });
 }
 
-function showProductDetail(p) {
+function showProductDetail(productId) {
+  const base = PRODUCTS.find(x => x.id === productId);
+  if (!base) return;
+  const p = getProduct(base); // applies any custom recipe overrides
   const modal = document.getElementById('quote-modal');
   const content = document.getElementById('modal-content');
 
   let rows = '';
   for (const [rmId, grams] of Object.entries(p.rm_formula)) {
-    const rm = RAW_MATERIALS.find(r => r.id === rmId);
+    const rm = [...RAW_MATERIALS, ...(state.customRMs||[])].find(r => r.id === rmId);
     const rate = getRMRate(rmId);
     const cost = (grams / 1000) * rate;
     rows += `<div class="cost-row">
