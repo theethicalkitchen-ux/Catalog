@@ -330,6 +330,10 @@
       <button class="btn" onclick="showAddRMForm()" id="add-rm-btn" style="padding:10px 18px;border:1px solid #f59e0b;border-radius:8px;background:transparent;color:#f59e0b;font-family:inherit;font-size:14px;cursor:pointer;font-weight:500">+ Add material</button>
       <button class="btn btn-primary" onclick="saveRM()">Save Rates</button>
     </div>
+    <div class="card" id="rm-supabase-card" style="display:none">
+      <div class="card-label">Inventory Recipe Ingredients</div>
+      <div class="rm-list" id="rm-supabase"></div>
+    </div>
     <div style="text-align:center; margin-top: 10px; font-size: 11px; color: var(--text-muted);" id="rm-saved-at"></div>
   </div>
 </div>
@@ -1057,15 +1061,15 @@ function renderRM() {
           <div class="rm-unit">${rm.unit}</div>
         </div>
         <div class="rm-price-wrap">
-          <span class="rm-currency">₹</span>
-          <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] || rm.rate}" 
+          <span class="rm-currency">\u20b9</span>
+          <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] || rm.rate}"
             data-rm="${rm.id}" oninput="onRMChange(this)">
         </div>`;
       el.appendChild(row);
     });
   }
 
-  // Render custom RMs
+  // Custom RMs
   const customEl = document.getElementById('rm-custom');
   const customCard = document.getElementById('custom-rm-card');
   customEl.innerHTML = '';
@@ -1078,18 +1082,57 @@ function renderRM() {
       row.innerHTML = `
         <div style="flex:1">
           <div class="rm-name">${rm.name}</div>
-          <div class="rm-unit">${rm.unit} · ${rm.cat === 'flour' ? 'Flour & Grains' : rm.cat === 'other' ? 'Fats & Dairy' : rm.cat === 'additive' ? 'Additive' : 'Custom'}</div>
+          <div class="rm-unit">${rm.unit}</div>
         </div>
         <div class="rm-price-wrap">
-          <span class="rm-currency">₹</span>
+          <span class="rm-currency">\u20b9</span>
           <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] || rm.rate}"
             data-rm="${rm.id}" oninput="onRMChange(this)">
         </div>
-        <button onclick="deleteCustomRM('${rm.id}')" style="margin-left:8px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:4px;line-height:1" title="Delete">✕</button>`;
+        <button onclick="deleteCustomRM('${rm.id}')" style="margin-left:8px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:4px">\u2715</button>`;
       customEl.appendChild(row);
     });
   } else {
     customCard.style.display = 'none';
+  }
+
+  // Supabase-only ingredients — ingredients in live recipes not in hardcoded RM list
+  const baseNames = new Set([
+    ...RAW_MATERIALS.map(r => r.name.toLowerCase()),
+    ...(state.customRMs || []).map(r => r.name.toLowerCase()),
+  ]);
+  const sbIngredients = new Map();
+  SB_RECIPES.forEach(r => {
+    Object.keys(r.rm_formula).forEach(ingName => {
+      if (!baseNames.has(ingName.toLowerCase()) && !sbIngredients.has(ingName)) {
+        sbIngredients.set(ingName, state.rm[ingName] || 0);
+      }
+    });
+  });
+  const sbCard = document.getElementById('rm-supabase-card');
+  const sbEl   = document.getElementById('rm-supabase');
+  if (sbCard && sbEl) {
+    sbEl.innerHTML = '';
+    if (sbIngredients.size > 0) {
+      sbCard.style.display = 'block';
+      sbIngredients.forEach((rate, name) => {
+        const row = document.createElement('div');
+        row.className = 'rm-row';
+        row.innerHTML = `
+          <div>
+            <div class="rm-name">${name}</div>
+            <div class="rm-unit">from Inventory recipes</div>
+          </div>
+          <div class="rm-price-wrap">
+            <span class="rm-currency">\u20b9</span>
+            <input class="rm-price-input" type="number" step="0.5" value="${rate}"
+              data-rm="${name}" oninput="onRMChange(this)">
+          </div>`;
+        sbEl.appendChild(row);
+      });
+    } else {
+      sbCard.style.display = 'none';
+    }
   }
 
   const saved = localStorage.getItem('ed_rm_saved_at');
@@ -1855,6 +1898,7 @@ renderProducts();
 
 // Load live recipes from Supabase, then refresh products + quote screen
 loadSBRecipes().then(() => {
+  renderRM();       // refresh rates screen to show Supabase ingredients
   renderProducts();
   initQuoteScreen();
 });
