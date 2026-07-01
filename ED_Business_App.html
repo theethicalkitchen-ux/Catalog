@@ -946,31 +946,55 @@ async function syncFromCloud() {
 // CALCULATIONS
 // ============================================================
 
+// Maps ingredient names from Inventory App to Business App RM ids
+const RM_NAME_ALIASES = {
+  'siddhikala wheat':   'siddhikala',
+  'siddhikala atta':    'siddhikala',
+  'whole wheat flour':  'whole_wheat',
+  'maida':              'maida',
+  'rava':               'rava',
+  'rava (semolina)':    'rava',
+  'oil':                'oil',
+  'oil (refined)':      'oil',
+  'aloo flakes':        'aloo_flakes',
+  'curd':               'curd',
+  'butter':             'butter',
+  'milk powder':        'milk_powder',
+  'salt':               'salt',
+  'sugar':              'sugar',
+  'enzyme/softener':    'softener',
+  'enzyme / softener':  'softener',
+  'baking soda':        'baking_soda',
+  'baking powder':      'baking_powder',
+  'corn dexgel':        'corn_dexgel',
+  'ajwain':             'ajwain',
+  'water':              'water',
+  'preservative':       'preservative',
+};
+
 function getRMRate(id) {
-  // 1. Direct state.rm match by id (hardcoded recipe ids like 'siddhikala')
-  if (state.rm[id]) return parseFloat(state.rm[id]);
+  if (!id) return 0;
+  const key = id.toLowerCase().trim();
 
-  // 2. Direct state.rm match by name (Supabase ingredients stored by name)
-  if (state.rm[id] !== undefined) return parseFloat(state.rm[id]);
+  // 1. Direct match in state.rm (by id or name)
+  if (state.rm[id] !== undefined && state.rm[id] !== null) return parseFloat(state.rm[id]) || 0;
 
-  // 3. Look up in Supabase raw_materials by exact name match
-  const sbRM = SB_RAW_MATERIALS.find(r => r.name.toLowerCase() === id.toLowerCase());
-  if (sbRM) {
-    const rate = parseFloat(state.rm[sbRM.name] || sbRM.costing_price || 0);
-    return rate;
-  }
+  // 2. Alias map — resolve ingredient name to RM id
+  const aliasId = RM_NAME_ALIASES[key];
+  if (aliasId && state.rm[aliasId] !== undefined) return parseFloat(state.rm[aliasId]) || 0;
 
-  // 4. Look up in hardcoded RAW_MATERIALS by name
+  // 3. Fuzzy match against RAW_MATERIALS names
   const allRMs = [...RAW_MATERIALS, ...(state.customRMs || [])];
-  const byName = allRMs.find(r => r.name.toLowerCase() === id.toLowerCase());
-  if (byName && state.rm[byName.id]) return parseFloat(state.rm[byName.id]);
-  if (byName) return parseFloat(byName.rate || 0);
+  const byName = allRMs.find(r => r.name.toLowerCase() === key);
+  if (byName) return parseFloat(state.rm[byName.id] || byName.rate || 0);
 
-  // 5. Fuzzy name match in state.rm keys
-  const stateByName = Object.entries(state.rm).find(([k]) =>
-    k.toLowerCase() === id.toLowerCase()
-  );
-  if (stateByName) return parseFloat(stateByName[1]);
+  // 4. Fuzzy match in state.rm keys
+  const stateEntry = Object.entries(state.rm).find(([k]) => k.toLowerCase() === key);
+  if (stateEntry) return parseFloat(stateEntry[1]) || 0;
+
+  // 5. Supabase raw_materials costing_price as last resort
+  const sbRM = SB_RAW_MATERIALS.find(r => r.name.toLowerCase() === key);
+  if (sbRM && sbRM.costing_price > 0) return parseFloat(sbRM.costing_price);
 
   return 0;
 }
