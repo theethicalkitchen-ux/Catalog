@@ -1128,8 +1128,8 @@ function renderRM() {
 
   // Supabase-only ingredients — ingredients in live recipes not in hardcoded RM list
   const baseNames = new Set([
-    ...RAW_MATERIALS.map(r => r.name.toLowerCase()),
-    ...(state.customRMs || []).map(r => r.name.toLowerCase()),
+    ...RAW_MATERIALS.map(r => r.name.toLowerCase().trim()),
+    ...(state.customRMs || []).map(r => r.name.toLowerCase().trim()),
   ]);
   const sbIngredients = new Map();
   SB_RECIPES.forEach(r => {
@@ -1209,7 +1209,12 @@ function deleteCustomRM(id) {
 }
 
 function onRMChange(el) {
-  state.rm[el.dataset.rm] = parseFloat(el.value) || 0;
+  const key = el.dataset.rm;
+  const val = parseFloat(el.value) || 0;
+  state.rm[key] = val;
+  // Also store by resolved id so getRMRate id-lookup works
+  const aliasId = RM_NAME_ALIASES[key.toLowerCase().trim()];
+  if (aliasId) state.rm[aliasId] = val;
 }
 
 function saveRM() {
@@ -1898,9 +1903,13 @@ function switchScreen(name, btn) {
   document.getElementById('screen-' + name).classList.add('active');
   if (btn) btn.classList.add('active');
 
+  if (name === 'rm') {
+    renderRM();
+    loadSBRecipes().then(() => { renderRM(); });
+  }
   if (name === 'products') {
-    renderProducts(); // render immediately with cached data
-    loadSBRecipes().then(() => { renderProducts(); initQuoteScreen(); }); // then refresh from Supabase
+    renderProducts();
+    loadSBRecipes().then(() => { renderProducts(); initQuoteScreen(); });
   }
   if (name === 'history') renderHistory();
   if (name === 'infra') renderInfra();
