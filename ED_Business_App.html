@@ -271,14 +271,14 @@
   </div>
   <div style="padding: 0 16px 16px;">
     <div class="card">
-      <div class="card-label">Flour & Grains</div>
+      <div class="card-label">All Raw Materials</div>
       <div class="rm-list" id="rm-flour"></div>
     </div>
-    <div class="card">
+    <div class="card" style="display:none">
       <div class="card-label">Fats, Dairy & Other</div>
       <div class="rm-list" id="rm-other"></div>
     </div>
-    <div class="card">
+    <div class="card" style="display:none">
       <div class="card-label">Additives & Enhancers</div>
       <div class="rm-list" id="rm-additive"></div>
     </div>
@@ -1081,44 +1081,23 @@ function calcProductCostSummary(product) {
 // ============================================================
 
 function renderRM() {
-  // Use ONLY Supabase raw_materials — single source of truth
   const allRMs = SB_RAW_MATERIALS.filter(r => r.name.toLowerCase() !== 'water');
 
-  // Group by rough category based on name/unit
-  const groups = {
-    'Flour & Grains': allRMs.filter(r => {
-      const n = r.name.toLowerCase();
-      return n.includes('wheat') || n.includes('flour') || n.includes('maida') ||
-             n.includes('rava') || n.includes('atta') || n.includes('besan') ||
-             n.includes('aloo') || n.includes('semolina');
-    }),
-    'Fats, Dairy & Other': allRMs.filter(r => {
-      const n = r.name.toLowerCase();
-      return n.includes('oil') || n.includes('butter') || n.includes('fat') ||
-             n.includes('curd') || n.includes('milk') || n.includes('ghee');
-    }),
-    'Spices & Additives': allRMs.filter(r => {
-      const n = r.name.toLowerCase();
-      return !( n.includes('wheat') || n.includes('flour') || n.includes('maida') ||
-                n.includes('rava') || n.includes('atta') || n.includes('besan') ||
-                n.includes('aloo') || n.includes('semolina') ||
-                n.includes('oil') || n.includes('butter') || n.includes('fat') ||
-                n.includes('curd') || n.includes('milk') || n.includes('ghee') );
-    }),
-  };
+  // Clear all group containers
+  ['rm-flour','rm-other','rm-additive'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
 
-  const groupEls = {
-    'Flour & Grains':       'rm-flour',
-    'Fats, Dairy & Other':  'rm-other',
-    'Spices & Additives':   'rm-additive',
-  };
+  // Put ALL ingredients in rm-flour container — single unified list
+  const el = document.getElementById('rm-flour');
+  if (!el) return;
 
-  Object.entries(groups).forEach(([label, rms]) => {
-    const el = document.getElementById(groupEls[label]);
-    if (!el) return;
-    el.innerHTML = '';
-    rms.forEach(rm => {
-      const rate = state.rm[rm.name] || rm.costing_price || 0;
+  if (allRMs.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No materials yet. Add in Inventory App.</div>';
+  } else {
+    allRMs.forEach(rm => {
+      const rate = parseFloat(state.rm[rm.name] || rm.costing_price || 0);
       const row = document.createElement('div');
       row.className = 'rm-row';
       row.innerHTML = `
@@ -1132,15 +1111,13 @@ function renderRM() {
         </div>`;
       el.appendChild(row);
     });
+  }
+
+  // Hide unused cards
+  ['custom-rm-card','rm-supabase-card'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
   });
-
-  // Hide custom card — custom RMs are now managed in Inventory App
-  const customCard = document.getElementById('custom-rm-card');
-  if (customCard) customCard.style.display = 'none';
-
-  // Hide supabase card — no longer needed
-  const sbCard = document.getElementById('rm-supabase-card');
-  if (sbCard) sbCard.style.display = 'none';
 
   const saved = localStorage.getItem('ed_rm_saved_at');
   if (saved) document.getElementById('rm-saved-at').textContent = 'Last saved: ' + saved;
