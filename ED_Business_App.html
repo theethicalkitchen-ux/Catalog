@@ -859,9 +859,12 @@ async function sbSetState(key, value) {
 }
 
 function applyDefaults() {
-  if (!Object.keys(state.rm).length) {
-    RAW_MATERIALS.forEach(rm => state.rm[rm.id] = rm.rate);
-  }
+  // Always ensure every RM id has at least its default rate — never leave as 0
+  RAW_MATERIALS.forEach(rm => {
+    if (!state.rm[rm.id] || state.rm[rm.id] === 0) {
+      state.rm[rm.id] = rm.rate;
+    }
+  });
   if (!state.infra || !Object.keys(state.infra).length) {
     state.infra = {
       shift_vol: 8000, shifts: 2, days: 26,
@@ -911,8 +914,12 @@ async function syncFromCloud() {
 
       state = { ...state, ...cloud };
 
-      // Merge rm: cloud wins for ids that exist in cloud, local wins for everything else
-      state.rm = { ...cloud.rm, ...localRM };
+      // Merge rm: take the higher value — never let a 0 overwrite a real rate
+      const mergedRM = { ...cloud.rm };
+      Object.entries(localRM).forEach(([k, v]) => {
+        if (!mergedRM[k] || mergedRM[k] === 0 || v > mergedRM[k]) mergedRM[k] = v;
+      });
+      state.rm = mergedRM;
 
       // Merge quotes
       const allQuotes = [...(cloud.quotes || []), ...localQuotes];
@@ -1930,31 +1937,28 @@ document.getElementById('quote-modal').addEventListener('click', function(e) {
 // ============================================================
 // BOOT
 // ============================================================
-loadState();        // instant — from localStorage
+loadState();
 renderRM();
 initQuoteScreen();
 renderProducts();
 
-// Load live recipes from Supabase, then refresh products + quote screen
-loadSBRecipes().then(() => {
-  renderRM();       // refresh rates screen to show Supabase ingredients
+// Serialize: load recipes first, then sync cloud, then refresh UI once
+(async () => {
+  await loadSBRecipes();
+  const changed = await syncFromCloud();
+  applyDefaults(); // re-apply defaults after cloud sync in case it zeroed any rate
+  renderRM();
   renderProducts();
   initQuoteScreen();
-});
-
-// Then sync state from cloud
-syncFromCloud().then(changed => {
-  if (changed) {
-    renderRM();
-    renderProducts();
-    showToast('Synced from cloud ✓');
-  }
-});
+  if (changed) showToast('Synced ✓');
+})();
 
 // Re-sync every 30 seconds in background
-setInterval(() => {
-  syncFromCloud().then(changed => { if (changed) { renderRM(); renderProducts(); } });
-  loadSBRecipes().then(() => { renderProducts(); initQuoteScreen(); });
+setInterval(async () => {
+  await loadSBRecipes();
+  const changed = await syncFromCloud();
+  applyDefaults();
+  if (changed) { renderRM(); renderProducts(); }
 }, 30000);
 </script>
 </body>
