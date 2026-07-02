@@ -773,11 +773,12 @@ async function loadSBRecipes() {
     const rm_formula = {};
     ings.forEach(i => { rm_formula[i.ingredient_name] = i.qty_per_kg; });
 
-    // Build dough_sizes from variants
+    // Build dough_sizes from variants — use pieces_per_kg from Supabase directly
     const dough_sizes = vars.map(v => ({
       grams: v.dough_ball_g,
       inches: v.output_size,
       packSize: v.pack_size_pieces,
+      pieces_per_kg: v.pieces_per_kg,  // use Supabase value, not calculated
     }));
 
     // Identify primary flour (largest ingredient by qty)
@@ -1007,36 +1008,29 @@ function calcRMCostPerPiece(product, doughGrams, attaOverride) {
   let total = 0;
   const formula = { ...product.rm_formula };
 
-  // Atta override
+  // Calculate all ingredient costs per batch (per flour_grams kg)
   if (product.atta_swappable && attaOverride) {
     const primaryFlour = product.primary_flour;
     const grams = formula[primaryFlour] || 0;
     delete formula[primaryFlour];
-    const overrideRate = parseFloat(attaOverride);
-    total += (grams / 1000) * overrideRate;
-  } else {
-    const primaryRate = getRMRate(product.primary_flour);
-    const primaryGrams = formula[product.primary_flour] || 0;
-    const formulaCopy = { ...formula };
-    delete formulaCopy[product.primary_flour];
-    total += (primaryGrams / 1000) * primaryRate;
-    for (const [rmId, grams] of Object.entries(formulaCopy)) {
-      total += (grams / 1000) * getRMRate(rmId);
+    total += (grams / 1000) * parseFloat(attaOverride);
+    for (const [rmId, g] of Object.entries(formula)) {
+      total += (g / 1000) * getRMRate(rmId);
     }
-    // Compute total dough weight per kg
-    const totalDoughKg = product.flour_grams / 1000;
-    const piecesPerKgDough = (product.flour_grams) / doughGrams;
-    return total / piecesPerKgDough;
+  } else {
+    for (const [rmId, g] of Object.entries(formula)) {
+      total += (g / 1000) * getRMRate(rmId);
+    }
   }
 
-  // For other non-primary ingredients
-  for (const [rmId, grams] of Object.entries(formula)) {
-    if (rmId === product.primary_flour) continue;
-    total += (grams / 1000) * getRMRate(rmId);
-  }
+  // Use pieces_per_kg from Supabase variant if available (most accurate)
+  // Otherwise fall back to flour_grams / dough_ball_g
+  const doughSize = (product.dough_sizes || []).find(s => s.grams === doughGrams);
+  const piecesPerKg = (doughSize && doughSize.pieces_per_kg > 0)
+    ? doughSize.pieces_per_kg
+    : (product.flour_grams || 1000) / doughGrams;
 
-  const piecesPerKgDough = product.flour_grams / doughGrams;
-  return total / piecesPerKgDough;
+  return total / piecesPerKg;
 }
 
 function getInfraCostPerPiece(qtyPerMonth, type) {
