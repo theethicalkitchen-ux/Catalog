@@ -967,9 +967,6 @@ const RM_NAME_ALIASES = {
   'baking soda':        'baking_soda',
   'baking powder':      'baking_powder',
   'corn dexgel':        'corn_dexgel',
-  'ajwain':             'ajwain',
-  'water':              'water',
-  'preservative':       'preservative',
 };
 
 function getRMRate(id) {
@@ -983,12 +980,12 @@ function getRMRate(id) {
   const rmId = RM_NAME_ALIASES[key];
   if (rmId !== undefined && state.rm[rmId] !== undefined) return parseFloat(state.rm[rmId]) || 0;
 
-  // 3. Match by name in RAW_MATERIALS -> get its id -> look up rate
-  const hardcoded = RAW_MATERIALS.find(r => r.name.toLowerCase() === key);
+  // 3. Match by name in RAW_MATERIALS (trim names to handle trailing spaces)
+  const hardcoded = RAW_MATERIALS.find(r => r.name.toLowerCase().trim() === key);
   if (hardcoded) return parseFloat(state.rm[hardcoded.id] || hardcoded.rate || 0);
 
   // 4. Match by name in customRMs
-  const custom = (state.customRMs || []).find(r => r.name.toLowerCase() === key);
+  const custom = (state.customRMs || []).find(r => r.name.toLowerCase().trim() === key);
   if (custom) return parseFloat(state.rm[custom.id] || custom.rate || 0);
 
   return 0;
