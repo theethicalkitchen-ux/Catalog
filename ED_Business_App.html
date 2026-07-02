@@ -630,24 +630,7 @@
 // DATA LAYER
 // ============================================================
 
-const RAW_MATERIALS = [
-  // id, name, unit, default_rate, category
-  { id: 'siddhikala', name: 'Siddhikala Atta', unit: '₹/kg', rate: 45, cat: 'flour' },
-  { id: 'whole_wheat', name: 'Whole Wheat Flour', unit: '₹/kg', rate: 35, cat: 'flour' },
-  { id: 'maida', name: 'Maida', unit: '₹/kg', rate: 33, cat: 'flour' },
-  { id: 'rava', name: 'Rava (Semolina)', unit: '₹/kg', rate: 50, cat: 'flour' },
-  { id: 'corn_dexgel', name: 'Corn Dexgel', unit: '₹/kg', rate: 65, cat: 'flour' },
-  { id: 'oil', name: 'Oil (Refined)', unit: '₹/litre', rate: 140, cat: 'other' },
-  { id: 'aloo_flakes', name: 'Aloo Flakes', unit: '₹/kg', rate: 160, cat: 'other' },
-  { id: 'curd', name: 'Curd', unit: '₹/kg', rate: 60, cat: 'other' },
-  { id: 'butter', name: 'Butter', unit: '₹/kg', rate: 500, cat: 'other' },
-  { id: 'milk_powder', name: 'Milk Powder', unit: '₹/kg', rate: 400, cat: 'other' },
-  { id: 'salt', name: 'Salt', unit: '₹/kg', rate: 20, cat: 'additive' },
-  { id: 'sugar', name: 'Sugar', unit: '₹/kg', rate: 45, cat: 'additive' },
-  { id: 'softener', name: 'Enzyme / Softener', unit: '₹/kg', rate: 800, cat: 'additive' },
-  { id: 'baking_soda', name: 'Baking Soda', unit: '₹/kg', rate: 80, cat: 'additive' },
-  { id: 'baking_powder', name: 'Baking Powder', unit: '₹/kg', rate: 150, cat: 'additive' },
-];
+const RAW_MATERIALS = []; // replaced by SB_RAW_MATERIALS from Supabase
 
 // Products — recipe is grams per kg of primary flour
 // rm_formula: { rm_id: grams_per_kg }
@@ -980,27 +963,37 @@ function getRMRate(id) {
   if (!id) return 0;
   const key = id.toLowerCase().trim();
 
-  // 1. Direct match by id in state.rm (e.g. 'siddhikala' -> 45)
-  if (state.rm[id] !== undefined) return parseFloat(state.rm[id]) || 0;
+  // 1. Check state.rm by exact name (set via Rates screen)
+  if (state.rm[id] !== undefined && state.rm[id] !== 0) return parseFloat(state.rm[id]);
 
-  // 2. Resolve via alias map: ingredient name -> rm id -> rate
-  const rmId = RM_NAME_ALIASES[key];
-  if (rmId !== undefined && state.rm[rmId] !== undefined) return parseFloat(state.rm[rmId]) || 0;
+  // 2. Check state.rm case-insensitive
+  const stateEntry = Object.entries(state.rm).find(([k]) => k.toLowerCase().trim() === key);
+  if (stateEntry && stateEntry[1] !== 0) return parseFloat(stateEntry[1]);
 
-  // 3. Match by name in RAW_MATERIALS (trim names to handle trailing spaces)
-  const hardcoded = RAW_MATERIALS.find(r => r.name.toLowerCase().trim() === key);
-  if (hardcoded) return parseFloat(state.rm[hardcoded.id] || hardcoded.rate || 0);
-
-  // 4. Match by name in customRMs
-  const custom = (state.customRMs || []).find(r => r.name.toLowerCase().trim() === key);
-  if (custom) return parseFloat(state.rm[custom.id] || custom.rate || 0);
-
-  // 5. Match by name in Supabase raw_materials (costing_price)
+  // 3. Use costing_price from Supabase raw_materials directly
   const sbRM = SB_RAW_MATERIALS.find(r => r.name.toLowerCase().trim() === key);
-  if (sbRM) return parseFloat(state.rm[sbRM.name] || sbRM.costing_price || 0);
+  if (sbRM && sbRM.costing_price > 0) return parseFloat(sbRM.costing_price);
+
+  // 4. Legacy alias map for old hardcoded recipe ids
+  const ALIASES = {
+    'siddhikala wheat':'Siddhikala Wheat','siddhikala atta':'Siddhikala Wheat',
+    'whole wheat flour':'Whole Wheat Flour','maida':'Maida','rava':'Rava',
+    'oil':'Oil','aloo flakes':'Aloo Flakes','curd':'Curd','butter':'Butter',
+    'milk powder':'Milk Powder','salt':'Salt','sugar':'Sugar',
+    'enzyme/softener':'Enzyme/Softener','baking soda':'Baking Soda',
+    'baking powder':'Baking Powder','corn dexgel':'Corn Dexgel',
+  };
+  const resolvedName = ALIASES[key];
+  if (resolvedName) {
+    const resolved = SB_RAW_MATERIALS.find(r => r.name.toLowerCase().trim() === resolvedName.toLowerCase());
+    if (resolved && resolved.costing_price > 0) return parseFloat(resolved.costing_price);
+    if (state.rm[resolvedName]) return parseFloat(state.rm[resolvedName]);
+  }
 
   return 0;
 }
+
+
 
 function calcRMCostPerKgDough(product) {
   let total = 0;
@@ -1089,91 +1082,72 @@ function calcProductCostSummary(product) {
 // ============================================================
 
 function renderRM() {
-  const groups = { flour: 'rm-flour', other: 'rm-other', additive: 'rm-additive' };
-  for (const [cat, elId] of Object.entries(groups)) {
-    const el = document.getElementById(elId);
+  // Use ONLY Supabase raw_materials — single source of truth
+  const allRMs = SB_RAW_MATERIALS.filter(r => r.name.toLowerCase() !== 'water');
+
+  // Group by rough category based on name/unit
+  const groups = {
+    'Flour & Grains': allRMs.filter(r => {
+      const n = r.name.toLowerCase();
+      return n.includes('wheat') || n.includes('flour') || n.includes('maida') ||
+             n.includes('rava') || n.includes('atta') || n.includes('besan') ||
+             n.includes('aloo') || n.includes('semolina');
+    }),
+    'Fats, Dairy & Other': allRMs.filter(r => {
+      const n = r.name.toLowerCase();
+      return n.includes('oil') || n.includes('butter') || n.includes('fat') ||
+             n.includes('curd') || n.includes('milk') || n.includes('ghee');
+    }),
+    'Spices & Additives': allRMs.filter(r => {
+      const n = r.name.toLowerCase();
+      return !( n.includes('wheat') || n.includes('flour') || n.includes('maida') ||
+                n.includes('rava') || n.includes('atta') || n.includes('besan') ||
+                n.includes('aloo') || n.includes('semolina') ||
+                n.includes('oil') || n.includes('butter') || n.includes('fat') ||
+                n.includes('curd') || n.includes('milk') || n.includes('ghee') );
+    }),
+  };
+
+  const groupEls = {
+    'Flour & Grains':       'rm-flour',
+    'Fats, Dairy & Other':  'rm-other',
+    'Spices & Additives':   'rm-additive',
+  };
+
+  Object.entries(groups).forEach(([label, rms]) => {
+    const el = document.getElementById(groupEls[label]);
+    if (!el) return;
     el.innerHTML = '';
-    RAW_MATERIALS.filter(r => r.cat === cat).forEach(rm => {
+    rms.forEach(rm => {
+      const rate = state.rm[rm.name] || rm.costing_price || 0;
       const row = document.createElement('div');
       row.className = 'rm-row';
       row.innerHTML = `
         <div>
           <div class="rm-name">${rm.name}</div>
-          <div class="rm-unit">${rm.unit}</div>
+          <div class="rm-unit">₹/${rm.unit}</div>
         </div>
         <div class="rm-price-wrap">
-          <span class="rm-currency">\u20b9</span>
-          <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] || rm.rate}"
-            data-rm="${rm.id}" oninput="onRMChange(this)">
+          <span class="rm-currency">₹</span>
+          <input class="rm-price-input" type="number" step="0.5"
+            value="${rate}" data-rm="${rm.name}" oninput="onRMChange(this)">
         </div>`;
       el.appendChild(row);
     });
-  }
+  });
 
-  // Custom RMs
-  const customEl = document.getElementById('rm-custom');
+  // Hide custom card — custom RMs are now managed in Inventory App
   const customCard = document.getElementById('custom-rm-card');
-  customEl.innerHTML = '';
-  if (state.customRMs && state.customRMs.length > 0) {
-    customCard.style.display = 'block';
-    state.customRMs.forEach(rm => {
-      if (!state.rm[rm.id]) state.rm[rm.id] = rm.rate;
-      const row = document.createElement('div');
-      row.className = 'rm-row';
-      row.innerHTML = `
-        <div style="flex:1">
-          <div class="rm-name">${rm.name}</div>
-          <div class="rm-unit">${rm.unit}</div>
-        </div>
-        <div class="rm-price-wrap">
-          <span class="rm-currency">\u20b9</span>
-          <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] || rm.rate}"
-            data-rm="${rm.id}" oninput="onRMChange(this)">
-        </div>
-        <button onclick="deleteCustomRM('${rm.id}')" style="margin-left:8px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:4px">\u2715</button>`;
-      customEl.appendChild(row);
-    });
-  } else {
-    customCard.style.display = 'none';
-  }
+  if (customCard) customCard.style.display = 'none';
 
-  // Add Supabase raw materials not in hardcoded list into their own card
-  const hardcodedNames = new Set(RAW_MATERIALS.map(r => r.name.toLowerCase().trim()));
-  const sbOnlyRMs = SB_RAW_MATERIALS.filter(r => 
-    !hardcodedNames.has(r.name.toLowerCase().trim()) &&
-    r.name.toLowerCase() !== 'water'
-  );
-
+  // Hide supabase card — no longer needed
   const sbCard = document.getElementById('rm-supabase-card');
-  const sbEl = document.getElementById('rm-supabase');
-  if (sbCard && sbEl) {
-    sbEl.innerHTML = '';
-    if (sbOnlyRMs.length > 0) {
-      sbCard.style.display = 'block';
-      sbOnlyRMs.forEach(rm => {
-        const currentRate = state.rm[rm.name] || rm.costing_price || 0;
-        const row = document.createElement('div');
-        row.className = 'rm-row';
-        row.innerHTML = `
-          <div>
-            <div class="rm-name">${rm.name}</div>
-            <div class="rm-unit">₹/${rm.unit}</div>
-          </div>
-          <div class="rm-price-wrap">
-            <span class="rm-currency">₹</span>
-            <input class="rm-price-input" type="number" step="0.5" 
-              value="${currentRate}" data-rm="${rm.name}" oninput="onRMChange(this)">
-          </div>`;
-        sbEl.appendChild(row);
-      });
-    } else {
-      sbCard.style.display = 'none';
-    }
-  }
+  if (sbCard) sbCard.style.display = 'none';
 
   const saved = localStorage.getItem('ed_rm_saved_at');
   if (saved) document.getElementById('rm-saved-at').textContent = 'Last saved: ' + saved;
 }
+
 
 function showAddRMForm() {
   document.getElementById('add-rm-form').style.display = 'block';
