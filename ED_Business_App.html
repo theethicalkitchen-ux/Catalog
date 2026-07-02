@@ -326,6 +326,10 @@
       </div>
       <div id="add-rm-msg" style="font-size:12px;margin-top:8px;color:#f59e0b"></div>
     </div>
+    <div class="card" id="rm-supabase-card" style="display:none">
+      <div class="card-label">From Inventory App</div>
+      <div class="rm-list" id="rm-supabase"></div>
+    </div>
     <div style="margin-top:4px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn" onclick="showAddRMForm()" id="add-rm-btn" style="padding:10px 18px;border:1px solid #f59e0b;border-radius:8px;background:transparent;color:#f59e0b;font-family:inherit;font-size:14px;cursor:pointer;font-weight:500">+ Add material</button>
       <button class="btn btn-primary" onclick="saveRM()">Save Rates</button>
@@ -991,6 +995,10 @@ function getRMRate(id) {
   const custom = (state.customRMs || []).find(r => r.name.toLowerCase().trim() === key);
   if (custom) return parseFloat(state.rm[custom.id] || custom.rate || 0);
 
+  // 5. Match by name in Supabase raw_materials (costing_price)
+  const sbRM = SB_RAW_MATERIALS.find(r => r.name.toLowerCase().trim() === key);
+  if (sbRM) return parseFloat(state.rm[sbRM.name] || sbRM.costing_price || 0);
+
   return 0;
 }
 
@@ -1127,6 +1135,40 @@ function renderRM() {
     });
   } else {
     customCard.style.display = 'none';
+  }
+
+  // Add Supabase raw materials not in hardcoded list into their own card
+  const hardcodedNames = new Set(RAW_MATERIALS.map(r => r.name.toLowerCase().trim()));
+  const sbOnlyRMs = SB_RAW_MATERIALS.filter(r => 
+    !hardcodedNames.has(r.name.toLowerCase().trim()) &&
+    r.name.toLowerCase() !== 'water'
+  );
+
+  const sbCard = document.getElementById('rm-supabase-card');
+  const sbEl = document.getElementById('rm-supabase');
+  if (sbCard && sbEl) {
+    sbEl.innerHTML = '';
+    if (sbOnlyRMs.length > 0) {
+      sbCard.style.display = 'block';
+      sbOnlyRMs.forEach(rm => {
+        const currentRate = state.rm[rm.name] || rm.costing_price || 0;
+        const row = document.createElement('div');
+        row.className = 'rm-row';
+        row.innerHTML = `
+          <div>
+            <div class="rm-name">${rm.name}</div>
+            <div class="rm-unit">₹/${rm.unit}</div>
+          </div>
+          <div class="rm-price-wrap">
+            <span class="rm-currency">₹</span>
+            <input class="rm-price-input" type="number" step="0.5" 
+              value="${currentRate}" data-rm="${rm.name}" oninput="onRMChange(this)">
+          </div>`;
+        sbEl.appendChild(row);
+      });
+    } else {
+      sbCard.style.display = 'none';
+    }
   }
 
   const saved = localStorage.getItem('ed_rm_saved_at');
