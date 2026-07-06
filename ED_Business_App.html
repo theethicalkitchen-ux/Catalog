@@ -199,6 +199,13 @@
 <body>
 
 <div id="toast" class="toast"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px;max-width:430px;margin:0 auto;">
+  <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--saffron);">ED Ops</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="sync-indicator" style="font-size:11px;color:var(--text-muted);">◌ Local only</span>
+    <button onclick="syncFromSupabase()" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;">↻ Sync</button>
+  </div>
+</div>
 
 <!-- SCREEN: RM Rates -->
 <div id="screen-rm" class="screen active">
@@ -480,22 +487,40 @@ const ATTA_OPTIONS = {
 // ============================================================
 let state = { rm:{}, products:[], infra:{}, labour:[], quotes:[], currentMargin:15 };
 
-function loadState() {
-  try {
-    const s = localStorage.getItem('ed_app_v2');
-    if (s) state = { ...state, ...JSON.parse(s) };
-  } catch(e) {}
+// ============================================================
+// SUPABASE CONFIG
+// ============================================================
+const SB_URL  = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZydHBvbHZ4Ymxid2dycXZkbXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1OTE2MDMsImV4cCI6MjA5ODE2NzYwM30.GO0gOt9T5YVzT_rsw9PHgvGpoRuWCuDCQ2dteRqvCpo';
+const SB_HDR  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
 
-  if (!Object.keys(state.rm).length) {
+async function sbGet(table) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?select=*`, { headers: SB_HDR });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function sbUpsert(table, payload) {
+  try {
+    await fetch(`${SB_URL}/rest/v1/${table}`, {
+      method: 'POST', headers: SB_HDR, body: JSON.stringify(payload)
+    });
+  } catch(e) {}
+}
+
+// ============================================================
+// STATE LOAD — localStorage first (instant), then Supabase overlay
+// ============================================================
+function applyDefaults() {
+  if (!Object.keys(state.rm).length)
     RM_DEFAULTS.forEach(r => state.rm[r.id] = r.rate);
-  }
-  if (!state.products || !state.products.length) {
+  if (!state.products || !state.products.length)
     state.products = JSON.parse(JSON.stringify(PRODUCT_DEFAULTS));
-  }
-  if (!state.infra || !Object.keys(state.infra).length) {
+  if (!state.infra || !Object.keys(state.infra).length)
     state.infra = { shift_vol:8000, shifts:2, days:26, rent:30000, elec:83200, lpg:83200, maint:20000, capex:40000, pkg:0.25, elec_rte:0.384, elec_rtc:0.384, roasting:0.375 };
-  }
-  if (!state.labour || !state.labour.length) {
+  if (!state.labour || !state.labour.length)
     state.labour = [
       {role:'Dough Mixing Labour',count:1,salary:12000},
       {role:'Machine Labour (Pressing)',count:2,salary:12000},
@@ -504,12 +529,137 @@ function loadState() {
       {role:'Supervisor',count:1,salary:20000},
       {role:'Labour Head',count:1,salary:25000},
     ];
-  }
   if (!state.quotes) state.quotes = [];
 }
 
-function saveState() {
+function loadState() {
+  // 1. Load from localStorage immediately (instant, works offline)
+  try {
+    const s = localStorage.getItem('ed_app_v2');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+
+  // 2. Migration from old app key — recovers Thepla etc.
+  if (!state.products || !state.products.length) {
+    try {
+      const old = localStorage.getItem('ed_app_state');
+      if (old) {
+        const o = JSON.parse(old);
+        if (o.rm && Object.keys(o.rm).length)       state.rm     = o.rm;
+        if (o.infra && Object.keys(o.infra).length) state.infra  = o.infra;
+        if (o.labour && o.labour.length)             state.labour = o.labour;
+        if (o.quotes && o.quotes.length)             state.quotes = o.quotes;
+        if (o.products && o.products.length)         state.products = o.products;
+      }
+    } catch(e) {}
+  }
+
+  applyDefaults();
+}
+
+// 3. Pull from Supabase in background — overlays on top of localStorage
+async function syncFromSupabase() {
+  setSyncStatus('syncing');
+  try {
+    const [rmRows, productRows, infraRows, quoteRows] = await Promise.all([
+      sbGet('ed_rm_rates'),
+      sbGet('ed_products'),
+      sbGet('ed_infra'),
+      sbGet('ed_quotes'),
+    ]);
+
+    let changed = false;
+
+    if (rmRows && rmRows.length) {
+      rmRows.forEach(r => { state.rm[r.id] = r.rate; });
+      changed = true;
+    }
+    if (productRows && productRows.length) {
+      state.products = productRows.map(r => r.data);
+      changed = true;
+    }
+    if (infraRows && infraRows.length) {
+      const row = infraRows[0];
+      state.infra   = row.data.infra  || state.infra;
+      state.labour  = row.data.labour || state.labour;
+      changed = true;
+    }
+    if (quoteRows && quoteRows.length) {
+      // Merge — Supabase is source of truth, dedupe by id
+      const sbIds = new Set(quoteRows.map(r => r.id));
+      const localOnly = state.quotes.filter(q => !sbIds.has(q.id));
+      state.quotes = [...quoteRows.map(r => r.data), ...localOnly]
+        .sort((a,b) => b.id - a.id);
+      changed = true;
+    }
+
+    if (changed) {
+      saveToLocalStorage();
+      applyDefaults();
+      renderRM();
+      renderProducts();
+      renderHistory();
+      if (document.getElementById('screen-infra').classList.contains('active')) renderInfra();
+    }
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('error');
+  }
+}
+
+// ============================================================
+// STATE SAVE — localStorage + Supabase simultaneously
+// ============================================================
+function saveToLocalStorage() {
   localStorage.setItem('ed_app_v2', JSON.stringify(state));
+}
+
+function saveState() {
+  saveToLocalStorage();
+  pushToSupabase();
+}
+
+async function pushToSupabase() {
+  setSyncStatus('syncing');
+  try {
+    // RM rates — one row per ingredient
+    const rmPayload = Object.entries(state.rm).map(([id, rate]) => ({ id, rate }));
+    await sbUpsert('ed_rm_rates', rmPayload);
+
+    // Products — one row per product, full recipe as JSON
+    const productPayload = state.products.map(p => ({ id: p.id, data: p }));
+    await sbUpsert('ed_products', productPayload);
+
+    // Infra + labour — single row
+    await sbUpsert('ed_infra', [{ id: 'main', data: { infra: state.infra, labour: state.labour } }]);
+
+    // Quotes — one row per quote
+    if (state.quotes.length) {
+      const quotePayload = state.quotes.map(q => ({ id: q.id, data: q }));
+      await sbUpsert('ed_quotes', quotePayload);
+    }
+
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('error');
+  }
+}
+
+// ============================================================
+// SYNC STATUS INDICATOR
+// ============================================================
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  const map = {
+    syncing: { text:'⟳ Syncing…', color:'var(--text-muted)' },
+    ok:      { text:'✓ Synced',   color:'var(--green)' },
+    error:   { text:'⚠ Offline',  color:'var(--saffron)' },
+    local:   { text:'◌ Local only', color:'var(--text-muted)' },
+  };
+  const s = map[status] || map.local;
+  el.textContent = s.text;
+  el.style.color = s.color;
 }
 
 // ============================================================
@@ -1190,6 +1340,8 @@ loadState();
 renderRM();
 renderProducts();
 initQuoteScreen();
+// Pull fresh data from Supabase after UI is ready
+syncFromSupabase();
 </script>
 </body>
 </html>
