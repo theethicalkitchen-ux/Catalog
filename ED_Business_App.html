@@ -237,7 +237,7 @@
   </div>
   <div class="pscreen">
     <div id="product-list"></div>
-    <button class="btn btn-ghost" onclick="openNewProductModal()">+ Add New Product</button>
+    <div style="font-size:11px;color:var(--text-muted);padding:8px 0 4px;">Add new products in the Inventory app → they appear here on ↻ Sync.<br>Tap Edit Recipe to set atta-swappable flag or adjust dough sizes.</div>
   </div>
 </div>
 
@@ -637,7 +637,7 @@ async function syncFromSupabase() {
   try {
     const [rmRows, productRows, infraRows, quoteRows] = await Promise.all([
       sbGet('ed_rm_rates'),
-      sbGet('ed_products'),
+      sbGet('ed_recipes'),
       sbGet('ed_infra'),
       sbGet('ed_quotes'),
     ]);
@@ -649,7 +649,15 @@ async function syncFromSupabase() {
       changed = true;
     }
     if (productRows && productRows.length) {
-      state.products = productRows.map(r => r.data);
+      // Merge: take recipe data from Supabase, preserve atta_swappable from local
+      const localById = {};
+      state.products.forEach(p => localById[p.id] = p);
+      state.products = productRows.map(r => ({
+        ...r.data,
+        atta_swappable: r.data.atta_swappable !== undefined
+          ? r.data.atta_swappable
+          : (localById[r.data.id]?.atta_swappable || false),
+      }));
       changed = true;
     }
     if (infraRows && infraRows.length) {
@@ -705,7 +713,7 @@ async function pushToSupabase() {
 
     // Products — one row per product, full recipe as JSON
     const productPayload = state.products.map(p => ({ id: p.id, data: p }));
-    await sbUpsert('ed_products', productPayload);
+    await sbUpsert('ed_recipes', productPayload);  // ed_recipes is the shared table
 
     // Infra + labour — single row
     await sbUpsert('ed_infra', [{ id: 'main', data: { infra: state.infra, labour: state.labour, rm_names: state.rm_names||{} } }]);

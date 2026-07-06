@@ -123,6 +123,7 @@ let pollTimer=null;
 let inv={}, orders=[], dispatches=[], actlog=[];
 // Local/RM data
 let rawMaterials=[], recipes=[], recipeIngredients=[], recipeVariants=[], skuMap=[], rmPurchases=[], productionPlans=[];
+let edRecipes=[]; // shared ed_recipes table used by Business App
 
 let expandedOrders=new Set();
 let editingRM=null, editingRecipe=null;
@@ -205,6 +206,9 @@ async function loadLocal(){
   ]);
   rawMaterials=a||[]; recipes=b||[]; recipeIngredients=c||[];
   recipeVariants=d||[]; skuMap=e||[]; rmPurchases=f||[]; productionPlans=g||[];
+  // Also load shared ed_recipes
+  const edR = await sbGet('ed_recipes','select=*');
+  edRecipes = (edR||[]).map(r=>r.data);
 }
 
 async function loadAll(){ await Promise.all([loadMumbai(), loadLocal()]); }
@@ -718,46 +722,152 @@ ${rmModalOpen ? `<div id="rm-modal-overlay" style="position:fixed;top:0;left:0;w
 
 
 /* ── RECIPES TAB ── */
+// ed_recipes Supabase upsert helper
+async function upsertEdRecipe(recipeData){
+  const r = await fetch(`${SB}/rest/v1/ed_recipes`,{
+    method:'POST',
+    headers:{...H(),'Prefer':'resolution=merge-duplicates'},
+    body:JSON.stringify({id:recipeData.id, data:recipeData})
+  });
+  return r.ok;
+}
+async function deleteEdRecipe(id){
+  await fetch(`${SB}/rest/v1/ed_recipes?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:H()});
+}
+
+let edRecipeForm=null; // null=closed, 'new'=new, id=editing
+
 function renderRecipesTab(){
+  const p = edRecipeForm && edRecipeForm!=='new' ? edRecipes.find(r=>r.id===edRecipeForm) : null;
+  const isNew = edRecipeForm==='new';
+  const formOpen = edRecipeForm!==null;
+
+  // Ingredient rows for form
+  let ingRowsHtml='';
+  const draftIngs = formOpen ? Object.entries((window._edIngDraft||{})) : [];
+  draftIngs.forEach(([rmId,grams],i)=>{
+    const rm=rawMaterials.find(r=>String(r.id)===String(rmId));
+    const opts=rawMaterials.map(r=>`<option value="${r.id}" ${String(r.id)===String(rmId)?'selected':''}>${r.name}</option>`).join('');
+    ingRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
+      <select style="flex:2" data-ing-key="${i}" onchange="edUpdateIngKey(${i},this.value)">${opts}</select>
+      <input type="number" value="${grams}" step="0.1" placeholder="g/batch" style="flex:1;min-width:70px"
+        data-ing-val="${i}" oninput="edUpdateIngVal(${i},this.value)">
+      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">${rm?.unit||'g'}/batch</span>
+      <button class="btn btn-danger btn-sm" onclick="edRemoveIng(${i})">✕</button>
+    </div>`;
+  });
+
+  // Dough size rows for form
+  let sizeRowsHtml='';
+  const draftSizes = formOpen ? (window._edSizeDraft||[]) : [];
+  draftSizes.forEach((s,i)=>{
+    sizeRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
+      <input type="number" value="${s.grams}" placeholder="g" style="flex:0 0 70px;min-width:60px"
+        oninput="edUpdateSize(${i},'grams',this.value)">
+      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">g →</span>
+      <input type="text" value="${s.label}" placeholder='e.g. 7"' style="flex:1"
+        oninput="edUpdateSize(${i},'label',this.value)">
+      <button class="btn btn-danger btn-sm" onclick="edRemoveSize(${i})">✕</button>
+    </div>`;
+  });
+
+  const flourOpts=rawMaterials.map(r=>`<option value="${r.id}" ${String(r.id)===String(window._edFlourDraft||'')?'selected':''}>${r.name}</option>`).join('');
+
   return `
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span class="sec" style="margin:0">Recipes</span>
-    <button class="btn btn-primary btn-sm" data-action="add-recipe">+ Add recipe</button>
+    <div>
+      <span class="sec" style="margin:0">Recipes</span>
+      <span class="muted" style="margin-left:8px;font-size:11px">Shared with Business App</span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="edOpenNew()">+ Add recipe</button>
   </div>
-  ${recipes.length===0?'<div class="muted">No recipes added yet.</div>':''}
-  ${recipes.map(r=>{
-    const ings=recipeIngredients.filter(i=>i.recipe_id===r.id);
-    const variants=recipeVariants.filter(v=>v.recipe_id===r.id);
+  <div class="info-bar" style="margin-bottom:12px;font-size:11px">📊 Recipes saved here sync automatically to the Business App for cost calculation.</div>
+  ${edRecipes.length===0?'<div class="muted">No recipes yet. Tap + Add recipe to start.</div>':''}
+  ${edRecipes.map(r=>{
+    const ingCount=Object.keys(r.rm_formula||{}).length;
+    const sizeCount=(r.dough_sizes||[]).length;
+    const tagColor=r.default_type==='rte'?'#791f1f':'#27500a';
+    const tagBg=r.default_type==='rte'?'#fcebeb':'#eaf3de';
     return `<div class="card-flat">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
         <div>
-          <strong>${r.id} — ${r.name}</strong>
-          <span class="muted" style="margin-left:6px">${r.product} · v${r.version||'1.0'}</span>
+          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:${tagBg};color:${tagColor};text-transform:uppercase;margin-right:6px">${r.default_type||'rtc'}</span>
+          <strong>${r.name||'Unnamed'}</strong>
+          <span class="muted" style="margin-left:6px;font-size:11px">${r.id}</span>
         </div>
         <div class="row">
-          <button class="btn btn-sm" data-action="edit-recipe" data-id="${r.id}">Edit</button>
-          <button class="btn btn-danger btn-sm" data-action="del-recipe" data-id="${r.id}">✕</button>
+          <button class="btn btn-sm" onclick="edOpenEdit('${r.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="edDeleteRecipe('${r.id}')">✕</button>
         </div>
       </div>
-      <div style="margin-bottom:8px">
-        <div class="muted" style="margin-bottom:4px">Ingredients per 1kg batch:</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${ings.map(i=>`<span style="background:#f0ede6;border-radius:6px;padding:3px 8px;font-size:12px">${i.ingredient_name}: ${i.qty_per_kg}${i.unit}</span>`).join('')}
-          ${ings.length===0?'<span class="muted">No ingredients yet</span>':''}
-        </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#666">
+        <span>📦 Batch: ${r.flour_grams||1000}g</span>
+        <span>🧪 ${ingCount} ingredient${ingCount!==1?'s':''}</span>
+        <span>📐 ${sizeCount} dough size${sizeCount!==1?'s':''}</span>
+        <span>🗳 Pack: ${r.pack_default||10} pcs</span>
       </div>
-      <div>
-        <div class="muted" style="margin-bottom:4px">Variants (dough ball sizes):</div>
-        ${variants.map(v=>`<span style="background:#e6f1fb;border-radius:6px;padding:3px 8px;font-size:12px;margin-right:6px;margin-bottom:4px;display:inline-block">
-          ${v.dough_ball_g}g → ${v.output_size} · ${v.pieces_per_kg} pcs/kg · Pack: ${v.pack_size_pieces} pcs
-          <span class="badge ${v.status==='approved'?'b-ok':'b-warn'}" style="margin-left:4px">${v.status}</span>
-        </span>`).join('')}
-        ${variants.length===0?'<span class="muted">No variants yet</span>':''}
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+        ${Object.entries(r.rm_formula||{}).map(([rmId,grams])=>{
+          const rm=rawMaterials.find(x=>String(x.id)===String(rmId));
+          return `<span style="background:#f0ede6;border-radius:6px;padding:2px 7px;font-size:11px">${rm?rm.name:rmId}: ${grams}g</span>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('')}
 </div>
+
+${formOpen?`<div class="card" style="border-color:#85b7eb" id="ed-recipe-form">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span class="sec" style="margin:0">${isNew?'New Recipe':'Edit — '+(p?.name||'')}</span>
+    <button class="btn btn-sm" onclick="edCloseForm()">✕ Cancel</button>
+  </div>
+
+  <div class="g3" style="margin-bottom:8px">
+    <div><label class="fl">Recipe ID</label>
+      <input id="ed-rec-id" value="${isNew?'':p?.id||''}" placeholder="e.g. TH-001" ${!isNew?'disabled':''}/>
+    </div>
+    <div><label class="fl">Product Type</label>
+      <input id="ed-rec-type" value="${p?.type||''}" placeholder="Chapati / Thepla…"/>
+    </div>
+    <div><label class="fl">RTC / RTE</label>
+      <select id="ed-rec-deftype">
+        <option value="rtc" ${(p?.default_type||'rtc')==='rtc'?'selected':''}>RTC</option>
+        <option value="rte" ${p?.default_type==='rte'?'selected':''}>RTE</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-bottom:8px"><label class="fl">Recipe Name</label>
+    <input id="ed-rec-name" value="${p?.name||''}" placeholder="e.g. Thepla — Methi Wheat"/>
+  </div>
+  <div class="g3" style="margin-bottom:8px">
+    <div><label class="fl">Batch size (g flour)</label>
+      <input type="number" id="ed-rec-batch" value="${p?.flour_grams||1000}"/>
+    </div>
+    <div><label class="fl">Primary Flour</label>
+      <select id="ed-rec-flour" onchange="window._edFlourDraft=this.value">${flourOpts}</select>
+    </div>
+    <div><label class="fl">Default Pack (pcs)</label>
+      <input type="number" id="ed-rec-pack" value="${p?.pack_default||10}"/>
+    </div>
+  </div>
+
+  <div style="margin-bottom:8px;font-size:12px;font-weight:500;color:#1a1a1a">
+    Ingredients <span class="muted">(grams per batch)</span>
+  </div>
+  <div id="ed-ing-rows">${ingRowsHtml}</div>
+  <button class="btn btn-sm" style="margin-bottom:14px" onclick="edAddIng()">+ Add ingredient</button>
+
+  <div style="margin-bottom:8px;font-size:12px;font-weight:500;color:#1a1a1a">Dough sizes</div>
+  <div id="ed-size-rows">${sizeRowsHtml}</div>
+  <button class="btn btn-sm" style="margin-bottom:14px" onclick="edAddSize()">+ Add size</button>
+
+  <div class="row">
+    <button class="btn btn-primary" id="ed-rec-save-btn" onclick="edSaveRecipe()">Save recipe</button>
+    <button class="btn" onclick="edCloseForm()">Cancel</button>
+  </div>
+  <div id="ed-recipe-msg" style="margin-top:8px;font-size:12px"></div>
+</div>`:''}
 
 ${recipeFormOpen ? `<div class="card" id="recipe-form-card" style="border-color:#85b7eb">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1150,6 +1260,122 @@ function bindLocal(){
     await sbDelete('production_plans',{id:b.dataset.id});
     await loadLocal();render();
   }));
+}
+
+/* ── ED_RECIPES HELPERS (shared with Business App) ── */
+function edOpenNew(){
+  edRecipeForm='new';
+  window._edIngDraft={};
+  window._edSizeDraft=[{grams:50,label:'7"'}];
+  window._edFlourDraft=rawMaterials[0]?String(rawMaterials[0].id):'';
+  recipeFormOpen=true;
+  render();
+  setTimeout(()=>document.getElementById('ed-recipe-form')?.scrollIntoView({behavior:'smooth'}),100);
+}
+function edOpenEdit(id){
+  const p=edRecipes.find(r=>r.id===id);
+  if(!p)return;
+  edRecipeForm=id;
+  window._edIngDraft={...(p.rm_formula||{})};
+  window._edSizeDraft=JSON.parse(JSON.stringify(p.dough_sizes||[]));
+  window._edFlourDraft=String(p.primary_flour||'');
+  recipeFormOpen=true;
+  render();
+  setTimeout(()=>document.getElementById('ed-recipe-form')?.scrollIntoView({behavior:'smooth'}),100);
+}
+function edCloseForm(){
+  edRecipeForm=null;
+  recipeFormOpen=false;
+  window._edIngDraft={};
+  window._edSizeDraft=[];
+  render();
+}
+function edRerender(){
+  // Re-render just the form section without full render to preserve scroll
+  recipeFormOpen=true;
+  render();
+}
+function edUpdateIngKey(i,newKey){
+  const keys=Object.keys(window._edIngDraft);
+  const vals=Object.values(window._edIngDraft);
+  const nf={};
+  keys.forEach((k,j)=>{nf[j===i?newKey:k]=vals[j];});
+  window._edIngDraft=nf;
+}
+function edUpdateIngVal(i,val){
+  const keys=Object.keys(window._edIngDraft);
+  window._edIngDraft[keys[i]]=parseFloat(val)||0;
+}
+function edRemoveIng(i){
+  const keys=Object.keys(window._edIngDraft);
+  const vals=Object.values(window._edIngDraft);
+  const nf={};
+  keys.forEach((k,j)=>{if(j!==i)nf[k]=vals[j];});
+  window._edIngDraft=nf;
+  render();
+}
+function edAddIng(){
+  const used=Object.keys(window._edIngDraft);
+  const next=rawMaterials.find(r=>!used.includes(String(r.id)));
+  if(next)window._edIngDraft[String(next.id)]=0;
+  render();
+}
+function edUpdateSize(i,field,val){
+  if(!window._edSizeDraft[i])return;
+  window._edSizeDraft[i][field]=field==='grams'?(parseFloat(val)||0):val;
+}
+function edRemoveSize(i){
+  if((window._edSizeDraft||[]).length<=1){alert('Need at least one dough size');return;}
+  window._edSizeDraft.splice(i,1);
+  render();
+}
+function edAddSize(){
+  if(!window._edSizeDraft)window._edSizeDraft=[];
+  window._edSizeDraft.push({grams:50,label:'?'});
+  render();
+}
+async function edSaveRecipe(){
+  const id=(document.getElementById('ed-rec-id')?.value||'').trim().toUpperCase();
+  const name=(document.getElementById('ed-rec-name')?.value||'').trim();
+  const type=(document.getElementById('ed-rec-type')?.value||'').trim();
+  const default_type=document.getElementById('ed-rec-deftype')?.value||'rtc';
+  const flour_grams=parseFloat(document.getElementById('ed-rec-batch')?.value)||1000;
+  const primary_flour=document.getElementById('ed-rec-flour')?.value||'';
+  const pack_default=parseInt(document.getElementById('ed-rec-pack')?.value)||10;
+
+  if(!id){setMsg('ed-recipe-msg','Recipe ID is required.',false);return;}
+  if(!name){setMsg('ed-recipe-msg','Recipe name is required.',false);return;}
+  if(!(window._edSizeDraft||[]).length){setMsg('ed-recipe-msg','Add at least one dough size.',false);return;}
+
+  const btn=document.getElementById('ed-rec-save-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+
+  const recipeData={
+    id,name,type,default_type,
+    primary_flour,flour_grams,pack_default,
+    atta_swappable:false,
+    rm_formula:{...window._edIngDraft},
+    dough_sizes:[...(window._edSizeDraft||[])],
+  };
+
+  const ok=await upsertEdRecipe(recipeData);
+  if(ok){
+    // Update local list
+    const idx=edRecipes.findIndex(r=>r.id===id);
+    if(idx>=0)edRecipes[idx]=recipeData;
+    else edRecipes.unshift(recipeData);
+    edCloseForm();
+    setMsg('ed-recipe-msg','✓ Saved.',true);
+  } else {
+    setMsg('ed-recipe-msg','Error saving. Try again.',false);
+    btn.disabled=false;btn.textContent='Save recipe';
+  }
+}
+async function edDeleteRecipe(id){
+  if(!confirm('Delete this recipe from Business App too?'))return;
+  await deleteEdRecipe(id);
+  edRecipes=edRecipes.filter(r=>r.id!==id);
+  render();
 }
 
 /* ── RECIPE FORM HELPERS ── */
