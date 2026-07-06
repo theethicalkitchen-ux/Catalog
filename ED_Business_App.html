@@ -659,6 +659,10 @@ async function syncFromSupabase() {
           : (localById[r.data.id]?.atta_swappable || false),
       }));
       changed = true;
+    } else if (state.products && state.products.length) {
+      // ed_recipes table is empty — push local products up to Supabase now
+      const productPayload = state.products.map(p => ({ id: p.id, data: p }));
+      sbUpsert('ed_recipes', productPayload);
     }
     if (infraRows && infraRows.length) {
       const row = infraRows[0];
@@ -711,9 +715,11 @@ async function pushToSupabase() {
     const rmPayload = Object.entries(state.rm).map(([id, rate]) => ({ id, rate }));
     await sbUpsert('ed_rm_rates', rmPayload);
 
-    // Products — one row per product, full recipe as JSON
-    const productPayload = state.products.map(p => ({ id: p.id, data: p }));
-    await sbUpsert('ed_recipes', productPayload);  // ed_recipes is the shared table
+    // Products — push ALL local products to ed_recipes (source of truth)
+    if (state.products && state.products.length) {
+      const productPayload = state.products.map(p => ({ id: p.id, data: p }));
+      await sbUpsert('ed_recipes', productPayload);  // ed_recipes is the shared table
+    }
 
     // Infra + labour — single row
     await sbUpsert('ed_infra', [{ id: 'main', data: { infra: state.infra, labour: state.labour, rm_names: state.rm_names||{} } }]);

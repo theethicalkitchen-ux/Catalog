@@ -207,8 +207,8 @@ async function loadLocal(){
   rawMaterials=a||[]; recipes=b||[]; recipeIngredients=c||[];
   recipeVariants=d||[]; skuMap=e||[]; rmPurchases=f||[]; productionPlans=g||[];
   // Also load shared ed_recipes
-  const edR = await sbGet('ed_recipes','select=*');
-  edRecipes = (edR||[]).map(r=>r.data);
+  const edR = await sbGet('ed_recipes','order=id.asc');
+  edRecipes = (edR||[]).map(r=>r.data).filter(Boolean);
 }
 
 async function loadAll(){ await Promise.all([loadMumbai(), loadLocal()]); }
@@ -783,7 +783,29 @@ function renderRecipesTab(){
     <button class="btn btn-primary btn-sm" onclick="edOpenNew()">+ Add recipe</button>
   </div>
   <div class="info-bar" style="margin-bottom:12px;font-size:11px">📊 Recipes saved here sync automatically to the Business App for cost calculation.</div>
-  ${edRecipes.length===0?'<div class="muted">No recipes yet. Tap + Add recipe to start.</div>':''}
+
+  ${/* ── OLD RECIPES (from recipes table) still shown for reference ── */
+  recipes.length>0?`<div style="margin-bottom:10px">
+    <div class="muted" style="font-size:11px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Legacy recipes (read-only reference)</div>
+    ${recipes.map(r=>{
+      const ings=recipeIngredients.filter(i=>i.recipe_id===r.id);
+      const variants=recipeVariants.filter(v=>v.recipe_id===r.id);
+      return `<div class="card-flat" style="margin-bottom:8px;opacity:0.75">
+        <div style="margin-bottom:6px"><strong>${r.id} — ${r.name}</strong>
+          <span class="muted" style="margin-left:6px">${r.product} · v${r.version||'1.0'}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${ings.map(i=>`<span style="background:#f0ede6;border-radius:6px;padding:2px 7px;font-size:11px">${i.ingredient_name}: ${i.qty_per_kg}${i.unit}</span>`).join('')}
+        </div>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">
+          ${variants.map(v=>`<span style="background:#e6f1fb;border-radius:6px;padding:2px 7px;font-size:11px">${v.dough_ball_g}g → ${v.output_size} · Pack ${v.pack_size_pieces}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`:''}
+
+  <div class="muted" style="font-size:11px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Business App recipes (editable)</div>
+  ${edRecipes.length===0?'<div class="muted" style="margin-bottom:10px">No recipes yet. Tap + Add recipe to start.</div>':''}
   ${edRecipes.map(r=>{
     const ingCount=Object.keys(r.rm_formula||{}).length;
     const sizeCount=(r.dough_sizes||[]).length;
