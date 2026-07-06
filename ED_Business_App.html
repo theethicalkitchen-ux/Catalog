@@ -222,7 +222,7 @@
       <div class="card-label">Custom Ingredients</div>
       <div id="rm-custom"></div>
     </div>
-    <button class="btn btn-ghost" style="margin-bottom:10px;" onclick="addCustomRM()">+ Add Custom Ingredient</button>
+    <div style="font-size:11px;color:var(--text-muted);padding:0 0 10px;">New ingredients? Add them in the Inventory app — they'll appear here on next ↻ Sync.</div>
     <button class="btn btn-primary" onclick="saveRM()">Save Rates</button>
     <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-muted);" id="rm-saved-at"></div>
   </div>
@@ -423,60 +423,67 @@
 // ============================================================
 // DEFAULTS — seeded once, then managed entirely in state
 // ============================================================
-const RM_DEFAULTS = [
-  { id:'siddhikala', name:'Siddhikala Atta',    unit:'₹/kg',    rate:45,  cat:'flour' },
-  { id:'whole_wheat',name:'Whole Wheat Flour',  unit:'₹/kg',    rate:35,  cat:'flour' },
-  { id:'maida',      name:'Maida',              unit:'₹/kg',    rate:33,  cat:'flour' },
-  { id:'rava',       name:'Rava (Semolina)',     unit:'₹/kg',    rate:50,  cat:'flour' },
-  { id:'corn_dexgel',name:'Corn Dexgel',        unit:'₹/kg',    rate:65,  cat:'flour' },
-  { id:'oil',        name:'Oil (Refined)',       unit:'₹/litre', rate:140, cat:'other' },
-  { id:'aloo_flakes',name:'Aloo Flakes',        unit:'₹/kg',    rate:160, cat:'other' },
-  { id:'curd',       name:'Curd',               unit:'₹/kg',    rate:60,  cat:'other' },
-  { id:'butter',     name:'Butter',             unit:'₹/kg',    rate:500, cat:'other' },
-  { id:'milk_powder',name:'Milk Powder',        unit:'₹/kg',    rate:400, cat:'other' },
-  { id:'salt',       name:'Salt',               unit:'₹/kg',    rate:20,  cat:'additive' },
-  { id:'sugar',      name:'Sugar',              unit:'₹/kg',    rate:45,  cat:'additive' },
-  { id:'softener',   name:'Enzyme / Softener',  unit:'₹/kg',    rate:800, cat:'additive' },
-  { id:'baking_soda',name:'Baking Soda',        unit:'₹/kg',    rate:80,  cat:'additive' },
-  { id:'baking_powder',name:'Baking Powder',    unit:'₹/kg',    rate:150, cat:'additive' },
+// RM_DEFAULTS is seeded from the inventory app's raw_materials table.
+// Keys use numeric Supabase IDs (as strings) to stay in sync.
+// Populated on boot via loadRMFromInventory(), then overridden by ed_rm_rates.
+let RM_DEFAULTS = [
+  { id:'37', name:'Siddhikala Wheat',  unit:'kg', rate:45,  cat:'flour' },
+  { id:'38', name:'Whole Wheat Flour', unit:'kg', rate:35,  cat:'flour' },
+  { id:'39', name:'Maida',             unit:'kg', rate:33,  cat:'flour' },
+  { id:'40', name:'Rava',              unit:'kg', rate:50,  cat:'flour' },
+  { id:'52', name:'Corn Dexgel',       unit:'g',  rate:65,  cat:'flour' },
+  { id:'41', name:'Oil',               unit:'litre', rate:140, cat:'other' },
+  { id:'48', name:'Aloo Flakes',       unit:'kg', rate:160, cat:'other' },
+  { id:'42', name:'Curd',              unit:'kg', rate:60,  cat:'other' },
+  { id:'55', name:'Butter/Fat',        unit:'kg', rate:500, cat:'other' },
+  { id:'54', name:'Water',             unit:'litre', rate:0, cat:'other' },
+  { id:'53', name:'Preservative',      unit:'g',  rate:0,   cat:'additive' },
+  { id:'45', name:'Salt',              unit:'kg', rate:20,  cat:'additive' },
+  { id:'46', name:'Sugar',             unit:'kg', rate:45,  cat:'additive' },
+  { id:'51', name:'Enzyme/Softener',   unit:'kg', rate:800, cat:'additive' },
+  { id:'49', name:'Baking Soda',       unit:'kg', rate:80,  cat:'additive' },
+  { id:'50', name:'Baking Powder',     unit:'kg', rate:150, cat:'additive' },
+  { id:'56', name:'Cumin Powder',      unit:'kg', rate:300, cat:'additive' },
+  { id:'57', name:'Ajwain Powder',     unit:'kg', rate:200, cat:'additive' },
+  { id:'58', name:'Thepla Atta',       unit:'kg', rate:120, cat:'flour' },
 ];
 
 // rm_formula values are grams per batch (flour_grams = batch size reference)
 const PRODUCT_DEFAULTS = [
   {
     id:'CH-001', name:'Chapati — Siddhikala', type:'Chapati', default_type:'rtc',
-    primary_flour:'siddhikala', flour_grams:1000, atta_swappable:true, pack_default:10,
-    rm_formula:{ siddhikala:1000, oil:50, salt:6, aloo_flakes:50, softener:0.3 },
+    primary_flour:'37', flour_grams:1000, atta_swappable:true, pack_default:10,
+    rm_formula:{ '37':1000, '41':50, '45':6, '48':50, '51':0.3 },
     dough_sizes:[{grams:50,label:'7"'},{grams:60,label:'8"'},{grams:70,label:'9"'},{grams:80,label:'10"'}],
   },
   {
     id:'PU-001', name:'Puri — Whole Wheat', type:'Puri', default_type:'rtc',
-    primary_flour:'whole_wheat', flour_grams:1000, atta_swappable:false, pack_default:25,
-    rm_formula:{ whole_wheat:1000, salt:20 },
+    primary_flour:'38', flour_grams:1000, atta_swappable:false, pack_default:25,
+    rm_formula:{ '38':1000, '45':20 },
     dough_sizes:[{grams:23,label:'4.5"'},{grams:25,label:'5"'}],
   },
   {
     id:'BH-001', name:'Bhature — Maida Rava Curd', type:'Bhature', default_type:'rtc',
-    primary_flour:'maida', flour_grams:500, atta_swappable:false, pack_default:10,
-    rm_formula:{ maida:500, rava:200, corn_dexgel:10, salt:10, sugar:10, curd:100, butter:25, baking_soda:2, baking_powder:3 },
+    primary_flour:'39', flour_grams:500, atta_swappable:false, pack_default:10,
+    rm_formula:{ '39':500, '40':200, '52':10, '45':10, '46':10, '42':100, '55':25, '49':2, '50':3 },
     dough_sizes:[{grams:35,label:'6"'},{grams:40,label:'6.5"'},{grams:50,label:'7"'},{grams:65,label:'8"'}],
   },
   {
     id:'DP-001', name:'Dal Pakwan — Maida Rava', type:'Dal Pakwan', default_type:'rtc',
-    primary_flour:'maida', flour_grams:1000, atta_swappable:false, pack_default:10,
-    rm_formula:{ maida:1000, corn_dexgel:10, oil:100, salt:15, sugar:15, rava:250 },
+    primary_flour:'39', flour_grams:1000, atta_swappable:false, pack_default:10,
+    rm_formula:{ '39':1000, '52':10, '41':100, '45':15, '46':15, '40':250 },
     dough_sizes:[{grams:50,label:'8"'},{grams:60,label:'9"'}],
   },
   {
     id:'WR-002', name:'Wrap — Whole Wheat', type:'Wrap', default_type:'rtc',
-    primary_flour:'whole_wheat', flour_grams:1000, atta_swappable:false, pack_default:10,
-    rm_formula:{ whole_wheat:1000, oil:100, salt:20, softener:10 },
+    primary_flour:'38', flour_grams:1000, atta_swappable:false, pack_default:10,
+    rm_formula:{ '38':1000, '41':100, '45':20, '51':10 },
     dough_sizes:[{grams:100,label:'12"'}],
   },
   {
     id:'PP-001', name:'Pani Puri — Rava Maida', type:'Pani Puri', default_type:'rtc',
-    primary_flour:'rava', flour_grams:250, atta_swappable:false, pack_default:40,
-    rm_formula:{ rava:250, maida:50, salt:5, baking_soda:1 },
+    primary_flour:'40', flour_grams:250, atta_swappable:false, pack_default:40,
+    rm_formula:{ '40':250, '39':50, '45':5, '49':1 },
     dough_sizes:[{grams:15,label:'Pani Puri'}],
   },
 ];
@@ -507,6 +514,42 @@ let state = { rm:{}, products:[], infra:{}, labour:[], quotes:[], currentMargin:
 const SB_URL  = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZydHBvbHZ4Ymxid2dycXZkbXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1OTE2MDMsImV4cCI6MjA5ODE2NzYwM30.GO0gOt9T5YVzT_rsw9PHgvGpoRuWCuDCQ2dteRqvCpo';
 const SB_HDR  = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
+
+// Pull raw materials from the inventory app's table and rebuild RM_DEFAULTS
+async function loadRMFromInventory() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/raw_materials?select=id,name,unit,costing_price&order=id`, { headers: SB_HDR });
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!rows || !rows.length) return;
+
+    // Categorise by name heuristic
+    const flourKeywords = ['wheat','maida','rava','atta','flour','dexgel'];
+    const otherKeywords = ['oil','curd','butter','fat','water','milk'];
+    const categorise = name => {
+      const n = name.toLowerCase();
+      if (flourKeywords.some(k => n.includes(k))) return 'flour';
+      if (otherKeywords.some(k => n.includes(k))) return 'other';
+      return 'additive';
+    };
+
+    RM_DEFAULTS = rows.map(r => ({
+      id:   String(r.id),
+      name: r.name,
+      unit: r.unit || 'kg',
+      rate: parseFloat(r.costing_price) || 0,
+      cat:  categorise(r.name),
+    }));
+
+    // Seed state.rm from costing_price for any ID not already saved
+    RM_DEFAULTS.forEach(rm => {
+      if (state.rm[rm.id] === undefined) state.rm[rm.id] = rm.rate;
+    });
+
+    renderRM();
+    renderProducts();
+  } catch(e) {}
+}
 
 async function sbGet(table) {
   try {
@@ -617,6 +660,8 @@ async function syncFromSupabase() {
       if (document.getElementById('screen-infra').classList.contains('active')) renderInfra();
     }
     setSyncStatus('ok');
+    // Refresh RM list from inventory in background
+    loadRMFromInventory();
   } catch(e) {
     setSyncStatus('error');
   }
@@ -680,10 +725,10 @@ function setSyncStatus(status) {
 // ============================================================
 // CALCULATIONS
 // ============================================================
-function getRMRate(id) { return parseFloat(state.rm[id] || 0); }
+function getRMRate(id) { return parseFloat(state.rm[String(id)] || 0); }
 
 function getRMName(id) {
-  const r = RM_DEFAULTS.find(x => x.id === id);
+  const r = RM_DEFAULTS.find(x => x.id === String(id));
   return r ? r.name : id;
 }
 
@@ -1396,8 +1441,8 @@ loadState();
 renderRM();
 renderProducts();
 initQuoteScreen();
-// Pull fresh data from Supabase after UI is ready
-syncFromSupabase();
+// Pull inventory RMs first, then full sync
+loadRMFromInventory().then(() => syncFromSupabase());
 </script>
 </body>
 </html>
