@@ -218,6 +218,11 @@
     <div class="card"><div class="card-label">Flour & Grains</div><div id="rm-flour"></div></div>
     <div class="card"><div class="card-label">Fats, Dairy & Other</div><div id="rm-other"></div></div>
     <div class="card"><div class="card-label">Additives & Enhancers</div><div id="rm-additive"></div></div>
+    <div class="card" id="rm-custom-card" style="display:none;">
+      <div class="card-label">Custom Ingredients</div>
+      <div id="rm-custom"></div>
+    </div>
+    <button class="btn btn-ghost" style="margin-bottom:10px;" onclick="addCustomRM()">+ Add Custom Ingredient</button>
     <button class="btn btn-primary" onclick="saveRM()">Save Rates</button>
     <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-muted);" id="rm-saved-at"></div>
   </div>
@@ -476,6 +481,15 @@ const PRODUCT_DEFAULTS = [
   },
 ];
 
+// Returns all RMs — defaults + any custom ones stored in state
+function getAllRMs() {
+  const customIds = Object.keys(state.rm).filter(id => !RM_DEFAULTS.find(r => r.id === id));
+  const customs = customIds.map(id => ({
+    id, name: state.rm_names?.[id] || id, unit: '₹/kg', rate: state.rm[id], cat: 'custom'
+  }));
+  return [...RM_DEFAULTS, ...customs];
+}
+
 const ATTA_OPTIONS = {
   siddhikala:{ name:'Siddhikala', rate:45 },
   khapli:    { name:'Khapli',     rate:80 },
@@ -580,8 +594,9 @@ async function syncFromSupabase() {
     }
     if (infraRows && infraRows.length) {
       const row = infraRows[0];
-      state.infra   = row.data.infra  || state.infra;
-      state.labour  = row.data.labour || state.labour;
+      state.infra    = row.data.infra    || state.infra;
+      state.labour   = row.data.labour   || state.labour;
+      state.rm_names = row.data.rm_names || state.rm_names || {};
       changed = true;
     }
     if (quoteRows && quoteRows.length) {
@@ -631,7 +646,7 @@ async function pushToSupabase() {
     await sbUpsert('ed_products', productPayload);
 
     // Infra + labour — single row
-    await sbUpsert('ed_infra', [{ id: 'main', data: { infra: state.infra, labour: state.labour } }]);
+    await sbUpsert('ed_infra', [{ id: 'main', data: { infra: state.infra, labour: state.labour, rm_names: state.rm_names||{} } }]);
 
     // Quotes — one row per quote
     if (state.quotes.length) {
@@ -721,19 +736,52 @@ function renderRM() {
     const el = document.getElementById(elId);
     el.innerHTML = '';
     RM_DEFAULTS.filter(r => r.cat === cat).forEach(rm => {
-      const row = document.createElement('div');
-      row.className = 'rm-row';
-      row.innerHTML = `
-        <div><div class="rm-name">${rm.name}</div><div class="rm-unit">${rm.unit}</div></div>
-        <div class="rm-price-wrap">
-          <span class="rm-currency">₹</span>
-          <input class="rm-price-input" type="number" step="0.5" value="${state.rm[rm.id] ?? rm.rate}" data-rm="${rm.id}" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
-        </div>`;
-      el.appendChild(row);
+      el.appendChild(makeRMRow(rm.id, rm.name, rm.unit, state.rm[rm.id] ?? rm.rate, false));
     });
   }
+  // Custom RMs
+  const customEl = document.getElementById('rm-custom');
+  customEl.innerHTML = '';
+  const customIds = Object.keys(state.rm).filter(id => !RM_DEFAULTS.find(r => r.id === id));
+  customIds.forEach(id => {
+    const name = state.rm_names?.[id] || id;
+    customEl.appendChild(makeRMRow(id, name, '₹/kg', state.rm[id], true));
+  });
+  document.getElementById('rm-custom-card').style.display = customIds.length ? '' : 'none';
   const saved = localStorage.getItem('ed_rm_saved_at');
   if (saved) document.getElementById('rm-saved-at').textContent = 'Last saved: ' + saved;
+}
+
+function makeRMRow(id, name, unit, rate, isCustom) {
+  const row = document.createElement('div');
+  row.className = 'rm-row';
+  row.innerHTML = `
+    <div style="flex:1;min-width:0;">
+      ${isCustom
+        ? `<input type="text" value="${name}" style="background:transparent;border:none;color:var(--text);font-size:14px;font-weight:500;width:100%;outline:none;padding:0;" oninput="if(!state.rm_names)state.rm_names={};state.rm_names['${id}']=this.value;">`
+        : `<div class="rm-name">${name}</div>`}
+      <div class="rm-unit">${unit}</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="${rate}" data-rm="${id}" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      ${isCustom ? `<button onclick="removeCustomRM('${id}')" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0 4px;">✕</button>` : ''}
+    </div>`;
+  return row;
+}
+
+function addCustomRM() {
+  const id = 'custom_' + Date.now();
+  if (!state.rm_names) state.rm_names = {};
+  state.rm_names[id] = 'New Ingredient';
+  state.rm[id] = 0;
+  renderRM();
+}
+
+function removeCustomRM(id) {
+  delete state.rm[id];
+  if (state.rm_names) delete state.rm_names[id];
+  renderRM();
 }
 
 function saveRM() {
@@ -866,7 +914,7 @@ function renderEditModal() {
   let ingRows = '';
   Object.entries(p.rm_formula).forEach(([rmId, grams], i) => {
     const rmName = getRMName(rmId);
-    const options = RM_DEFAULTS.map(r =>
+    const options = getAllRMs().map(r =>
       `<option value="${r.id}" ${r.id===rmId?'selected':''}>${r.name}</option>`
     ).join('');
     ingRows += `
@@ -890,7 +938,7 @@ function renderEditModal() {
       </div>`;
   });
 
-  const flourOptions = RM_DEFAULTS.filter(r=>r.cat==='flour').map(r=>
+  const flourOptions = getAllRMs().filter(r=>r.cat==='flour'||r.cat==='custom').map(r=>
     `<option value="${r.id}" ${r.id===p.primary_flour?'selected':''}>${r.name}</option>`
   ).join('');
 
@@ -957,15 +1005,15 @@ function updateIngVal(i, val) {
 function removeIng(i) {
   const keys = getIngKeys();
   delete editDraft.rm_formula[keys[i]];
-  renderEditModal();
+  renderEditModalKeepScroll();
 }
 
 function addIngredient() {
-  // Find first RM not already in formula
   const used = Object.keys(editDraft.rm_formula);
-  const next = RM_DEFAULTS.find(r => !used.includes(r.id));
+  const allRMs = getAllRMs();
+  const next = allRMs.find(r => !used.includes(r.id));
   editDraft.rm_formula[next ? next.id : 'salt'] = 0;
-  renderEditModal();
+  renderEditModalKeepScroll();
 }
 
 function updateDoughSize(i, field, val) {
@@ -975,12 +1023,20 @@ function updateDoughSize(i, field, val) {
 function removeDoughSize(i) {
   if (editDraft.dough_sizes.length <= 1) { showToast('Need at least one size'); return; }
   editDraft.dough_sizes.splice(i, 1);
-  renderEditModal();
+  renderEditModalKeepScroll();
 }
 
 function addDoughSize() {
   editDraft.dough_sizes.push({ grams: 50, label: '?' });
+  renderEditModalKeepScroll();
+}
+
+// Preserve scroll position when re-rendering edit modal
+function renderEditModalKeepScroll() {
+  const sheet = document.querySelector('#recipe-modal .modal-sheet');
+  const scrollTop = sheet ? sheet.scrollTop : 0;
   renderEditModal();
+  if (sheet) setTimeout(() => { sheet.scrollTop = scrollTop; }, 10);
 }
 
 function saveRecipe() {
