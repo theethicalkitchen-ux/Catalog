@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live.html -->
+<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_1.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -222,6 +222,53 @@ async function loadLocal(){
   // Also load shared ed_recipes
   const edR = await sbGet('ed_recipes','order=id.asc');
   edRecipes = (edR||[]).map(r=>r.data).filter(Boolean);
+
+  // Auto-migrate old recipes into ed_recipes if not already there
+  const edIds = new Set(edRecipes.map(r=>r.id));
+  const toMigrate = (recipes||[]).filter(r => !edIds.has(r.id));
+  for (const r of toMigrate) {
+    const ings = (recipeIngredients||[]).filter(i=>i.recipe_id===r.id);
+    const vars = (recipeVariants||[]).filter(v=>v.recipe_id===r.id);
+
+    // Build rm_formula: match ingredient names to raw_materials IDs
+    const rm_formula = {};
+    ings.forEach(ing => {
+      const rm = (rawMaterials||[]).find(x=>x.name.toLowerCase()===ing.ingredient_name.toLowerCase());
+      if (rm) rm_formula[String(rm.id)] = parseFloat(ing.qty_per_kg)||0;
+    });
+
+    // Build dough_sizes from variants
+    const dough_sizes = vars.map(v=>({
+      grams: parseFloat(v.dough_ball_g)||50,
+      label: v.output_size||'?'
+    }));
+
+    // Primary flour — first ingredient that is a flour RM
+    const flourIds = ['37','38','39','40','58']; // known flour IDs
+    const primary_flour = Object.keys(rm_formula).find(id=>flourIds.includes(id)) || Object.keys(rm_formula)[0] || '39';
+
+    const recipeData = {
+      id: r.id,
+      name: r.name||r.id,
+      type: r.product||'',
+      default_type: 'rtc',
+      primary_flour,
+      flour_grams: 1000,
+      pack_default: vars[0]?.pack_size_pieces || 10,
+      atta_swappable: false,
+      rm_formula,
+      dough_sizes: dough_sizes.length ? dough_sizes : [{grams:50,label:'?'}],
+    };
+
+    // Push to ed_recipes
+    await fetch(`${SB}/rest/v1/ed_recipes`, {
+      method:'POST',
+      headers:{...H(),'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({id:recipeData.id, data:recipeData})
+    });
+    edRecipes.push(recipeData);
+    console.log('Migrated recipe:', r.id, r.name);
+  }
 }
 
 async function loadAll(){ await Promise.all([loadMumbai(), loadLocal()]); }
