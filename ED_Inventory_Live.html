@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ED Operations</title>
 <style>
@@ -84,7 +84,20 @@ tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
+<div class="wrap"><div id="app"><div style="max-width:360px;margin:3rem auto">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:20px;font-weight:600">ED Operations</div>
+      <div class="muted" style="margin-top:4px">Ethical Delights · Inventory &amp; Production</div>
+    </div>
+    <label class="fl">Username</label>
+    <input id="un" placeholder="Enter username" style="margin-bottom:10px" autocapitalize="none">
+    <label class="fl">Password</label>
+    <input id="pw" type="password" placeholder="Enter password" style="margin-bottom:16px">
+    <button class="btn btn-primary" id="login-btn" style="width:100%;padding:10px">Sign in</button>
+    <div id="login-err" style="color:#791f1f;font-size:12px;margin-top:8px;text-align:center"></div>
+  </div>
+</div></div></div>
 <script>
 const SB = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
 const KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
@@ -1481,5 +1494,6 @@ async function saveRecipe(){
 if(user){loadAll().then(()=>{render();startPolling();});}
 else render();
 </script>
-</body>
-</html>
+
+
+</body></html>

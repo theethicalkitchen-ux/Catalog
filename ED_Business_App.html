@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_1.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Ethical Delights — Business App</title>
 <style>
@@ -202,7 +202,7 @@
 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px;max-width:430px;margin:0 auto;">
   <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--saffron);">ED Ops</span>
   <div style="display:flex;align-items:center;gap:10px;">
-    <span id="sync-indicator" style="font-size:11px;color:var(--text-muted);">◌ Local only</span>
+    <span id="sync-indicator" style="font-size: 11px; color: var(--green);">✓ Synced</span>
     <button onclick="syncFromSupabase()" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;">↻ Sync</button>
   </div>
 </div>
@@ -215,10 +215,181 @@
     <div class="page-subtitle">Update prices — all product costs recalculate instantly</div>
   </div>
   <div class="pscreen">
-    <div class="card"><div class="card-label">Flour & Grains</div><div id="rm-flour"></div></div>
-    <div class="card"><div class="card-label">Fats, Dairy & Other</div><div id="rm-other"></div></div>
-    <div class="card"><div class="card-label">Additives & Enhancers</div><div id="rm-additive"></div></div>
-    <div class="card" id="rm-custom-card" style="display:none;">
+    <div class="card"><div class="card-label">Flour &amp; Grains</div><div id="rm-flour"><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Siddhikala Wheat</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="45" data-rm="37" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Whole Wheat Flour</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="35" data-rm="38" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Maida</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="33" data-rm="39" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Rava</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="50" data-rm="40" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Corn Dexgel</div>
+      <div class="rm-unit">g</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="65" data-rm="52" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Thepla Atta</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="120" data-rm="58" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div></div></div>
+    <div class="card"><div class="card-label">Fats, Dairy &amp; Other</div><div id="rm-other"><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Oil</div>
+      <div class="rm-unit">litre</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="140" data-rm="41" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Curd</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="60" data-rm="42" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Water</div>
+      <div class="rm-unit">litre</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="0" data-rm="54" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Butter/Fat</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="500" data-rm="55" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div></div></div>
+    <div class="card"><div class="card-label">Additives &amp; Enhancers</div><div id="rm-additive"><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Salt</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="20" data-rm="45" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Sugar</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="45" data-rm="46" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Aloo Flakes</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="160" data-rm="48" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Baking Soda</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="80" data-rm="49" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Baking Powder</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="150" data-rm="50" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Enzyme/Softener</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="800" data-rm="51" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">Preservative</div>
+      <div class="rm-unit">g</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="0" data-rm="53" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">cumin powder</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="300" data-rm="56" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div><div class="rm-row">
+    <div style="flex:1;min-width:0;">
+      <div class="rm-name">ajwain powder</div>
+      <div class="rm-unit">kg</div>
+    </div>
+    <div class="rm-price-wrap">
+      <span class="rm-currency">₹</span>
+      <input class="rm-price-input" type="number" step="0.5" value="200" data-rm="57" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      
+    </div></div></div></div>
+    <div class="card" id="rm-custom-card" style="display: none;">
       <div class="card-label">Custom Ingredients</div>
       <div id="rm-custom"></div>
     </div>
@@ -236,7 +407,109 @@
     <div class="page-subtitle">Tap a product to view breakdown or edit recipe</div>
   </div>
   <div class="pscreen">
-    <div id="product-list"></div>
+    <div id="product-list"><div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      <div class="product-header">
+        <div><div class="product-name">Chapati — Siddhikala</div><div class="product-id">CH-001</div></div>
+        <div style="text-align:right;">
+          <div class="product-cost">₹4.20</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px;">50g default</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹3.02</span></div>
+        <div class="product-meta-item">Infra: <span>₹0.93</span></div>
+        <div class="product-meta-item">Pkg: <span>₹0.25</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="action-btn" onclick="openViewModal(0)">📊 View Breakdown</div>
+        <div class="action-btn primary" onclick="openEditModal(0)">✏️ Edit Recipe</div>
+      </div></div><div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      <div class="product-header">
+        <div><div class="product-name">Puri — Whole Wheat</div><div class="product-id">PU-001</div></div>
+        <div style="text-align:right;">
+          <div class="product-cost">₹1.99</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px;">23g default</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹0.81</span></div>
+        <div class="product-meta-item">Infra: <span>₹0.93</span></div>
+        <div class="product-meta-item">Pkg: <span>₹0.25</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="action-btn" onclick="openViewModal(1)">📊 View Breakdown</div>
+        <div class="action-btn primary" onclick="openEditModal(1)">✏️ Edit Recipe</div>
+      </div></div><div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      <div class="product-header">
+        <div><div class="product-name">Bhature — Maida Rava Curd</div><div class="product-id">BH-001</div></div>
+        <div style="text-align:right;">
+          <div class="product-cost">₹4.46</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px;">35g default</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹3.28</span></div>
+        <div class="product-meta-item">Infra: <span>₹0.93</span></div>
+        <div class="product-meta-item">Pkg: <span>₹0.25</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="action-btn" onclick="openViewModal(2)">📊 View Breakdown</div>
+        <div class="action-btn primary" onclick="openEditModal(2)">✏️ Edit Recipe</div>
+      </div></div><div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      <div class="product-header">
+        <div><div class="product-name">Dal Pakwan — Maida Rava</div><div class="product-id">DP-001</div></div>
+        <div style="text-align:right;">
+          <div class="product-cost">₹4.24</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px;">50g default</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹3.06</span></div>
+        <div class="product-meta-item">Infra: <span>₹0.93</span></div>
+        <div class="product-meta-item">Pkg: <span>₹0.25</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="action-btn" onclick="openViewModal(3)">📊 View Breakdown</div>
+        <div class="action-btn primary" onclick="openEditModal(3)">✏️ Edit Recipe</div>
+      </div></div><div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      <div class="product-header">
+        <div><div class="product-name">Wrap — Whole Wheat</div><div class="product-id">WR-002</div></div>
+        <div style="text-align:right;">
+          <div class="product-cost">₹6.92</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px;">100g default</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹5.74</span></div>
+        <div class="product-meta-item">Infra: <span>₹0.93</span></div>
+        <div class="product-meta-item">Pkg: <span>₹0.25</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="action-btn" onclick="openViewModal(4)">📊 View Breakdown</div>
+        <div class="action-btn primary" onclick="openEditModal(4)">✏️ Edit Recipe</div>
+      </div></div><div class="product-card">
+      <span class="product-tag tag-rtc">RTC</span>
+      <div class="product-header">
+        <div><div class="product-name">Pani Puri — Rava Maida</div><div class="product-id">PP-001</div></div>
+        <div style="text-align:right;">
+          <div class="product-cost">₹2.04</div>
+          <div class="product-cost-label">cost/piece<br><span style="font-size:9px;">15g default</span></div>
+        </div>
+      </div>
+      <div class="product-meta">
+        <div class="product-meta-item">RM: <span>₹0.86</span></div>
+        <div class="product-meta-item">Infra: <span>₹0.93</span></div>
+        <div class="product-meta-item">Pkg: <span>₹0.25</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="action-btn" onclick="openViewModal(5)">📊 View Breakdown</div>
+        <div class="action-btn primary" onclick="openEditModal(5)">✏️ Edit Recipe</div>
+      </div></div></div>
     <div style="font-size:11px;color:var(--text-muted);padding:8px 0 4px;">Add new products in the Inventory app → they appear here on ↻ Sync.<br>Tap Edit Recipe to set atta-swappable flag or adjust dough sizes.</div>
   </div>
 </div>
@@ -256,7 +529,7 @@
     </div>
     <div class="card">
       <div class="card-label">Product Configuration</div>
-      <div class="field"><label>Product</label><select id="q-product" onchange="updateQuoteOptions()"><option value="">Select product…</option></select></div>
+      <div class="field"><label>Product</label><select id="q-product" onchange="updateQuoteOptions()"><option value="">Select product…</option><option value="CH-001">Chapati — Siddhikala</option><option value="PU-001">Puri — Whole Wheat</option><option value="BH-001">Bhature — Maida Rava Curd</option><option value="DP-001">Dal Pakwan — Maida Rava</option><option value="WR-002">Wrap — Whole Wheat</option><option value="PP-001">Pani Puri — Rava Maida</option></select></div>
       <div class="two-col">
         <div class="field"><label>Dough Size</label><select id="q-dough" onchange="calculateQuote()"><option value="">Select…</option></select></div>
         <div class="field"><label>Type</label><select id="q-type" onchange="calculateQuote()"><option value="rtc">RTC</option><option value="rte">RTE</option></select></div>
@@ -311,9 +584,9 @@
           </div>
         </div>
         <table class="price-table">
-          <tr><th>Pack</th><th>Cost/Pack</th><th>Sale Price</th><th>Margin ₹</th></tr>
+          <tbody><tr><th>Pack</th><th>Cost/Pack</th><th>Sale Price</th><th>Margin ₹</th></tr>
           <tr><td class="dim" id="qo-pack-size">—</td><td class="mono dim" id="qo-pack-cost">₹—</td><td class="highlight" id="qo-pack-price">₹—</td><td class="mono" id="qo-margin-val" style="color:var(--green)">—</td></tr>
-        </table>
+        </tbody></table>
         <div class="two-col" style="margin-top:14px;">
           <div class="stat-box"><div class="stat-val" id="qo-price-per-piece">₹—</div><div class="stat-label">Price / piece</div></div>
           <div class="stat-box"><div class="stat-val" id="qo-monthly-revenue">₹—</div><div class="stat-label">Monthly revenue</div></div>
@@ -336,7 +609,7 @@
     <div class="card">
       <div class="infra-section-title">Production Volume</div>
       <div class="field"><label>Pieces per Shift</label><input type="number" id="inf-shift-vol" value="8000" oninput="updateInfra()"></div>
-      <div class="field"><label>Shifts per Day</label><select id="inf-shifts" onchange="updateInfra()"><option value="1">1 Shift</option><option value="2" selected>2 Shifts</option></select></div>
+      <div class="field"><label>Shifts per Day</label><select id="inf-shifts" onchange="updateInfra()"><option value="1">1 Shift</option><option value="2" selected="">2 Shifts</option></select></div>
       <div class="field"><label>Working Days / Month</label><input type="number" id="inf-days" value="26" oninput="updateInfra()"></div>
     </div>
     <div class="card">
@@ -354,7 +627,7 @@
       <div class="field"><label>Packaging (₹ per piece)</label><input type="number" id="inf-pkg" step="0.05" oninput="updateInfra()"></div>
     </div>
     <div class="card">
-      <div class="infra-section-title">Per-Piece Electricity & Roasting</div>
+      <div class="infra-section-title">Per-Piece Electricity &amp; Roasting</div>
       <div class="field"><label>RTE — electricity cost per piece ₹</label><input type="number" id="inf-elec-rte" step="0.01" oninput="updateInfra()"></div>
       <div class="field"><label>RTC — electricity cost per piece ₹</label><input type="number" id="inf-elec-rtc" step="0.01" oninput="updateInfra()"></div>
       <div class="field"><label>Roasting cost per piece ₹ (RTE only)</label><input type="number" id="inf-roasting" step="0.01" oninput="updateInfra()"></div>
@@ -374,14 +647,14 @@
     <div class="page-title">Buyer History</div>
     <div class="page-subtitle">All saved quotes by buyer</div>
   </div>
-  <div class="pscreen" id="history-list"></div>
+  <div class="pscreen" id="history-list"><div class="empty-state"><div class="icon">📋</div>No quotes saved yet.<br>Generate a quote and tap Save.</div></div>
 </div>
 
 <!-- MODAL: View/Edit Recipe -->
 <div class="modal-overlay" id="recipe-modal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <button class="close-modal" onclick="closeModal('recipe-modal')">✕ Close</button>
+    <button class="close-modal" onclick="closeModal(&#39;recipe-modal&#39;)">✕ Close</button>
     <div id="recipe-modal-content"></div>
   </div>
 </div>
@@ -390,31 +663,31 @@
 <div class="modal-overlay" id="history-modal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <button class="close-modal" onclick="closeModal('history-modal')">✕ Close</button>
+    <button class="close-modal" onclick="closeModal(&#39;history-modal&#39;)">✕ Close</button>
     <div id="history-modal-content"></div>
   </div>
 </div>
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="nav-item active" onclick="switchScreen('rm',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+  <button class="nav-item active" onclick="switchScreen(&#39;rm&#39;,this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
     Rates
   </button>
-  <button class="nav-item" onclick="switchScreen('products',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+  <button class="nav-item" onclick="switchScreen(&#39;products&#39;,this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
     Products
   </button>
-  <button class="nav-item" onclick="switchScreen('quote',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  <button class="nav-item" onclick="switchScreen(&#39;quote&#39;,this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
     Quote
   </button>
-  <button class="nav-item" onclick="switchScreen('infra',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  <button class="nav-item" onclick="switchScreen(&#39;infra&#39;,this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
     Infra
   </button>
-  <button class="nav-item" onclick="switchScreen('history',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  <button class="nav-item" onclick="switchScreen(&#39;history&#39;,this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     History
   </button>
 </nav>
@@ -1475,5 +1748,6 @@ initQuoteScreen();
 // Pull inventory RMs first, then full sync
 loadRMFromInventory().then(() => syncFromSupabase());
 </script>
-</body>
-</html>
+
+
+</body></html>
