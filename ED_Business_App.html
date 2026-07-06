@@ -546,6 +546,10 @@ async function loadRMFromInventory() {
       if (state.rm[rm.id] === undefined) state.rm[rm.id] = rm.rate;
     });
 
+    // Remove any stale/garbage keys left from old versions
+    cleanupStaleRMKeys();
+    saveToLocalStorage();
+
     renderRM();
     renderProducts();
   } catch(e) {}
@@ -570,6 +574,18 @@ async function sbUpsert(table, payload) {
 // ============================================================
 // STATE LOAD — localStorage first (instant), then Supabase overlay
 // ============================================================
+function cleanupStaleRMKeys() {
+  // Remove any RM key from state.rm that is not a valid numeric inventory ID
+  const validIds = new Set(RM_DEFAULTS.map(r => r.id));
+  Object.keys(state.rm).forEach(k => {
+    if (!validIds.has(k)) {
+      delete state.rm[k];
+    }
+  });
+  // Also wipe rm_names — no longer needed since inventory is source of truth
+  state.rm_names = {};
+}
+
 function applyDefaults() {
   if (!Object.keys(state.rm).length)
     RM_DEFAULTS.forEach(r => state.rm[r.id] = r.rate);
@@ -611,6 +627,7 @@ function loadState() {
     } catch(e) {}
   }
 
+  cleanupStaleRMKeys();
   applyDefaults();
 }
 
