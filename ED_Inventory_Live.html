@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_1.html -->
+<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_3.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -782,7 +782,6 @@ ${rmModalOpen ? `<div id="rm-modal-overlay" style="position:fixed;top:0;left:0;w
 
 
 /* ── RECIPES TAB ── */
-// ed_recipes Supabase upsert helper
 async function upsertEdRecipe(recipeData){
   const r = await fetch(`${SB}/rest/v1/ed_recipes`,{
     method:'POST',
@@ -795,38 +794,33 @@ async function deleteEdRecipe(id){
   await fetch(`${SB}/rest/v1/ed_recipes?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:H()});
 }
 
-let edRecipeForm=null; // null=closed, 'new'=new, id=editing
+let edRecipeForm=null;
 
 function renderRecipesTab(){
   const p = edRecipeForm && edRecipeForm!=='new' ? edRecipes.find(r=>r.id===edRecipeForm) : null;
   const isNew = edRecipeForm==='new';
   const formOpen = edRecipeForm!==null;
 
-  // Ingredient rows for form
+  // Ingredient rows
   let ingRowsHtml='';
-  const draftIngs = formOpen ? Object.entries((window._edIngDraft||{})) : [];
-  draftIngs.forEach(([rmId,grams],i)=>{
+  Object.entries(window._edIngDraft||{}).forEach(([rmId,grams],i)=>{
     const rm=rawMaterials.find(r=>String(r.id)===String(rmId));
     const opts=rawMaterials.map(r=>`<option value="${r.id}" ${String(r.id)===String(rmId)?'selected':''}>${r.name}</option>`).join('');
     ingRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
-      <select style="flex:2" data-ing-key="${i}" onchange="edUpdateIngKey(${i},this.value)">${opts}</select>
-      <input type="number" value="${grams}" step="0.1" placeholder="g/batch" style="flex:1;min-width:70px"
-        data-ing-val="${i}" oninput="edUpdateIngVal(${i},this.value)">
-      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">${rm?.unit||'g'}/batch</span>
+      <select style="flex:2" onchange="edUpdateIngKey(${i},this.value)">${opts}</select>
+      <input type="number" value="${grams}" step="0.1" placeholder="g" style="flex:1;min-width:70px" oninput="edUpdateIngVal(${i},this.value)">
+      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">${rm?.unit||'g'}</span>
       <button class="btn btn-danger btn-sm" onclick="edRemoveIng(${i})">✕</button>
     </div>`;
   });
 
-  // Dough size rows for form
+  // Dough size rows
   let sizeRowsHtml='';
-  const draftSizes = formOpen ? (window._edSizeDraft||[]) : [];
-  draftSizes.forEach((s,i)=>{
+  (window._edSizeDraft||[]).forEach((s,i)=>{
     sizeRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
-      <input type="number" value="${s.grams}" placeholder="g" style="flex:0 0 70px;min-width:60px"
-        oninput="edUpdateSize(${i},'grams',this.value)">
+      <input type="number" value="${s.grams}" placeholder="g" style="flex:0 0 70px;min-width:60px" oninput="edUpdateSize(${i},'grams',this.value)">
       <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">g →</span>
-      <input type="text" value="${s.label}" placeholder='e.g. 7"' style="flex:1"
-        oninput="edUpdateSize(${i},'label',this.value)">
+      <input type="text" value="${s.label||''}" placeholder='e.g. 7"' style="flex:1" oninput="edUpdateSize(${i},'label',this.value)">
       <button class="btn btn-danger btn-sm" onclick="edRemoveSize(${i})">✕</button>
     </div>`;
   });
@@ -836,42 +830,16 @@ function renderRecipesTab(){
   return `
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div>
-      <span class="sec" style="margin:0">Recipes</span>
-      <span class="muted" style="margin-left:8px;font-size:11px">Shared with Business App</span>
-    </div>
+    <span class="sec" style="margin:0">Recipes <span class="muted" style="font-size:11px;font-weight:400">${edRecipes.length} total</span></span>
     <button class="btn btn-primary btn-sm" onclick="edOpenNew()">+ Add recipe</button>
   </div>
-  <div class="info-bar" style="margin-bottom:12px;font-size:11px">📊 Recipes saved here sync automatically to the Business App for cost calculation.</div>
-
-  ${/* ── OLD RECIPES (from recipes table) still shown for reference ── */
-  recipes.length>0?`<div style="margin-bottom:10px">
-    <div class="muted" style="font-size:11px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Legacy recipes (read-only reference)</div>
-    ${recipes.map(r=>{
-      const ings=recipeIngredients.filter(i=>i.recipe_id===r.id);
-      const variants=recipeVariants.filter(v=>v.recipe_id===r.id);
-      return `<div class="card-flat" style="margin-bottom:8px;opacity:0.75">
-        <div style="margin-bottom:6px"><strong>${r.id} — ${r.name}</strong>
-          <span class="muted" style="margin-left:6px">${r.product} · v${r.version||'1.0'}</span>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px">
-          ${ings.map(i=>`<span style="background:#f0ede6;border-radius:6px;padding:2px 7px;font-size:11px">${i.ingredient_name}: ${i.qty_per_kg}${i.unit}</span>`).join('')}
-        </div>
-        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">
-          ${variants.map(v=>`<span style="background:#e6f1fb;border-radius:6px;padding:2px 7px;font-size:11px">${v.dough_ball_g}g → ${v.output_size} · Pack ${v.pack_size_pieces}</span>`).join('')}
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`:''}
-
-  <div class="muted" style="font-size:11px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Business App recipes (editable)</div>
-  ${edRecipes.length===0?'<div class="muted" style="margin-bottom:10px">No recipes yet. Tap + Add recipe to start.</div>':''}
+  ${edRecipes.length===0?'<div class="muted">No recipes yet. Tap + Add recipe to start.</div>':''}
   ${edRecipes.map(r=>{
     const ingCount=Object.keys(r.rm_formula||{}).length;
     const sizeCount=(r.dough_sizes||[]).length;
     const tagColor=r.default_type==='rte'?'#791f1f':'#27500a';
     const tagBg=r.default_type==='rte'?'#fcebeb':'#eaf3de';
-    return `<div class="card-flat">
+    return `<div class="card-flat" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
         <div>
           <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:${tagBg};color:${tagColor};text-transform:uppercase;margin-right:6px">${r.default_type||'rtc'}</span>
@@ -883,34 +851,36 @@ function renderRecipesTab(){
           <button class="btn btn-danger btn-sm" onclick="edDeleteRecipe('${r.id}')">✕</button>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#666">
-        <span>📦 Batch: ${r.flour_grams||1000}g</span>
-        <span>🧪 ${ingCount} ingredient${ingCount!==1?'s':''}</span>
-        <span>📐 ${sizeCount} dough size${sizeCount!==1?'s':''}</span>
-        <span>🗳 Pack: ${r.pack_default||10} pcs</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#666;margin-bottom:8px">
+        <span>Batch: <strong style="color:#1a1a1a">${r.flour_grams||1000}g</strong></span>
+        <span>Pack: <strong style="color:#1a1a1a">${r.pack_default||10} pcs</strong></span>
+        <span>${sizeCount} size${sizeCount!==1?'s':''}</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
         ${Object.entries(r.rm_formula||{}).map(([rmId,grams])=>{
           const rm=rawMaterials.find(x=>String(x.id)===String(rmId));
-          return `<span style="background:#f0ede6;border-radius:6px;padding:2px 7px;font-size:11px">${rm?rm.name:rmId}: ${grams}g</span>`;
+          return `<span style="background:#f0ede6;border-radius:6px;padding:2px 8px;font-size:11px">${rm?rm.name:rmId}: ${grams}g</span>`;
         }).join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+        ${(r.dough_sizes||[]).map(s=>`<span style="background:#e6f1fb;border-radius:6px;padding:2px 8px;font-size:11px">${s.grams}g → ${s.label}</span>`).join('')}
       </div>
     </div>`;
   }).join('')}
 </div>
 
-${formOpen?`<div class="card" style="border-color:#85b7eb" id="ed-recipe-form">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+${formOpen?`<div class="card" style="border-color:#85b7eb;margin-top:4px" id="ed-recipe-form">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
     <span class="sec" style="margin:0">${isNew?'New Recipe':'Edit — '+(p?.name||'')}</span>
     <button class="btn btn-sm" onclick="edCloseForm()">✕ Cancel</button>
   </div>
 
-  <div class="g3" style="margin-bottom:8px">
+  <div class="g3" style="margin-bottom:10px">
     <div><label class="fl">Recipe ID</label>
       <input id="ed-rec-id" value="${isNew?'':p?.id||''}" placeholder="e.g. TH-001" ${!isNew?'disabled':''}/>
     </div>
     <div><label class="fl">Product Type</label>
-      <input id="ed-rec-type" value="${p?.type||''}" placeholder="Chapati / Thepla…"/>
+      <input id="ed-rec-type" value="${p?.type||''}" placeholder="Chapati, Thepla…"/>
     </div>
     <div><label class="fl">RTC / RTE</label>
       <select id="ed-rec-deftype">
@@ -919,10 +889,13 @@ ${formOpen?`<div class="card" style="border-color:#85b7eb" id="ed-recipe-form">
       </select>
     </div>
   </div>
-  <div style="margin-bottom:8px"><label class="fl">Recipe Name</label>
+
+  <div style="margin-bottom:10px">
+    <label class="fl">Recipe Name</label>
     <input id="ed-rec-name" value="${p?.name||''}" placeholder="e.g. Thepla — Methi Wheat"/>
   </div>
-  <div class="g3" style="margin-bottom:8px">
+
+  <div class="g3" style="margin-bottom:10px">
     <div><label class="fl">Batch size (g flour)</label>
       <input type="number" id="ed-rec-batch" value="${p?.flour_grams||1000}"/>
     </div>
@@ -934,13 +907,11 @@ ${formOpen?`<div class="card" style="border-color:#85b7eb" id="ed-recipe-form">
     </div>
   </div>
 
-  <div style="margin-bottom:8px;font-size:12px;font-weight:500;color:#1a1a1a">
-    Ingredients <span class="muted">(grams per batch)</span>
-  </div>
+  <div style="margin-bottom:6px;font-size:12px;font-weight:500">Ingredients <span class="muted">(grams per batch)</span></div>
   <div id="ed-ing-rows">${ingRowsHtml}</div>
   <button class="btn btn-sm" style="margin-bottom:14px" onclick="edAddIng()">+ Add ingredient</button>
 
-  <div style="margin-bottom:8px;font-size:12px;font-weight:500;color:#1a1a1a">Dough sizes</div>
+  <div style="margin-bottom:6px;font-size:12px;font-weight:500">Dough sizes</div>
   <div id="ed-size-rows">${sizeRowsHtml}</div>
   <button class="btn btn-sm" style="margin-bottom:14px" onclick="edAddSize()">+ Add size</button>
 
@@ -950,56 +921,8 @@ ${formOpen?`<div class="card" style="border-color:#85b7eb" id="ed-recipe-form">
   </div>
   <div id="ed-recipe-msg" style="margin-top:8px;font-size:12px"></div>
 </div>`:''}
-
-${recipeFormOpen ? `<div class="card" id="recipe-form-card" style="border-color:#85b7eb">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span class="sec" style="margin:0">${editingRecipe?'Edit — '+editingRecipe.name:'Add recipe'}</span>
-  </div>
-  <div class="g3" style="margin-bottom:8px">
-    <div><label class="fl">Recipe ID</label><input id="rec-id" placeholder="CH-001" value="${editingRecipe?.id||''}" ${editingRecipe?'disabled':''}/></div>
-    <div><label class="fl">Product</label><select id="rec-product">
-      ${['Chapati','Bhature','Puri','Dal Pakwan','Wrap','Other'].map(p=>`<option ${editingRecipe?.product===p?'selected':''}>${p}</option>`).join('')}
-    </select></div>
-    <div><label class="fl">Version</label><input id="rec-version" placeholder="1.0" value="${editingRecipe?.version||''}"/></div>
-  </div>
-  <div style="margin-bottom:8px"><label class="fl">Recipe name</label><input id="rec-name" placeholder="e.g. Chapati — Siddhikala Wheat" value="${editingRecipe?.name||''}"/></div>
-  <div style="margin-bottom:8px"><label class="fl">Notes / trial result</label><textarea id="rec-notes" rows="2" placeholder="Optional notes…">${editingRecipe?.notes||''}</textarea></div>
-  <div style="margin-bottom:8px"><label class="fl" style="font-size:12px;font-weight:500;color:#1a1a1a">Ingredients (per 1kg of primary flour/base)</label>
-    <div id="ing-rows"></div>
-    <button class="btn btn-sm" id="add-ing-row" style="margin-top:6px">+ Add ingredient</button>
-  </div>
-  <div style="margin-bottom:12px"><label class="fl" style="font-size:12px;font-weight:500;color:#1a1a1a">Variants (dough ball sizes)</label>
-    <div id="var-rows"></div>
-    <button class="btn btn-sm" id="add-var-row" style="margin-top:6px">+ Add variant</button>
-  </div>
-  <div class="row">
-    <button class="btn btn-primary" id="recipe-save-btn">Save recipe</button>
-    <button class="btn" id="recipe-cancel-btn">Cancel</button>
-  </div>
-  <div id="recipe-msg"></div>
-</div>` : ''}
-
-<div class="card">
-  <div class="sec" style="margin-bottom:12px">SKU → Recipe mapping</div>
-  <div class="muted" style="margin-bottom:10px">Map each Mumbai SKU to the recipe variant that produces it. Stock alarms use this mapping.</div>
-  ${SKUS.map(s=>{
-    const map=skuMap.find(m=>m.sku===s.id);
-    const variant=map?recipeVariants.find(v=>v.id===map.recipe_variant_id):null;
-    const rec=variant?recipes.find(r=>r.id===variant.recipe_id):null;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ede6">
-      <div style="width:130px;font-weight:500;font-size:13px">${s.name}</div>
-      <select data-action="map-sku" data-sku="${s.id}" style="flex:1;font-size:12px">
-        <option value="">— Not mapped —</option>
-        ${recipeVariants.map(v=>{
-          const r=recipes.find(x=>x.id===v.recipe_id);
-          return `<option value="${v.id}" ${map?.recipe_variant_id===v.id?'selected':''}>${r?.name||v.recipe_id} · ${v.dough_ball_g}g · ${v.output_size}</option>`;
-        }).join('')}
-      </select>
-      ${variant?`<span class="muted" style="font-size:11px">${rec?.id}</span>`:''}
-    </div>`;
-  }).join('')}
-  <div id="map-msg" style="margin-top:6px"></div>
-</div>`;}
+`;
+}
 
 /* ── PRODUCTION PLAN TAB ── */
 function renderPlanTab(){
