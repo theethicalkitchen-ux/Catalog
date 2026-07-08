@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_4.html -->
+<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_5.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -721,7 +721,7 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
       <th style="width:17%;text-align:right">Total stock</th>
       <th style="width:8%;text-align:center" class="hide-mobile">Unit</th>
       <th style="width:22%;text-align:right;color:#0c447c">Add qty</th>
-      <th style="width:15%;text-align:right" class="hide-mobile">Reorder at</th>
+      <th style="width:15%;text-align:right" class="hide-mobile">Cost ₹</th>
       <th style="width:8%;text-align:center">Edit</th>
     </tr></thead>
     <tbody>
@@ -730,8 +730,7 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
       return `<tr style="${isLow?'background:#fff8f0':''}">
         <td><strong style="font-weight:500">${r.name}</strong></td>
         <td style="text-align:right;white-space:nowrap">
-          <span id="rm-total-${r.id}" style="font-size:17px;font-weight:700;color:${isLow?'#791f1f':'#1a1a1a'}">${r.stock_qty}</span>
-          ${isLow?'<span class="badge b-low" style="margin-left:4px;font-size:10px;vertical-align:middle">Low</span>':''}
+          <span id="rm-total-${r.id}" style="font-size:17px;font-weight:700;color:${isLow?'#791f1f':'#1a1a1a'};display:block;text-align:right;">${r.stock_qty}</span>
         </td>
         <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">${r.unit}</td>
         <td style="text-align:right;padding-right:8px">
@@ -740,7 +739,7 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
             style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c"
             oninput="updateRMPreview(${r.id},this.value,${r.stock_qty},${r.costing_price||0})"/>
         </td>
-        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">${r.reorder_threshold||'—'} ${r.reorder_threshold?r.unit:''}</td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹${r.costing_price||'0'}</td>
         <td style="text-align:center">
           <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}" title="Edit" style="padding:4px 7px">⚙</button>
         </td>
