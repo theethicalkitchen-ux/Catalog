@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_3.html -->
+<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_4.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -608,7 +608,7 @@
     </div>
     <div class="card">
       <div class="card-label">Product Configuration</div>
-      <div class="field"><label>Product</label><select id="q-product" onchange="updateQuoteOptions()"><option value="">Select product…</option><option value="CH-001">Chapati — Siddhikala</option><option value="PU-001">Puri — Whole Wheat</option><option value="BH-001">Bhature — Maida Rava Curd</option><option value="DP-001">Dal Pakwan — Maida Rava</option><option value="WR-002">Wrap — Whole Wheat</option><option value="PP-001">Pani Puri — Rava Maida</option><option value="WR-001">Wrap 12 inch — Maida</option><option value="THEPLA-001">Thepla</option></select></div>
+      <div class="field"><label>Product</label><select id="q-product" onchange="updateQuoteOptions()"><option value="">Select product…</option><option value="CH-001">Chapati — Siddhikala</option><option value="PU-001">Puri — Whole Wheat</option><option value="BH-001">Bhature — Maida Rava Curd</option><option value="DP-001">Dal Pakwan — Maida Rava</option><option value="WR-002">Wrap — Whole Wheat</option><option value="PP-001">Pani Puri — Rava Maida</option><option value="WR-001">Wrap 12 inch — Maida</option><option value="THEPLA-001">Thepla</option><option value="CH-001-COPY">Chapati — Siddhikala Original</option></select></div>
       <div class="two-col">
         <div class="field"><label>Dough Size</label><select id="q-dough" onchange="calculateQuote()"><option value="">Select…</option></select></div>
         <div class="field"><label>Type</label><select id="q-type" onchange="calculateQuote()"><option value="rtc">RTC</option><option value="rte">RTE</option></select></div>
@@ -1316,6 +1316,7 @@ let editDraft = null; // deep copy being edited
 function openEditModal(idx) {
   editingIdx = idx;
   editDraft = JSON.parse(JSON.stringify(state.products[idx]));
+  editDraft._ings = formulaToIngArray(editDraft.rm_formula);
   renderEditModal();
   document.getElementById('recipe-modal').classList.add('open');
 }
@@ -1327,7 +1328,8 @@ function openNewProductModal() {
     name: '', type: '', default_type: 'rtc',
     primary_flour: 'maida', flour_grams: 1000,
     atta_swappable: false, pack_default: 10,
-    rm_formula: { maida: 1000 },
+    rm_formula: {},
+    _ings: [],
     dough_sizes: [{ grams: 50, label: '7"' }],
   };
   renderEditModal();
@@ -1339,20 +1341,21 @@ function renderEditModal() {
   const p = editDraft;
   const isNew = editingIdx === null;
 
-  // Build ingredient rows
+  // Build ingredient rows from ordered array (preserves insertion order)
+  if (!p._ings) p._ings = formulaToIngArray(p.rm_formula);
   let ingRows = '';
-  Object.entries(p.rm_formula).forEach(([rmId, grams], i) => {
-    const isTemp = rmId.startsWith('new_');
-    const rmMeta = isTemp ? null : getAllRMs().find(r => r.id === rmId);
+  p._ings.forEach(({id: rmId, grams}, i) => {
+    const isEmpty = !rmId;
+    const rmMeta  = isEmpty ? null : getAllRMs().find(r => r.id === rmId);
     const unitLabel = rmMeta ? rmMeta.unit : '—';
-    const blankOption = isTemp ? `<option value="" disabled selected>— select ingredient —</option>` : '';
-    const options = blankOption + getAllRMs().map(r =>
-      `<option value="${r.id}" ${!isTemp && r.id===rmId?'selected':''}>${r.name}</option>`
+    const blankOpt  = isEmpty ? `<option value="" disabled selected>— select ingredient —</option>` : '';
+    const options   = blankOpt + getAllRMs().map(r =>
+      `<option value="${r.id}" ${!isEmpty && r.id===rmId?'selected':''}>${r.name}</option>`
     ).join('');
     ingRows += `
       <div class="ing-edit-row" id="ing-row-${i}">
         <select onchange="updateIngKey(${i},this.value)">${options}</select>
-        <input type="number" value="${isTemp ? '' : grams}" step="0.1" placeholder="qty" oninput="updateIngVal(${i},this.value)">
+        <input type="number" value="${isEmpty ? '' : grams}" step="0.1" placeholder="qty" oninput="updateIngVal(${i},this.value)">
         <span class="ing-unit-label">${unitLabel}</span>
         <button class="remove-btn" onclick="removeIng(${i})">✕</button>
       </div>`;
@@ -1416,48 +1419,68 @@ function renderEditModal() {
 }
 
 // Ingredient editing helpers — operate on editDraft
-function getIngKeys() { return Object.keys(editDraft.rm_formula); }
-function getIngVals() { return Object.values(editDraft.rm_formula); }
+// ── Ingredient editing uses an ORDERED ARRAY during editing ──────────────────
+// editDraft._ings = [{id, grams}] — preserves insertion order always
+// Converted back to rm_formula object only on save
 
-function updateIngKey(i, newKey) {
-  const keys = getIngKeys();
-  const vals = getIngVals();
-  const newFormula = {};
-  keys.forEach((k,j) => { newFormula[j===i ? newKey : k] = vals[j]; });
-  editDraft.rm_formula = newFormula;
-  renderEditModalKeepScroll(); // re-render so unit label updates instantly
+function ingArrayToFormula(arr) {
+  const f = {};
+  arr.forEach(row => { if (row.id) f[row.id] = row.grams; });
+  return f;
+}
+
+function formulaToIngArray(formula) {
+  return Object.entries(formula || {}).map(([id, grams]) => ({ id, grams }));
+}
+
+function ensureIngArray() {
+  if (!editDraft._ings) {
+    editDraft._ings = formulaToIngArray(editDraft.rm_formula);
+  }
+}
+
+function updateIngKey(i, newId) {
+  ensureIngArray();
+  editDraft._ings[i].id = newId;
+  // Update unit label only — don't re-render whole modal, just swap the unit span
+  const rmMeta = getAllRMs().find(r => r.id === newId);
+  const unitSpan = document.querySelectorAll('#ing-rows-edit .ing-unit-label')[i];
+  if (unitSpan) unitSpan.textContent = rmMeta ? rmMeta.unit : '—';
 }
 
 function updateIngVal(i, val) {
-  const keys = getIngKeys();
-  editDraft.rm_formula[keys[i]] = parseFloat(val) || 0;
+  ensureIngArray();
+  editDraft._ings[i].grams = parseFloat(val) || 0;
 }
 
 function removeIng(i) {
-  const keys = getIngKeys();
-  delete editDraft.rm_formula[keys[i]];
+  ensureIngArray();
+  editDraft._ings.splice(i, 1);
   renderEditModalKeepScroll();
 }
 
 function addIngredient() {
-  // Use a temp non-numeric key so it appends at end (numeric keys sort to top in JS objects)
-  const tempKey = 'new_' + Date.now();
-  editDraft.rm_formula[tempKey] = 0;
+  ensureIngArray();
+  editDraft._ings.push({ id: '', grams: 0 }); // empty row appended at bottom
   renderEditModalKeepScroll();
 }
 
 function normaliseTempKeys() {
-  // Called on save — replace any temp 'new_...' keys with the actual RM ID selected
-  // by reading the current select values from the DOM
+  // Sync DOM values into _ings before save (in case oninput didn't fire)
   const selects = document.querySelectorAll('#ing-rows-edit select');
   const inputs  = document.querySelectorAll('#ing-rows-edit input[type=number]');
-  const newFormula = {};
-  selects.forEach((sel, i) => {
-    const rmId = sel.value;
-    const qty  = parseFloat(inputs[i]?.value) || 0;
-    if (rmId) newFormula[rmId] = qty;
-  });
-  if (Object.keys(newFormula).length) editDraft.rm_formula = newFormula;
+  if (editDraft._ings && selects.length) {
+    selects.forEach((sel, i) => {
+      if (editDraft._ings[i]) {
+        editDraft._ings[i].id    = sel.value;
+        editDraft._ings[i].grams = parseFloat(inputs[i]?.value) || 0;
+      }
+    });
+  }
+  // Convert array back to formula object
+  if (editDraft._ings) {
+    editDraft.rm_formula = ingArrayToFormula(editDraft._ings);
+  }
 }
 
 function updateDoughSize(i, field, val) {
@@ -1490,6 +1513,7 @@ function duplicateProduct(idx) {
   editDraft = JSON.parse(JSON.stringify(original));
   editDraft.id = newId;
   editDraft.name = original.name + ' (Copy)';
+  editDraft._ings = formulaToIngArray(editDraft.rm_formula);
   renderEditModal();
   document.getElementById('recipe-modal').classList.add('open');
 }
@@ -1500,10 +1524,13 @@ function saveRecipe() {
   if (!editDraft.dough_sizes.length) { showToast('Add at least one dough size'); return; }
   if (!Object.keys(editDraft.rm_formula).length) { showToast('Add at least one ingredient'); return; }
 
+  normaliseTempKeys(); // already called above but ensure _ings -> rm_formula
+  const toStore = JSON.parse(JSON.stringify(editDraft));
+  delete toStore._ings; // don't persist the editing array
   if (editingIdx === null) {
-    state.products.push(editDraft);
+    state.products.push(toStore);
   } else {
-    state.products[editingIdx] = editDraft;
+    state.products[editingIdx] = toStore;
   }
   saveState();
   closeModal('recipe-modal');
