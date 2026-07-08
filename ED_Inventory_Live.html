@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_7.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- saved from url=(0069)https://theethicalkitchen-ux.github.io/Catalog/ED_Inventory_Live.html -->
+<html lang="en" data-lt-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ED Operations</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ED Operations">
-<meta name="application-name" content="ED Operations">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;min-height:100vh}
@@ -85,22 +82,325 @@ tr:last-child td{border-bottom:none}
   .rm-add-input{font-size:16px!important}
 }
 </style>
-</head>
+<script src="chrome-extension://liecbddmkiiihnedobmlmillhodjkdmb/js/recordConsoleEvents.js"></script></head>
 <body>
-<div class="wrap"><div id="app"><div style="max-width:360px;margin:3rem auto">
-  <div class="card">
-    <div style="text-align:center;margin-bottom:1.5rem">
-      <div style="font-size:20px;font-weight:600">ED Operations</div>
-      <div class="muted" style="margin-top:4px">Ethical Delights · Inventory &amp; Production</div>
-    </div>
-    <label class="fl">Username</label>
-    <input id="un" placeholder="Enter username" style="margin-bottom:10px" autocapitalize="none">
-    <label class="fl">Password</label>
-    <input id="pw" type="password" placeholder="Enter password" style="margin-bottom:16px">
-    <button class="btn btn-primary" id="login-btn" style="width:100%;padding:10px">Sign in</button>
-    <div id="login-err" style="color:#791f1f;font-size:12px;margin-top:8px;text-align:center"></div>
+<div class="wrap"><div id="app">
+<div class="hdr">
+  <div>
+    <span style="font-size:17px;font-weight:600">ED Operations</span>
+    <span class="muted" style="margin-left:8px">Nishant · Pune</span>
   </div>
-</div></div></div>
+  <div class="row">
+    <span class="muted hide-mobile" id="sync-lbl">🟢 Live</span>
+    <button class="btn btn-sm" id="refresh-btn" title="Refresh" fdprocessedid="hexnj">↻</button>
+    <button class="btn btn-sm" id="logout-btn" fdprocessedid="6laqarn">Sign out</button>
+  </div>
+</div>
+
+<div class="mod-tabs">
+  <button class="mod-tab " data-mod="mumbai" fdprocessedid="rltxn">🚚 <span class="hide-mobile">Mumbai </span>Distributor</button>
+  <button class="mod-tab active" data-mod="local" fdprocessedid="ebu618">🏭 <span class="hide-mobile">Local </span>Production <span style="background:#fcebeb;color:#791f1f;border-radius:10px;padding:1px 6px;font-size:10px">3</span></button>
+</div>
+
+
+<div class="danger-bar">⚠️ RM shortage for 3 materials based on active orders &amp; plans — check Report tab</div>
+<div class="tabs-row">
+  <button class="tab active" data-tab="rm" fdprocessedid="c8w9ns">🧪 Raw Materials</button><button class="tab " data-tab="recipes" fdprocessedid="au2xtd">📖 Recipes</button><button class="tab " data-tab="plan" fdprocessedid="dsagzq">📅 Production Plan</button><button class="tab " data-tab="report" fdprocessedid="1g2el">📊 Report</button>
+</div>
+
+<div class="alert-bar">⚠️ Reorder needed: Rava, Sugar, Whole Wheat Flour</div>
+
+<div class="card" style="padding:0">
+  <div style="padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f0ede6">
+    <span class="sec" style="margin:0">Raw materials</span>
+    <span class="muted" style="margin-left:8px;font-size:12px">Enter qty to add, then Save all</span>
+  </div>
+  <div id="rm-save-msg" style="padding:4px 1.25rem;font-size:12px;min-height:18px"></div>
+  
+  <div style="overflow-x:auto"><table style="table-layout:fixed;width:100%">
+    <thead><tr>
+      <th style="width:30%">Material</th>
+      <th style="width:17%;text-align:right">Total stock</th>
+      <th style="width:8%;text-align:center" class="hide-mobile">Unit</th>
+      <th style="width:22%;text-align:right;color:#0c447c">Add qty</th>
+      <th style="width:15%;text-align:right" class="hide-mobile">Cost ₹</th>
+      <th style="width:8%;text-align:center">Edit</th>
+    </tr></thead>
+    <tbody>
+    <tr style="">
+        <td><strong style="font-weight:500">ajwain powder</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-57" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="57" data-current="0" data-price="200" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(57,this.value,0,200)" fdprocessedid="cnd8l">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹200</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="57" title="Edit" style="padding:4px 7px" fdprocessedid="7wrofi">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Aloo Flakes</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-48" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">95</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="48" data-current="95" data-price="160" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(48,this.value,95,160)" fdprocessedid="vdndnu">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹160</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="48" title="Edit" style="padding:4px 7px" fdprocessedid="z0brt7i">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Baking Powder</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-50" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">50</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="50" data-current="50" data-price="150" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(50,this.value,50,150)" fdprocessedid="t6nnil">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹150</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="50" title="Edit" style="padding:4px 7px" fdprocessedid="d79kcx">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Baking Soda</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-49" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">20</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="49" data-current="20" data-price="80" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(49,this.value,20,80)" fdprocessedid="5hssd">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹80</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="49" title="Edit" style="padding:4px 7px" fdprocessedid="v5fsq">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Butter/Fat</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-55" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="55" data-current="0" data-price="500" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(55,this.value,0,500)" fdprocessedid="raqi">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹500</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="55" title="Edit" style="padding:4px 7px" fdprocessedid="1v56wv">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Corn Dexgel</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-52" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">1000</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">g</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="52" data-current="1000" data-price="65" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(52,this.value,1000,65)" fdprocessedid="iwf99gf">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹65</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="52" title="Edit" style="padding:4px 7px" fdprocessedid="wfqtv9">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">cumin powder</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-56" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="56" data-current="0" data-price="300" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(56,this.value,0,300)" fdprocessedid="vzwr2r">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹300</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="56" title="Edit" style="padding:4px 7px" fdprocessedid="htx5xc">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Curd</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-42" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">100</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="42" data-current="100" data-price="60" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(42,this.value,100,60)" fdprocessedid="vl5fra">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹60</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="42" title="Edit" style="padding:4px 7px" fdprocessedid="be3xji">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Enzyme/Softener</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-51" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">10</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="51" data-current="10" data-price="13000" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(51,this.value,10,13000)" fdprocessedid="p2kict">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹13000</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="51" title="Edit" style="padding:4px 7px" fdprocessedid="abr92">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">glycerine</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-59" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="59" data-current="0" data-price="354" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(59,this.value,0,354)" fdprocessedid="tceiij">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹354</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="59" title="Edit" style="padding:4px 7px" fdprocessedid="yp1uyw">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Maida</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-39" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">50</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="39" data-current="50" data-price="33" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(39,this.value,50,33)" fdprocessedid="rdce5">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹33</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="39" title="Edit" style="padding:4px 7px" fdprocessedid="qvb7v7">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Oil</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-41" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">100</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">litre</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="41" data-current="100" data-price="140" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(41,this.value,100,140)" fdprocessedid="rnkvu">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹140</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="41" title="Edit" style="padding:4px 7px" fdprocessedid="pw9ofj">⚙</button>
+        </td>
+      </tr><tr style="background:#fff8f0">
+        <td><strong style="font-weight:500">Rava</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-40" style="font-size:17px;font-weight:700;color:#791f1f;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="40" data-current="0" data-price="50" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(40,this.value,0,50)" fdprocessedid="7cx1tb">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹50</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="40" title="Edit" style="padding:4px 7px" fdprocessedid="hjtdq">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Salt</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-45" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">100</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="45" data-current="100" data-price="20" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(45,this.value,100,20)" fdprocessedid="upse8h">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹20</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="45" title="Edit" style="padding:4px 7px" fdprocessedid="lsdihd">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Siddhikala Wheat</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-37" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">1000</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="37" data-current="1000" data-price="45" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(37,this.value,1000,45)" fdprocessedid="fb6ne">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹45</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="37" title="Edit" style="padding:4px 7px" fdprocessedid="5m7n6">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Sodium bicarbonate</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-60" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="60" data-current="0" data-price="310" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(60,this.value,0,310)" fdprocessedid="9wxrf">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹310</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="60" title="Edit" style="padding:4px 7px" fdprocessedid="69d38">⚙</button>
+        </td>
+      </tr><tr style="background:#fff8f0">
+        <td><strong style="font-weight:500">Sugar</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-46" style="font-size:17px;font-weight:700;color:#791f1f;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="46" data-current="0" data-price="45" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(46,this.value,0,45)" fdprocessedid="ijhmx">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹45</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="46" title="Edit" style="padding:4px 7px" fdprocessedid="fl0ou4">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Thepla Atta</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-58" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="58" data-current="0" data-price="120" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(58,this.value,0,120)" fdprocessedid="ilg42m">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹120</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="58" title="Edit" style="padding:4px 7px" fdprocessedid="wvtzma">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Water</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-54" style="font-size:17px;font-weight:700;color:#1a1a1a;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">ml</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="54" data-current="0" data-price="10" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(54,this.value,0,10)" fdprocessedid="72ab0g">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹10</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="54" title="Edit" style="padding:4px 7px" fdprocessedid="tlvd8x">⚙</button>
+        </td>
+      </tr><tr style="background:#fff8f0">
+        <td><strong style="font-weight:500">Whole Wheat Flour</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-38" style="font-size:17px;font-weight:700;color:#791f1f;display:block;text-align:right;">0</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="38" data-current="0" data-price="35" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(38,this.value,0,35)" fdprocessedid="1mzmpq">
+        </td>
+        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹35</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="38" title="Edit" style="padding:4px 7px" fdprocessedid="d04mmr">⚙</button>
+        </td>
+      </tr>
+    </tbody>
+  </table></div>
+  <div style="display:flex;gap:8px;padding:0.75rem 1.25rem;border-top:1px solid #f0ede6;">
+    <button class="btn btn-success btn-sm" id="rm-save-all-btn" style="flex:1;" fdprocessedid="v5506h">✓ Save all</button>
+    <button class="btn btn-primary btn-sm" data-action="add-rm" style="flex:1;" fdprocessedid="yl6i4">+ Add material</button>
+  </div>
+</div>
+
+
+
+
+
+</div></div>
 <script>
 const SB = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
 const KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
@@ -1471,4 +1771,4 @@ else render();
 </script>
 
 
-</body></html>
+<span id="PING_IFRAME_FORM_DETECTION" style="display: none;"></span></body></html>
