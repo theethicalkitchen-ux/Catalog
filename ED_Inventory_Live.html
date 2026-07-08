@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_3.html -->
+<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_4.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -809,7 +809,7 @@ function renderRecipesTab(){
     ingRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
       <select style="flex:2" onchange="edUpdateIngKey(${i},this.value)">${opts}</select>
       <input type="number" value="${grams}" step="0.1" placeholder="g" style="flex:1;min-width:70px" oninput="edUpdateIngVal(${i},this.value)">
-      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">${rm?.unit||'g'}</span>
+      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">${rm?.unit||'unit'}</span>
       <button class="btn btn-danger btn-sm" onclick="edRemoveIng(${i})">✕</button>
     </div>`;
   });
@@ -1306,6 +1306,7 @@ function edUpdateIngKey(i,newKey){
   const nf={};
   keys.forEach((k,j)=>{nf[j===i?newKey:k]=vals[j];});
   window._edIngDraft=nf;
+  render(); // re-render so unit updates immediately
 }
 function edUpdateIngVal(i,val){
   const keys=Object.keys(window._edIngDraft);
