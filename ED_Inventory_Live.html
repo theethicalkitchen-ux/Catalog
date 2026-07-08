@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_5.html -->
+<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_6.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -514,6 +514,10 @@ function renderMumbaiInventory(isPune){
         </td></tr>`;
     }).join('')}</tbody>
   </table></div>
+  <div style="display:flex;gap:8px;padding:0.75rem 1.25rem;border-top:1px solid #f0ede6;">
+    <button class="btn btn-success btn-sm" id="rm-save-all-btn" style="flex:1;">✓ Save all</button>
+    <button class="btn btn-primary btn-sm" data-action="add-rm" style="flex:1;">+ Add material</button>
+  </div>
 </div>
 ${!isPune?`<div class="card">
   <div class="sec" style="margin-bottom:12px">Place reorder request</div>
@@ -703,17 +707,11 @@ function renderRMTab(){
 ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.name).join(', ')}</div>`:''}
 
 <div class="card" style="padding:0">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f0ede6">
-    <div>
-      <span class="sec" style="margin:0">Raw materials</span>
-      <span class="muted" style="margin-left:8px">Enter qty to add, then Save all</span>
-    </div>
-    <div class="row">
-      <button class="btn btn-success" id="rm-save-all-btn">✓ Save all</button>
-      <button class="btn btn-primary btn-sm" data-action="add-rm">+ Add material</button>
-    </div>
+  <div style="padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f0ede6">
+    <span class="sec" style="margin:0">Raw materials</span>
+    <span class="muted" style="margin-left:8px;font-size:12px">Enter qty to add, then Save all</span>
   </div>
-  <div id="rm-save-msg" style="padding:6px 1.25rem;font-size:12px;min-height:22px"></div>
+  <div id="rm-save-msg" style="padding:4px 1.25rem;font-size:12px;min-height:18px"></div>
   ${rawMaterials.length===0?'<div class="muted" style="padding:1rem 1.25rem">No raw materials yet. Click + Add material to start.</div>':''}
   ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;width:100%">
     <thead><tr>
@@ -747,6 +745,10 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
     }).join('')}
     </tbody>
   </table></div>`:''}
+  <div style="display:flex;gap:8px;padding:0.75rem 1.25rem;border-top:1px solid #f0ede6;">
+    <button class="btn btn-success btn-sm" id="rm-save-all-btn" style="flex:1;">✓ Save all</button>
+    <button class="btn btn-primary btn-sm" data-action="add-rm" style="flex:1;">+ Add material</button>
+  </div>
 </div>
 
 ${rmModalOpen ? `<div id="rm-modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center">
