@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0067)https://theethicalkitchen-ux.github.io/Catalog/ED_Business_App.html -->
-<html lang="en" data-lt-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_9.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Ethical Delights — Business App</title>
+<title>ED Business</title>
+<meta name="apple-mobile-web-app-title" content="ED Business">
+<meta name="application-name" content="ED Business">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -190,25 +192,51 @@
   .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
   .badge-warn { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: #2a1f0a; color: var(--saffron); }
 
+  /* PLAYGROUND */
+  .pg-qty-btn {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text-dim); font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .pg-qty-btn.active { background: var(--saffron); color: #000; border-color: var(--saffron); }
+  .pg-ing-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .pg-ing-row:last-child { border-bottom: none; }
+  .pg-ing-name { font-size: 13px; color: var(--text-dim); }
+  .pg-ing-qty {
+    font-family: 'JetBrains Mono', monospace; font-size: 15px;
+    font-weight: 600; color: var(--text);
+  }
+  .pg-ing-unit { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+  .pg-primary { background: var(--surface2); border-radius: 8px; padding: 10px 12px; margin-bottom: 2px; }
+  .pg-primary .pg-ing-name { color: var(--saffron); font-weight: 600; }
+  .pg-size-pill {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px;
+  }
+  .pg-size-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--saffron); font-size: 15px; }
+
   input[type=range] { width: 100%; -webkit-appearance: none; height: 4px; border-radius: 99px; background: var(--surface2); outline: none; }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--saffron); cursor: pointer; border: 2px solid var(--bg); }
 
   .pscreen { padding: 0 16px 16px; }
 </style>
-<script src="chrome-extension://liecbddmkiiihnedobmlmillhodjkdmb/js/recordConsoleEvents.js"></script></head>
+</head>
 <body>
 
-<div id="toast" class="toast">Rates saved to both apps ✓</div>
+<div id="toast" class="toast"></div>
 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px;max-width:430px;margin:0 auto;">
   <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--saffron);">ED Ops</span>
   <div style="display:flex;align-items:center;gap:10px;">
     <span id="sync-indicator" style="font-size: 11px; color: var(--green);">✓ Synced</span>
-    <button onclick="syncFromSupabase()" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;" fdprocessedid="8fdslo">↻ Sync</button>
+    <button onclick="syncFromSupabase()" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;">↻ Sync</button>
   </div>
 </div>
 
 <!-- SCREEN: RM Rates -->
-<div id="screen-rm" class="screen">
+<div id="screen-rm" class="screen active">
   <div class="page-header">
     <div class="page-eyebrow">Ethical Delights</div>
     <div class="page-title">Raw Material Rates</div>
@@ -222,8 +250,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="45" data-rm="37" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="4cduxu">
-      <button onclick="openRMModal({id:&#39;37&#39;,name:&#39;Siddhikala Wheat&#39;,unit:&#39;kg&#39;,costing_price:45})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="1397o">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="45" data-rm="37" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;37&#39;,name:&#39;Siddhikala Wheat&#39;,unit:&#39;kg&#39;,costing_price:45})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Whole Wheat Flour</div>
@@ -231,8 +259,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="35" data-rm="38" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="ar4l7d">
-      <button onclick="openRMModal({id:&#39;38&#39;,name:&#39;Whole Wheat Flour&#39;,unit:&#39;kg&#39;,costing_price:35})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="vm68kg">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="35" data-rm="38" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;38&#39;,name:&#39;Whole Wheat Flour&#39;,unit:&#39;kg&#39;,costing_price:35})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Maida</div>
@@ -240,8 +268,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="33" data-rm="39" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="m4zg8j">
-      <button onclick="openRMModal({id:&#39;39&#39;,name:&#39;Maida&#39;,unit:&#39;kg&#39;,costing_price:33})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="unsdcl">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="33" data-rm="39" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;39&#39;,name:&#39;Maida&#39;,unit:&#39;kg&#39;,costing_price:33})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Rava</div>
@@ -249,8 +277,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="50" data-rm="40" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="se9yre">
-      <button onclick="openRMModal({id:&#39;40&#39;,name:&#39;Rava&#39;,unit:&#39;kg&#39;,costing_price:50})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="txzwu9">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="50" data-rm="40" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;40&#39;,name:&#39;Rava&#39;,unit:&#39;kg&#39;,costing_price:50})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Corn Dexgel</div>
@@ -258,8 +286,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="65" data-rm="52" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="v24ux9">
-      <button onclick="openRMModal({id:&#39;52&#39;,name:&#39;Corn Dexgel&#39;,unit:&#39;g&#39;,costing_price:65})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="ee1spk">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="65" data-rm="52" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;52&#39;,name:&#39;Corn Dexgel&#39;,unit:&#39;g&#39;,costing_price:65})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Thepla Atta</div>
@@ -267,8 +295,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="120" data-rm="58" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="iojzug">
-      <button onclick="openRMModal({id:&#39;58&#39;,name:&#39;Thepla Atta&#39;,unit:&#39;kg&#39;,costing_price:120})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="qfyex">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="120" data-rm="58" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;58&#39;,name:&#39;Thepla Atta&#39;,unit:&#39;kg&#39;,costing_price:120})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div></div></div>
     <div class="card"><div class="card-label">Fats, Dairy &amp; Other</div><div id="rm-other"><div class="rm-row">
     <div style="flex:1;min-width:0;">
@@ -277,8 +305,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="140" data-rm="41" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="3uvvq">
-      <button onclick="openRMModal({id:&#39;41&#39;,name:&#39;Oil&#39;,unit:&#39;litre&#39;,costing_price:140})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="zh1faw">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="140" data-rm="41" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;41&#39;,name:&#39;Oil&#39;,unit:&#39;litre&#39;,costing_price:140})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Curd</div>
@@ -286,8 +314,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="60" data-rm="42" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="4ah676">
-      <button onclick="openRMModal({id:&#39;42&#39;,name:&#39;Curd&#39;,unit:&#39;kg&#39;,costing_price:60})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="2fn6s">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="60" data-rm="42" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;42&#39;,name:&#39;Curd&#39;,unit:&#39;kg&#39;,costing_price:60})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Water</div>
@@ -295,8 +323,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="10" data-rm="54" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="0t85yk">
-      <button onclick="openRMModal({id:&#39;54&#39;,name:&#39;Water&#39;,unit:&#39;ml&#39;,costing_price:10})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="gf3ct1">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="10" data-rm="54" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;54&#39;,name:&#39;Water&#39;,unit:&#39;ml&#39;,costing_price:10})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Butter/Fat</div>
@@ -304,8 +332,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="500" data-rm="55" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="1ozevc">
-      <button onclick="openRMModal({id:&#39;55&#39;,name:&#39;Butter/Fat&#39;,unit:&#39;kg&#39;,costing_price:500})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="p8q2ad">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="500" data-rm="55" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;55&#39;,name:&#39;Butter/Fat&#39;,unit:&#39;kg&#39;,costing_price:500})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div></div></div>
     <div class="card"><div class="card-label">Additives &amp; Enhancers</div><div id="rm-additive"><div class="rm-row">
     <div style="flex:1;min-width:0;">
@@ -314,8 +342,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="20" data-rm="45" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="rjb4t">
-      <button onclick="openRMModal({id:&#39;45&#39;,name:&#39;Salt&#39;,unit:&#39;kg&#39;,costing_price:20})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="lsi7r">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="20" data-rm="45" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;45&#39;,name:&#39;Salt&#39;,unit:&#39;kg&#39;,costing_price:20})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Sugar</div>
@@ -323,8 +351,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="45" data-rm="46" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="9jzcqb">
-      <button onclick="openRMModal({id:&#39;46&#39;,name:&#39;Sugar&#39;,unit:&#39;kg&#39;,costing_price:45})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="t165le">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="45" data-rm="46" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;46&#39;,name:&#39;Sugar&#39;,unit:&#39;kg&#39;,costing_price:45})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Aloo Flakes</div>
@@ -332,8 +360,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="160" data-rm="48" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="6e1m7">
-      <button onclick="openRMModal({id:&#39;48&#39;,name:&#39;Aloo Flakes&#39;,unit:&#39;kg&#39;,costing_price:160})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="hxdj9c">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="160" data-rm="48" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;48&#39;,name:&#39;Aloo Flakes&#39;,unit:&#39;kg&#39;,costing_price:160})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Baking Soda</div>
@@ -341,8 +369,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="80" data-rm="49" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="vmufm7">
-      <button onclick="openRMModal({id:&#39;49&#39;,name:&#39;Baking Soda&#39;,unit:&#39;kg&#39;,costing_price:80})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="jyraw">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="80" data-rm="49" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;49&#39;,name:&#39;Baking Soda&#39;,unit:&#39;kg&#39;,costing_price:80})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Baking Powder</div>
@@ -350,8 +378,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="150" data-rm="50" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="n082np">
-      <button onclick="openRMModal({id:&#39;50&#39;,name:&#39;Baking Powder&#39;,unit:&#39;kg&#39;,costing_price:150})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="uqfbvq">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="150" data-rm="50" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;50&#39;,name:&#39;Baking Powder&#39;,unit:&#39;kg&#39;,costing_price:150})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Enzyme/Softener</div>
@@ -359,8 +387,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="13000" data-rm="51" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="v7v2jh">
-      <button onclick="openRMModal({id:&#39;51&#39;,name:&#39;Enzyme/Softener&#39;,unit:&#39;kg&#39;,costing_price:13000})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="7fzri">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="13000" data-rm="51" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;51&#39;,name:&#39;Enzyme/Softener&#39;,unit:&#39;kg&#39;,costing_price:13000})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">cumin powder</div>
@@ -368,8 +396,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="300" data-rm="56" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="1yezj">
-      <button onclick="openRMModal({id:&#39;56&#39;,name:&#39;cumin powder&#39;,unit:&#39;kg&#39;,costing_price:300})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="bb5ajr">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="300" data-rm="56" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;56&#39;,name:&#39;cumin powder&#39;,unit:&#39;kg&#39;,costing_price:300})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">ajwain powder</div>
@@ -377,8 +405,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="200" data-rm="57" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="2sxf68">
-      <button onclick="openRMModal({id:&#39;57&#39;,name:&#39;ajwain powder&#39;,unit:&#39;kg&#39;,costing_price:200})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="w8mimh">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="200" data-rm="57" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;57&#39;,name:&#39;ajwain powder&#39;,unit:&#39;kg&#39;,costing_price:200})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">glycerine</div>
@@ -386,8 +414,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="354" data-rm="59" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="puu18b">
-      <button onclick="openRMModal({id:&#39;59&#39;,name:&#39;glycerine&#39;,unit:&#39;kg&#39;,costing_price:354})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="nnufpt">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="354" data-rm="59" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;59&#39;,name:&#39;glycerine&#39;,unit:&#39;kg&#39;,costing_price:354})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div><div class="rm-row">
     <div style="flex:1;min-width:0;">
       <div class="rm-name">Sodium bicarbonate</div>
@@ -395,8 +423,8 @@
     </div>
     <div class="rm-price-wrap">
       <span class="rm-currency">₹</span>
-      <input class="rm-price-input" type="number" step="0.5" value="310" data-rm="60" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0" fdprocessedid="gc7y5q">
-      <button onclick="openRMModal({id:&#39;60&#39;,name:&#39;Sodium bicarbonate&#39;,unit:&#39;kg&#39;,costing_price:310})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit" fdprocessedid="vo9rce">⚙</button>
+      <input class="rm-price-input" type="number" step="0.5" value="310" data-rm="60" oninput="state.rm[this.dataset.rm]=parseFloat(this.value)||0">
+      <button onclick="openRMModal({id:&#39;60&#39;,name:&#39;Sodium bicarbonate&#39;,unit:&#39;kg&#39;,costing_price:310})" style="background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:2px 4px;" title="Edit">⚙</button>
     </div></div></div></div>
     <div class="card" id="rm-custom-card" style="display:none;">
       <div class="card-label">Custom Ingredients</div>
@@ -404,15 +432,15 @@
     </div>
     <div style="font-size:11px;color:var(--text-muted);padding:0 0 10px;">New ingredients? Add them in the Inventory app — they'll appear here on next ↻ Sync.</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="saveRM()" fdprocessedid="ja523">Save Rates</button>
-      <button class="btn btn-ghost" style="flex:1;" onclick="openRMModal(null)" fdprocessedid="nx0p43">+ Add Material</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="saveRM()">Save Rates</button>
+      <button class="btn btn-ghost" style="flex:1;" onclick="openRMModal(null)">+ Add Material</button>
     </div>
-    <div style="text-align:center;margin-top:4px;font-size:11px;color:var(--text-muted);" id="rm-saved-at">Last saved: 8 Jul 2026, 8:19 pm</div>
+    <div style="text-align:center;margin-top:4px;font-size:11px;color:var(--text-muted);" id="rm-saved-at"></div>
   </div>
 </div>
 
 <!-- SCREEN: Products -->
-<div id="screen-products" class="screen active">
+<div id="screen-products" class="screen">
   <div class="page-header">
     <div class="page-eyebrow">Ethical Delights</div>
     <div class="page-title">Products</div>
@@ -582,7 +610,7 @@
         <div class="action-btn primary" onclick="openEditModal(8)">✏️ Edit</div>
         <div class="action-btn" onclick="duplicateProduct(8)">⧉ Duplicate</div>
       </div></div></div>
-    <button class="btn btn-primary" style="margin-top:8px;" onclick="openNewProductModal()" fdprocessedid="wvn01">+ New Recipe</button>
+    <button class="btn btn-primary" style="margin-top:8px;" onclick="openNewProductModal()">+ New Recipe</button>
     <div style="font-size:11px;color:var(--text-muted);padding:6px 0 2px;">New recipes sync to Inventory App on next ↻ Sync. Use ⧉ on any recipe card to duplicate.</div>
   </div>
 </div>
@@ -727,7 +755,7 @@
 <div class="modal-overlay" id="rm-edit-modal">
   <div class="modal-sheet" style="max-height:70vh;">
     <div class="modal-handle"></div>
-    <button class="close-modal" onclick="closeModal(&#39;rm-edit-modal&#39;)" fdprocessedid="9tzdlo">✕ Close</button>
+    <button class="close-modal" onclick="closeModal(&#39;rm-edit-modal&#39;)">✕ Close</button>
     <div id="rm-edit-content" style="margin-top:8px;"></div>
   </div>
 </div>
@@ -736,63 +764,8 @@
 <div class="modal-overlay" id="recipe-modal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <button class="close-modal" onclick="closeModal(&#39;recipe-modal&#39;)" fdprocessedid="wquq5c">✕ Close</button>
-    <div id="recipe-modal-content">
-    <div class="modal-title">Chapati — Siddhikala</div>
-    <div class="modal-sub">CH-001 · RTC · Batch = 1000g</div>
-    <div class="section-divider">Ingredient Cost per Batch</div>
-    <div class="cost-row">
-      <div class="cost-label">Siddhikala Wheat<small>1000g per 1000g batch @ ₹45/kg</small></div>
-      <div class="cost-val mono">₹45.000</div>
-    </div><div class="cost-row">
-      <div class="cost-label">Oil<small>50g per 1000g batch @ ₹140/kg</small></div>
-      <div class="cost-val mono">₹7.000</div>
-    </div><div class="cost-row">
-      <div class="cost-label">Salt<small>20g per 1000g batch @ ₹20/kg</small></div>
-      <div class="cost-val mono">₹0.400</div>
-    </div><div class="cost-row">
-      <div class="cost-label">Aloo Flakes<small>50g per 1000g batch @ ₹160/kg</small></div>
-      <div class="cost-val mono">₹8.000</div>
-    </div><div class="cost-row">
-      <div class="cost-label">Corn Dexgel<small>20g per 1000g batch @ ₹65/kg</small></div>
-      <div class="cost-val mono">₹1.300</div>
-    </div><div class="cost-row">
-      <div class="cost-label">Water<small>1000g per 1000g batch @ ₹10/kg</small></div>
-      <div class="cost-val mono">₹10.000</div>
-    </div><div class="cost-row">
-      <div class="cost-label">glycerine<small>2g per 1000g batch @ ₹354/kg</small></div>
-      <div class="cost-val mono">₹0.708</div>
-    </div><div class="cost-row">
-      <div class="cost-label">Sodium bicarbonate<small>2g per 1000g batch @ ₹310/kg</small></div>
-      <div class="cost-val mono">₹0.620</div>
-    </div>
-    <div class="section-divider" style="margin-top:16px;">Cost by Dough Size</div>
-    <table class="price-table">
-      <tbody><tr><th>Size</th><th>Pcs/Batch</th><th>RM/Piece</th><th>Total/Piece</th></tr>
-      <tr>
-      <td>50g / 7"</td>
-      <td style="color:var(--text-muted);font-size:11px;">~20 pcs</td>
-      <td class="mono">₹3.651</td>
-      <td class="mono" style="color:var(--saffron);font-weight:600;">₹4.83</td>
-    </tr><tr>
-      <td>60g / 8"</td>
-      <td style="color:var(--text-muted);font-size:11px;">~16 pcs</td>
-      <td class="mono">₹4.382</td>
-      <td class="mono" style="color:var(--saffron);font-weight:600;">₹5.56</td>
-    </tr><tr>
-      <td>70g / 9"</td>
-      <td style="color:var(--text-muted);font-size:11px;">~14 pcs</td>
-      <td class="mono">₹5.112</td>
-      <td class="mono" style="color:var(--saffron);font-weight:600;">₹6.29</td>
-    </tr><tr>
-      <td>80g / 10"</td>
-      <td style="color:var(--text-muted);font-size:11px;">~12 pcs</td>
-      <td class="mono">₹5.842</td>
-      <td class="mono" style="color:var(--saffron);font-weight:600;">₹7.02</td>
-    </tr>
-    </tbody></table>
-    <div class="badge-warn" style="margin-top:12px;display:block;">Atta brand is swappable in the Quote screen</div>
-    <button class="btn btn-primary" style="margin-top:16px;" onclick="closeModal(&#39;recipe-modal&#39;);openEditModal(0)" fdprocessedid="gn9njat">Edit Recipe →</button></div>
+    <button class="close-modal" onclick="closeModal(&#39;recipe-modal&#39;)">✕ Close</button>
+    <div id="recipe-modal-content"></div>
   </div>
 </div>
 
@@ -800,32 +773,109 @@
 <div class="modal-overlay" id="history-modal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <button class="close-modal" onclick="closeModal(&#39;history-modal&#39;)" fdprocessedid="e4xtq">✕ Close</button>
+    <button class="close-modal" onclick="closeModal(&#39;history-modal&#39;)">✕ Close</button>
     <div id="history-modal-content"></div>
+  </div>
+</div>
+
+<!-- SCREEN: Recipe Playground -->
+<div id="screen-playground" class="screen">
+  <div class="page-header">
+    <div class="page-eyebrow">Ethical Delights</div>
+    <div class="page-title">Recipe Playground</div>
+    <div class="page-subtitle">Scale any recipe to any batch size instantly</div>
+  </div>
+  <div class="pscreen">
+
+    <div class="card">
+      <div class="card-label">Select Recipe &amp; Batch</div>
+      <div class="field">
+        <label>Recipe</label>
+        <select id="pg-recipe" onchange="pgCalculate()"><option value="">Select a recipe…</option><option value="CH-001">Chapati — Siddhikala</option><option value="PU-001">Puri — Whole Wheat</option><option value="BH-001">Bhature — Maida Rava Curd</option><option value="DP-001">Dal Pakwan — Maida Rava</option><option value="WR-002">Wrap — Whole Wheat</option><option value="PP-001">Pani Puri — Rava Maida</option><option value="WR-001">Wrap 12 inch — Maida</option><option value="THEPLA-001">Thepla</option><option value="CH-001-COPY">Chapati — Siddhikala Original</option></select>
+      </div>
+      <div class="field">
+        <label>Batch Size (kg of primary flour)</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="pg-qty-btns">
+          <button class="pg-qty-btn active" onclick="pgSetQty(1,this)">1 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(2,this)">2 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(3,this)">3 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(5,this)">5 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(8,this)">8 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(10,this)">10 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(15,this)">15 kg</button>
+          <button class="pg-qty-btn" onclick="pgSetQty(20,this)">20 kg</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="pg-qty-custom" placeholder="Custom kg…" min="0.1" step="0.5" style="flex:1;" oninput="pgSetCustomQty(this.value)">
+          <span style="font-size:13px;color:var(--text-muted);">kg</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div id="pg-output" style="display:none;">
+      <div class="card" id="pg-result-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <div class="card-label" style="margin-bottom:2px;">Ingredients needed</div>
+            <div style="font-size:13px;color:var(--text-dim);" id="pg-batch-label">—</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:&#39;JetBrains Mono&#39;,monospace;font-size:22px;font-weight:700;color:var(--saffron);" id="pg-pieces-out">—</div>
+            <div style="font-size:10px;color:var(--text-muted);">pieces output</div>
+          </div>
+        </div>
+        <div id="pg-ingredients"></div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">Dough size output</div>
+          </div>
+          <div id="pg-sizes" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">RM Cost for this Batch</div>
+        <div id="pg-cost-breakdown"></div>
+        <div class="cost-total" style="margin-top:8px;">
+          <div class="cost-total-label">Total RM Cost</div>
+          <div class="cost-total-val" id="pg-total-cost">₹—</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pg-empty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;">
+      <div style="font-size:36px;margin-bottom:10px;">🫓</div>
+      Select a recipe to get started
+    </div>
   </div>
 </div>
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="nav-item" onclick="switchScreen(&#39;rm&#39;,this)" fdprocessedid="f6xbn">
+  <button class="nav-item active" onclick="switchScreen(&#39;rm&#39;,this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
     Rates
   </button>
-  <button class="nav-item active" onclick="switchScreen(&#39;products&#39;,this)" fdprocessedid="tc651">
+  <button class="nav-item" onclick="switchScreen(&#39;products&#39;,this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
     Products
   </button>
-  <button class="nav-item" onclick="switchScreen(&#39;quote&#39;,this)" fdprocessedid="kl4xgb">
+  <button class="nav-item" onclick="switchScreen(&#39;quote&#39;,this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
     Quote
   </button>
-  <button class="nav-item" onclick="switchScreen(&#39;infra&#39;,this)" fdprocessedid="cvieko">
+  <button class="nav-item" onclick="switchScreen(&#39;infra&#39;,this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
     Infra
   </button>
-  <button class="nav-item" onclick="switchScreen(&#39;history&#39;,this)" fdprocessedid="nmq8lm9">
+  <button class="nav-item" onclick="switchScreen(&#39;history&#39;,this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     History
+  </button>
+  <button class="nav-item" onclick="switchScreen(&#39;playground&#39;,this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"></path></svg>
+    Play
   </button>
 </nav>
 
@@ -2005,10 +2055,11 @@ function switchScreen(name, btn) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (name==='products') { renderProducts(); }
-  if (name==='history')  { renderHistory(); }
-  if (name==='infra')    { renderInfra(); }
-  if (name==='quote')    { initQuoteScreen(); }
+  if (name==='products')   { renderProducts(); }
+  if (name==='history')    { renderHistory(); }
+  if (name==='infra')      { renderInfra(); }
+  if (name==='quote')      { initQuoteScreen(); }
+  if (name==='playground') { pgInit(); pgCalculate(); }
 }
 
 function closeModal(id) {
@@ -2027,15 +2078,152 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 // ============================================================
+// RECIPE PLAYGROUND
+// ============================================================
+let pgQty = 1;
+
+function pgInit() {
+  const sel = document.getElementById('pg-recipe');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select a recipe…</option>';
+  state.products.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name; sel.appendChild(o);
+  });
+}
+
+function pgSetQty(qty, btn) {
+  pgQty = qty;
+  document.querySelectorAll('.pg-qty-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('pg-qty-custom').value = '';
+  pgCalculate();
+}
+
+function pgSetCustomQty(val) {
+  pgQty = parseFloat(val) || 1;
+  document.querySelectorAll('.pg-qty-btn').forEach(b => b.classList.remove('active'));
+  pgCalculate();
+}
+
+function pgCalculate() {
+  const pid = document.getElementById('pg-recipe').value;
+  const p = state.products.find(x => x.id === pid);
+  const output = document.getElementById('pg-output');
+  const empty  = document.getElementById('pg-empty');
+
+  if (!p) { output.style.display='none'; empty.style.display=''; return; }
+  output.style.display=''; empty.style.display='none';
+
+  // Scale factor: pgQty kg of primary flour vs batch flour_grams
+  const batchKg = p.flour_grams / 1000;
+  const scale   = pgQty / batchKg;
+
+  // Batch label
+  const primaryRM = RM_DEFAULTS.find(r => r.id === String(p.primary_flour));
+  document.getElementById('pg-batch-label').textContent =
+    `${pgQty} kg ${primaryRM ? primaryRM.name : 'flour'} · ${p.name}`;
+
+  // Pieces output — based on smallest dough size
+  const defaultDough = p.dough_sizes[0]?.grams || 50;
+  const piecesPerBatch = Math.floor((p.flour_grams) / defaultDough);
+  const totalPieces = Math.round(piecesPerBatch * scale);
+  document.getElementById('pg-pieces-out').textContent =
+    totalPieces.toLocaleString('en-IN') + ' pcs';
+
+  // Ingredient rows
+  const ingEl = document.getElementById('pg-ingredients');
+  ingEl.innerHTML = '';
+  let totalRMCost = 0;
+  const costRows = [];
+
+  Object.entries(p.rm_formula).forEach(([rmId, baseGrams]) => {
+    const rm   = RM_DEFAULTS.find(r => r.id === String(rmId));
+    const name = rm ? rm.name : rmId;
+    const unit = rm ? rm.unit : 'g';
+    const scaledGrams = baseGrams * scale;
+    const isPrimary = String(rmId) === String(p.primary_flour);
+
+    // Smart unit display — convert g to kg if >= 1000g
+    let displayQty, displayUnit;
+    if (unit === 'g' && scaledGrams >= 1000) {
+      displayQty = (scaledGrams / 1000).toFixed(2);
+      displayUnit = 'kg';
+    } else if (unit === 'kg' || unit === 'litre' || unit === 'ml') {
+      displayQty = scaledGrams >= 1000
+        ? (scaledGrams / 1000).toFixed(2) + ' kg'
+        : scaledGrams < 1
+          ? (scaledGrams * 1000).toFixed(0) + ' g'
+          : scaledGrams.toFixed(scaledGrams < 10 ? 2 : 1);
+      displayUnit = unit === 'litre' ? 'L'
+        : unit === 'ml' ? 'ml'
+        : scaledGrams >= 1000 ? 'kg'
+        : scaledGrams < 1 ? 'g' : 'kg';
+      // Simplify
+      if (unit === 'kg') {
+        if (scaledGrams >= 1) { displayQty = scaledGrams.toFixed(2); displayUnit = 'kg'; }
+        else { displayQty = (scaledGrams * 1000).toFixed(0); displayUnit = 'g'; }
+      } else if (unit === 'litre') {
+        if (scaledGrams >= 1) { displayQty = scaledGrams.toFixed(2); displayUnit = 'L'; }
+        else { displayQty = (scaledGrams * 1000).toFixed(0); displayUnit = 'ml'; }
+      } else if (unit === 'ml') {
+        displayQty = scaledGrams.toFixed(0); displayUnit = 'ml';
+      }
+    } else {
+      displayQty = scaledGrams.toFixed(1); displayUnit = unit;
+    }
+
+    // Cost
+    const rate = getRMRate(String(rmId));
+    const costForBatch = (baseGrams / 1000) * rate * scale;
+    totalRMCost += costForBatch;
+    costRows.push({ name, cost: costForBatch });
+
+    const row = document.createElement('div');
+    row.className = 'pg-ing-row' + (isPrimary ? ' pg-primary' : '');
+    row.innerHTML = `
+      <div class="pg-ing-name">${isPrimary ? '⭐ ' : ''}${name}</div>
+      <div>
+        <span class="pg-ing-qty">${displayQty}</span>
+        <span class="pg-ing-unit">${displayUnit}</span>
+      </div>`;
+    ingEl.appendChild(row);
+  });
+
+  // Dough size outputs
+  const sizesEl = document.getElementById('pg-sizes');
+  sizesEl.innerHTML = '';
+  p.dough_sizes.forEach(s => {
+    const pcs = Math.round((p.flour_grams / s.grams) * scale);
+    const pill = document.createElement('div');
+    pill.className = 'pg-size-pill';
+    pill.innerHTML = `<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${s.grams}g / ${s.label}</div>
+      <div class="pg-size-val">${pcs.toLocaleString('en-IN')}</div>
+      <div style="font-size:10px;color:var(--text-muted);">pieces</div>`;
+    sizesEl.appendChild(pill);
+  });
+
+  // Cost breakdown
+  const costEl = document.getElementById('pg-cost-breakdown');
+  costEl.innerHTML = costRows.map(r => `
+    <div class="cost-row">
+      <div class="cost-label">${r.name}</div>
+      <div class="cost-val mono">₹${r.cost.toFixed(2)}</div>
+    </div>`).join('');
+  document.getElementById('pg-total-cost').textContent = '₹' + totalRMCost.toFixed(2);
+}
+
+// ============================================================
 // BOOT
 // ============================================================
 loadState();
 renderRM();
 renderProducts();
 initQuoteScreen();
+pgInit();
 // Pull inventory RMs first, then full sync
 loadRMFromInventory().then(() => syncFromSupabase());
 </script>
 
 
-<span id="PING_IFRAME_FORM_DETECTION" style="display: none;"></span></body></html>
+</body></html>
