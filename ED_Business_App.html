@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0070)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_9.html -->
+<!-- saved from url=(0071)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_10.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -748,7 +748,7 @@
     <div class="page-title">Buyer History</div>
     <div class="page-subtitle">All saved quotes by buyer</div>
   </div>
-  <div class="pscreen" id="history-list"><div class="empty-state"><div class="icon">📋</div>No quotes saved yet.<br>Generate a quote and tap Save.</div></div>
+  <div class="pscreen" id="history-list"></div>
 </div>
 
 <!-- MODAL: Add/Edit Raw Material -->
@@ -2144,33 +2144,25 @@ function pgCalculate() {
     const scaledGrams = baseGrams * scale;
     const isPrimary = String(rmId) === String(p.primary_flour);
 
-    // Smart unit display — convert g to kg if >= 1000g
+    // Recipe quantities are always stored in grams (or ml for liquids).
+    // Display rule: show in grams/ml always (recipe context, not stock context).
+    // Exception: if qty >= 1000g, show as kg for readability.
+    const isLiquid = unit === 'litre' || unit === 'ml';
     let displayQty, displayUnit;
-    if (unit === 'g' && scaledGrams >= 1000) {
-      displayQty = (scaledGrams / 1000).toFixed(2);
-      displayUnit = 'kg';
-    } else if (unit === 'kg' || unit === 'litre' || unit === 'ml') {
-      displayQty = scaledGrams >= 1000
-        ? (scaledGrams / 1000).toFixed(2) + ' kg'
-        : scaledGrams < 1
-          ? (scaledGrams * 1000).toFixed(0) + ' g'
-          : scaledGrams.toFixed(scaledGrams < 10 ? 2 : 1);
-      displayUnit = unit === 'litre' ? 'L'
-        : unit === 'ml' ? 'ml'
-        : scaledGrams >= 1000 ? 'kg'
-        : scaledGrams < 1 ? 'g' : 'kg';
-      // Simplify
-      if (unit === 'kg') {
-        if (scaledGrams >= 1) { displayQty = scaledGrams.toFixed(2); displayUnit = 'kg'; }
-        else { displayQty = (scaledGrams * 1000).toFixed(0); displayUnit = 'g'; }
-      } else if (unit === 'litre') {
-        if (scaledGrams >= 1) { displayQty = scaledGrams.toFixed(2); displayUnit = 'L'; }
-        else { displayQty = (scaledGrams * 1000).toFixed(0); displayUnit = 'ml'; }
-      } else if (unit === 'ml') {
+    if (isLiquid) {
+      // Water, oil etc — stored as ml in recipe
+      if (scaledGrams >= 1000) {
+        displayQty = (scaledGrams / 1000).toFixed(2); displayUnit = 'L';
+      } else {
         displayQty = scaledGrams.toFixed(0); displayUnit = 'ml';
       }
     } else {
-      displayQty = scaledGrams.toFixed(1); displayUnit = unit;
+      // All solids — stored as grams in recipe
+      if (scaledGrams >= 1000) {
+        displayQty = (scaledGrams / 1000).toFixed(2); displayUnit = 'kg';
+      } else {
+        displayQty = scaledGrams.toFixed(scaledGrams < 1 ? 2 : 0); displayUnit = 'g';
+      }
     }
 
     // Cost
