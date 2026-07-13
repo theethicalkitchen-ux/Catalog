@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0071)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_18.html -->
+<!-- saved from url=(0071)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Business_App_19.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -231,10 +231,10 @@
 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px;max-width:430px;margin:0 auto;">
   <div style="display:flex;align-items:center;gap:8px;">
     <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--saffron);">ED Business</span>
-    <span id="app-version" style="font-size:10px;color:var(--text-muted);font-family:&#39;JetBrains Mono&#39;,monospace;">v1.24</span>
+    <span id="app-version" style="font-size:10px;color:var(--text-muted);font-family:&#39;JetBrains Mono&#39;,monospace;">v1.25</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
-    <span id="sync-indicator" style="font-size: 11px; color: var(--saffron);">⚠ Offline</span>
+    <span id="sync-indicator" style="font-size: 11px; color: var(--green);">✓ Synced</span>
     <button onclick="syncFromSupabase()" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;">↻ Sync</button>
   </div>
 </div>
@@ -721,7 +721,7 @@
       </div>
     </div>
 
-    <div id="pg-output" style="">
+    <div id="pg-output" style="display:none;">
 
       <!-- Card 1: Ingredients (editable) -->
       <div class="card">
@@ -729,169 +729,19 @@
           <div class="card-label" style="margin-bottom:0;">Ingredients</div>
           <button onclick="pgResetToDefaults()" style="font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--saffron);background:var(--surface2);color:var(--saffron);font-weight:600;cursor:pointer;">↺ Reset to recipe</button>
         </div>
-        <div style="font-size:13px;color:var(--text-dim);margin-bottom:4px;" id="pg-batch-label">1 kg Maida · Bhature — Maida Rava Curd</div>
-        <div style="font-size:12px;color:var(--saffron);font-family:&#39;JetBrains Mono&#39;,monospace;font-weight:600;margin-bottom:12px;" id="pg-dough-weight">2.52 kg total dough</div>
-        <div id="pg-ingredients"><table style="width:100%;border-collapse:collapse;"><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;">⭐</td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(0,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39" selected="">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="1000" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(0,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(0)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(1,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40" selected="">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="400" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(1,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(1)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(2,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42" selected="">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="200" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(2,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(2)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(3,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45" selected="">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="20" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(3,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(3)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(4,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46" selected="">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="20" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(4,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(4)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(5,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49" selected="">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="4" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(5,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(5)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(6,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50" selected="">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="6" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(6,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(6)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(7,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52" selected="">Corn Dexgel</option><option value="54">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="20" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(7,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(7)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(8,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54" selected="">Water</option><option value="55">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="800" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(8,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">ml</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(8)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr><tr>
-      <td style="padding:7px 4px 7px 0;width:16px;"></td>
-      <td style="padding:7px 4px;">
-        <select style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;outline:none;-webkit-appearance:none;" onchange="pgUpdateRM(9,this.value)"><option value="37">Siddhikala Wheat</option><option value="38">Whole Wheat Flour</option><option value="39">Maida</option><option value="40">Rava</option><option value="41">Oil</option><option value="42">Curd</option><option value="45">Salt</option><option value="46">Sugar</option><option value="48">Aloo Flakes</option><option value="49">Baking Soda</option><option value="50">Baking Powder</option><option value="51">Enzyme/Softener</option><option value="52">Corn Dexgel</option><option value="54">Water</option><option value="55" selected="">Butter/Fat</option><option value="56">cumin powder</option><option value="57">ajwain powder</option><option value="58">Thepla Atta</option><option value="59">glycerine</option><option value="60">Sodium bicarbonate</option></select>
-      </td>
-      <td style="padding:7px 4px;white-space:nowrap;">
-        <input type="number" value="50" min="0" step="any" style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:&#39;JetBrains Mono&#39;,monospace;font-size:13px;padding:6px 8px;text-align:right;outline:none;" oninput="pgUpdateQty(9,this.value,2)">
-      </td>
-      <td style="padding:7px 0 7px 4px;font-size:11px;color:var(--text-muted);width:28px;">g</td>
-      <td style="padding:7px 0;width:24px;text-align:right;">
-        <button onclick="pgRemoveIng(9)" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">✕</button>
-      </td></tr></table></div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:4px;" id="pg-batch-label">—</div>
+        <div style="font-size:12px;color:var(--saffron);font-family:&#39;JetBrains Mono&#39;,monospace;font-weight:600;margin-bottom:12px;" id="pg-dough-weight">—</div>
+        <div id="pg-ingredients"></div>
         <button onclick="pgAddIngredient()" style="width:100%;margin-top:8px;padding:9px;border-radius:8px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer;">+ Add ingredient</button>
       </div>
 
       <!-- Card 2: RM Cost breakdown -->
       <div class="card">
         <div class="card-label">RM Cost for this Batch</div>
-        <div id="pg-cost-breakdown">
-    <div class="cost-row">
-      <div class="cost-label">Maida</div>
-      <div class="cost-val mono">₹38.00</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Rava</div>
-      <div class="cost-val mono">₹20.00</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Curd</div>
-      <div class="cost-val mono">₹16.00</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Salt</div>
-      <div class="cost-val mono">₹0.40</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Sugar</div>
-      <div class="cost-val mono">₹0.90</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Baking Soda</div>
-      <div class="cost-val mono">₹0.32</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Baking Powder</div>
-      <div class="cost-val mono">₹0.90</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Corn Dexgel</div>
-      <div class="cost-val mono">₹1.30</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Water</div>
-      <div class="cost-val mono">₹1.60</div>
-    </div>
-    <div class="cost-row">
-      <div class="cost-label">Butter/Fat</div>
-      <div class="cost-val mono">₹25.00</div>
-    </div></div>
+        <div id="pg-cost-breakdown"></div>
         <div class="cost-total" style="margin-top:8px;">
           <div class="cost-total-label">Total RM Cost</div>
-          <div class="cost-total-val" id="pg-total-cost">₹104.42</div>
+          <div class="cost-total-val" id="pg-total-cost">₹—</div>
         </div>
       </div>
 
@@ -899,28 +749,28 @@
       <div class="card">
         <div class="card-label">Select Dough Size</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Tap a size to see cost per piece</div>
-        <div id="pg-sizes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"><button class="pg-qty-btn active" data-idx="0"><div style="font-size:13px;font-weight:700;">35g</div><div style="font-size:10px;font-weight:400;">6"</div></button><button class="pg-qty-btn" data-idx="1"><div style="font-size:13px;font-weight:700;">40g</div><div style="font-size:10px;font-weight:400;">6.5"</div></button><button class="pg-qty-btn" data-idx="2"><div style="font-size:13px;font-weight:700;">50g</div><div style="font-size:10px;font-weight:400;">7"</div></button><button class="pg-qty-btn" data-idx="3"><div style="font-size:13px;font-weight:700;">65g</div><div style="font-size:10px;font-weight:400;">8"</div></button></div>
-        <div id="pg-per-piece" style="">
+        <div id="pg-sizes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+        <div id="pg-per-piece" style="display:none;">
           <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;" id="pg-selected-size-label">35g dough ball · 6" · 72 pieces from this batch</div>
-          <div class="cost-row"><div class="cost-label">RM cost / piece</div><div class="cost-val mono" id="pg-rm-per-piece">₹1.450</div></div>
-          <div class="cost-row"><div class="cost-label">Labour + Rent</div><div class="cost-val mono" id="pg-infra-labour">₹0.498</div></div>
-          <div class="cost-row"><div class="cost-label">Electricity</div><div class="cost-val mono" id="pg-infra-elec">₹0.384</div></div>
-          <div class="cost-row"><div class="cost-label">Roasting<small id="pg-roasting-note"> — N/A (RTC)</small></div><div class="cost-val mono" id="pg-infra-roasting">₹0.000</div></div>
-          <div class="cost-row"><div class="cost-label">Maintenance</div><div class="cost-val mono" id="pg-infra-maint">₹0.048</div></div>
-          <div class="cost-row"><div class="cost-label">Inner Packaging</div><div class="cost-val mono" id="pg-pkg">₹0.250</div></div>
-          <div class="cost-row"><div class="cost-label">Outer Box</div><div class="cost-val mono" id="pg-outer-box">₹0.200</div></div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;" id="pg-selected-size-label">—</div>
+          <div class="cost-row"><div class="cost-label">RM cost / piece</div><div class="cost-val mono" id="pg-rm-per-piece">₹—</div></div>
+          <div class="cost-row"><div class="cost-label">Labour + Rent</div><div class="cost-val mono" id="pg-infra-labour">₹—</div></div>
+          <div class="cost-row"><div class="cost-label">Electricity</div><div class="cost-val mono" id="pg-infra-elec">₹—</div></div>
+          <div class="cost-row"><div class="cost-label">Roasting<small id="pg-roasting-note"></small></div><div class="cost-val mono" id="pg-infra-roasting">₹—</div></div>
+          <div class="cost-row"><div class="cost-label">Maintenance</div><div class="cost-val mono" id="pg-infra-maint">₹—</div></div>
+          <div class="cost-row"><div class="cost-label">Inner Packaging</div><div class="cost-val mono" id="pg-pkg">₹—</div></div>
+          <div class="cost-row"><div class="cost-label">Outer Box</div><div class="cost-val mono" id="pg-outer-box">₹—</div></div>
           <div class="cost-total" style="margin-top:8px;">
             <div class="cost-total-label">Total cost / piece</div>
-            <div class="cost-total-val" id="pg-grand-total">₹2.83</div>
+            <div class="cost-total-val" id="pg-grand-total">₹—</div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;">
             <div class="stat-box" style="flex:1;">
-              <div class="stat-val" id="pg-pieces-count">72 pcs</div>
+              <div class="stat-val" id="pg-pieces-count">—</div>
               <div class="stat-label">Pieces from batch</div>
             </div>
             <div class="stat-box" style="flex:1;">
-              <div class="stat-val" id="pg-batch-value">₹104.42</div>
+              <div class="stat-val" id="pg-batch-value">₹—</div>
               <div class="stat-label">Total batch RM cost</div>
             </div>
           </div>
@@ -929,7 +779,7 @@
 
     </div>
 
-    <div id="pg-empty" style="text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; display: none;">
+    <div id="pg-empty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;">
       <div style="font-size:36px;margin-bottom:10px;">🫓</div>
       Select a recipe to get started
     </div>
@@ -960,7 +810,7 @@
 // ============================================================
 // DEFAULTS — seeded once, then managed entirely in state
 // ============================================================
-const APP_VERSION = 'v1.24';
+const APP_VERSION = 'v1.25';
 
 // RM_DEFAULTS is seeded from the inventory app's raw_materials table.
 // Keys use numeric Supabase IDs (as strings) to stay in sync.
@@ -1212,7 +1062,6 @@ async function syncFromSupabase() {
       applyDefaults();
       renderRM();
       renderProducts();
-      renderHistory();
       if (document.getElementById('screen-infra').classList.contains('active')) renderInfra();
     }
     setSyncStatus('ok');
@@ -1852,15 +1701,6 @@ function deleteProduct(idx) {
 }
 
 // ============================================================
-// QUOTE SCREEN
-// ============================================================
-function onAttaChange() {
-  const val = document.getElementById('q-atta').value;
-  document.getElementById('q-atta-custom-wrap').style.display = val === 'custom' ? '' : 'none';
-  calculateQuote();
-}
-
-
 function renderInfra() {
   const inf = state.infra;
   const fields = ['shift_vol','rent','elec','lpg','maint','capex','pkg','elec_rte','elec_rtc','roasting'];
