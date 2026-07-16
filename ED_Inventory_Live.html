@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-<!-- saved from url=(0073)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_11.html -->
+<!-- saved from url=(0072)file:///C:/Users/Nishant%20Sarmukadam/Downloads/ED_Inventory_Live_1.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ED Operations</title>
-<meta name="apple-mobile-web-app-title" content="ED Operations">
-<meta name="application-name" content="ED Operations">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;min-height:100vh}
@@ -86,20 +84,347 @@ tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
-<div class="wrap"><div id="app"><div style="max-width:360px;margin:3rem auto">
-  <div class="card">
-    <div style="text-align:center;margin-bottom:1.5rem">
-      <div style="font-size:20px;font-weight:600">ED Operations</div>
-      <div class="muted" style="margin-top:4px">Ethical Delights · Inventory &amp; Production</div>
-    </div>
-    <label class="fl">Username</label>
-    <input id="un" placeholder="Enter username" style="margin-bottom:10px" autocapitalize="none">
-    <label class="fl">Password</label>
-    <input id="pw" type="password" placeholder="Enter password" style="margin-bottom:16px">
-    <button class="btn btn-primary" id="login-btn" style="width:100%;padding:10px">Sign in</button>
-    <div id="login-err" style="color:#791f1f;font-size:12px;margin-top:8px;text-align:center"></div>
+<div class="wrap"><div id="app">
+<div class="hdr">
+  <div>
+    <span style="font-size:17px;font-weight:600">ED Operations</span>
+    <span class="muted" style="margin-left:8px">Nishant · Pune</span>
   </div>
-</div></div></div>
+  <div class="row">
+    <span class="muted hide-mobile" id="sync-lbl">🟢 Live</span>
+    <button class="btn btn-sm" id="refresh-btn" title="Refresh">↻</button>
+    <button class="btn btn-sm" id="logout-btn">Sign out</button>
+  </div>
+</div>
+
+<div class="mod-tabs">
+  <button class="mod-tab " data-mod="mumbai">🚚 <span class="hide-mobile">Mumbai </span>Distributor</button>
+  <button class="mod-tab active" data-mod="local">🏭 <span class="hide-mobile">Local </span>Production <span style="background:#fcebeb;color:#791f1f;border-radius:10px;padding:1px 6px;font-size:10px">3</span></button>
+</div>
+
+
+<div class="danger-bar">⚠️ RM shortage for 3 materials based on active orders &amp; plans — check Report tab</div>
+<div class="tabs-row">
+  <button class="tab active" data-tab="rm">🧪 Raw Materials</button><button class="tab " data-tab="recipes">📖 Recipes</button><button class="tab " data-tab="plan">📅 Production Plan</button><button class="tab " data-tab="report">📊 Report</button>
+</div>
+
+<div class="alert-bar">⚠️ Reorder needed: Rava, Sugar, Whole Wheat Flour</div>
+
+<div class="card" style="padding:0">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f0ede6">
+    <div>
+      <span class="sec" style="margin:0">Raw materials</span>
+      <span class="muted" style="margin-left:8px">Enter qty to add, then Save all</span>
+    </div>
+    <div class="row">
+      <button class="btn btn-success" id="rm-save-all-btn">✓ Save all</button>
+      <button class="btn btn-primary btn-sm" data-action="add-rm">+ Add material</button>
+    </div>
+  </div>
+  <div id="rm-save-msg" style="padding:6px 1.25rem;font-size:12px;min-height:22px"></div>
+  
+  <div style="overflow-x:auto"><table style="table-layout:fixed;width:100%">
+    <thead><tr>
+      <th style="width:30%">Material</th>
+      <th style="width:17%;text-align:right">Total stock</th>
+      <th style="width:8%;text-align:center" class="hide-mobile">Unit</th>
+      <th style="width:22%;text-align:right;color:#0c447c">Add qty</th>
+      <th style="width:15%;text-align:right" class="hide-mobile">Reorder at</th>
+      <th style="width:8%;text-align:center">Edit</th>
+    </tr></thead>
+    <tbody>
+    <tr style="">
+        <td><strong style="font-weight:500">ajwain powder</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-57" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="57" data-current="0" data-price="200" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(57,this.value,0,200)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="57" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Aloo Flakes</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-48" style="font-size:17px;font-weight:700;color:#1a1a1a">95</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="48" data-current="95" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(48,this.value,95,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">2 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="48" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Baking Powder</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-50" style="font-size:17px;font-weight:700;color:#1a1a1a">50</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="50" data-current="50" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(50,this.value,50,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">0.5 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="50" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Baking Soda</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-49" style="font-size:17px;font-weight:700;color:#1a1a1a">20</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="49" data-current="20" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(49,this.value,20,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">0.5 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="49" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Butter/Fat</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-55" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="55" data-current="0" data-price="180" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(55,this.value,0,180)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="55" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Corn Dexgel</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-52" style="font-size:17px;font-weight:700;color:#1a1a1a">1000</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">g</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="52" data-current="1000" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(52,this.value,1000,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">200 g</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="52" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">cumin powder</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-56" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="56" data-current="0" data-price="300" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(56,this.value,0,300)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="56" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Curd</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-42" style="font-size:17px;font-weight:700;color:#1a1a1a">100</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="42" data-current="100" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(42,this.value,100,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">2 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="42" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Enzyme/Softener</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-51" style="font-size:17px;font-weight:700;color:#1a1a1a">10</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="51" data-current="10" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(51,this.value,10,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">0.1 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="51" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">glycerine</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-59" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="59" data-current="0" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(59,this.value,0,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="59" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Maida</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-39" style="font-size:17px;font-weight:700;color:#1a1a1a">50</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="39" data-current="50" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(39,this.value,50,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">10 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="39" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Oil</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-41" style="font-size:17px;font-weight:700;color:#1a1a1a">100</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">litre</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="41" data-current="100" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(41,this.value,100,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">5 litre</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="41" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="background:#fff8f0">
+        <td><strong style="font-weight:500">Rava</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-40" style="font-size:17px;font-weight:700;color:#791f1f">0</span>
+          <span class="badge b-low" style="margin-left:4px;font-size:10px;vertical-align:middle">Low</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="40" data-current="0" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(40,this.value,0,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">5 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="40" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Salt</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-45" style="font-size:17px;font-weight:700;color:#1a1a1a">100</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="45" data-current="100" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(45,this.value,100,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">2 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="45" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Siddhikala Wheat</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-37" style="font-size:17px;font-weight:700;color:#1a1a1a">1000</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="37" data-current="1000" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(37,this.value,1000,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">10 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="37" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Sodium bicarbonate</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-60" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="60" data-current="0" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(60,this.value,0,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="60" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="background:#fff8f0">
+        <td><strong style="font-weight:500">Sugar</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-46" style="font-size:17px;font-weight:700;color:#791f1f">0</span>
+          <span class="badge b-low" style="margin-left:4px;font-size:10px;vertical-align:middle">Low</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="46" data-current="0" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(46,this.value,0,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">2 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="46" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Thepla Atta</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-58" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="58" data-current="0" data-price="120" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(58,this.value,0,120)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="58" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="">
+        <td><strong style="font-weight:500">Water</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-54" style="font-size:17px;font-weight:700;color:#1a1a1a">0</span>
+          
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">litre</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="54" data-current="0" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(54,this.value,0,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">— </td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="54" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr><tr style="background:#fff8f0">
+        <td><strong style="font-weight:500">Whole Wheat Flour</strong></td>
+        <td style="text-align:right;white-space:nowrap">
+          <span id="rm-total-38" style="font-size:17px;font-weight:700;color:#791f1f">0</span>
+          <span class="badge b-low" style="margin-left:4px;font-size:10px;vertical-align:middle">Low</span>
+        </td>
+        <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">kg</td>
+        <td style="text-align:right;padding-right:8px">
+          <input type="number" class="rm-add-input" data-id="38" data-current="0" data-price="0" value="" min="0" step="0.001" placeholder="0" style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c" oninput="updateRMPreview(38,this.value,0,0)">
+        </td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">10 kg</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" data-action="edit-rm" data-id="38" title="Edit" style="padding:4px 7px">⚙</button>
+        </td>
+      </tr>
+    </tbody>
+  </table></div>
+</div>
+
+
+
+
+
+
+
+</div></div>
 <script>
 const SB = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
 const KEY = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
@@ -137,8 +462,7 @@ let pollTimer=null;
 // Mumbai data
 let inv={}, orders=[], dispatches=[], actlog=[];
 // Local/RM data
-let rawMaterials=[], recipes=[], recipeIngredients=[], recipeVariants=[], skuMap=[], rmPurchases=[], productionPlans=[];
-let edRecipes=[]; // shared ed_recipes table used by Business App
+let rawMaterials=[], recipes=[], recipeIngredients=[], recipeVariants=[], skuMap=[], rmPurchases=[], productionPlans=[], batchLogs=[];
 
 let expandedOrders=new Set();
 let editingRM=null, editingRecipe=null;
@@ -210,7 +534,7 @@ async function loadMumbai(){
 }
 
 async function loadLocal(){
-  const [a,b,c,d,e,f,g]=await Promise.all([
+  const [a,b,c,d,e,f,g,h]=await Promise.all([
     sbGet('raw_materials','order=name.asc'),
     sbGet('recipes','order=id.asc'),
     sbGet('recipe_ingredients','order=recipe_id.asc'),
@@ -218,59 +542,10 @@ async function loadLocal(){
     sbGet('sku_recipe_map',''),
     sbGet('rm_purchases','order=purchased_at.desc&limit=100'),
     sbGet('production_plans','order=planned_date.asc&limit=50'),
+    sbGet('batch_logs','order=created_at.desc&limit=100'),
   ]);
   rawMaterials=a||[]; recipes=b||[]; recipeIngredients=c||[];
-  recipeVariants=d||[]; skuMap=e||[]; rmPurchases=f||[]; productionPlans=g||[];
-  // Also load shared ed_recipes
-  const edR = await sbGet('ed_recipes','order=id.asc');
-  edRecipes = (edR||[]).map(r=>r.data).filter(Boolean);
-
-  // Auto-migrate old recipes into ed_recipes if not already there
-  const edIds = new Set(edRecipes.map(r=>r.id));
-  const toMigrate = (recipes||[]).filter(r => !edIds.has(r.id));
-  for (const r of toMigrate) {
-    const ings = (recipeIngredients||[]).filter(i=>i.recipe_id===r.id);
-    const vars = (recipeVariants||[]).filter(v=>v.recipe_id===r.id);
-
-    // Build rm_formula: match ingredient names to raw_materials IDs
-    const rm_formula = {};
-    ings.forEach(ing => {
-      const rm = (rawMaterials||[]).find(x=>x.name.toLowerCase()===ing.ingredient_name.toLowerCase());
-      if (rm) rm_formula[String(rm.id)] = parseFloat(ing.qty_per_kg)||0;
-    });
-
-    // Build dough_sizes from variants
-    const dough_sizes = vars.map(v=>({
-      grams: parseFloat(v.dough_ball_g)||50,
-      label: v.output_size||'?'
-    }));
-
-    // Primary flour — first ingredient that is a flour RM
-    const flourIds = ['37','38','39','40','58']; // known flour IDs
-    const primary_flour = Object.keys(rm_formula).find(id=>flourIds.includes(id)) || Object.keys(rm_formula)[0] || '39';
-
-    const recipeData = {
-      id: r.id,
-      name: r.name||r.id,
-      type: r.product||'',
-      default_type: 'rtc',
-      primary_flour,
-      flour_grams: 1000,
-      pack_default: vars[0]?.pack_size_pieces || 10,
-      atta_swappable: false,
-      rm_formula,
-      dough_sizes: dough_sizes.length ? dough_sizes : [{grams:50,label:'?'}],
-    };
-
-    // Push to ed_recipes
-    await fetch(`${SB}/rest/v1/ed_recipes`, {
-      method:'POST',
-      headers:{...H(),'Prefer':'resolution=merge-duplicates'},
-      body:JSON.stringify({id:recipeData.id, data:recipeData})
-    });
-    edRecipes.push(recipeData);
-    console.log('Migrated recipe:', r.id, r.name);
-  }
+  recipeVariants=d||[]; skuMap=e||[]; rmPurchases=f||[]; productionPlans=g||[]; batchLogs=h||[];
 }
 
 async function loadAll(){ await Promise.all([loadMumbai(), loadLocal()]); }
@@ -410,6 +685,7 @@ function startPolling(){
     if(activeTab==='rm' && (rmDirty.size>0 || rmModalOpen)) return;
     if(activeTab==='recipes' && recipeFormOpen) return;
     if(activeTab==='plan') return; // plan form always visible — never wipe mid-entry
+    if(activeTab==='batches') return; // batch form — never wipe mid-entry
     if(activeTab==='orders' && expandedOrders.size>0) return; // dispatch form open
     render();
   },20000);
@@ -516,10 +792,6 @@ function renderMumbaiInventory(isPune){
         </td></tr>`;
     }).join('')}</tbody>
   </table></div>
-  <div style="display:flex;gap:8px;padding:0.75rem 1.25rem;border-top:1px solid #f0ede6;">
-    <button class="btn btn-success btn-sm" id="rm-save-all-btn" style="flex:1;">✓ Save all</button>
-    <button class="btn btn-primary btn-sm" data-action="add-rm" style="flex:1;">+ Add material</button>
-  </div>
 </div>
 ${!isPune?`<div class="card">
   <div class="sec" style="margin-bottom:12px">Place reorder request</div>
@@ -699,7 +971,9 @@ ${alarms.length?`<div class="danger-bar">⚠️ RM shortage for ${alarms.length}
 ${activeTab==='rm'?renderRMTab():''}
 ${activeTab==='recipes'?renderRecipesTab():''}
 ${activeTab==='plan'?renderPlanTab():''}
-${activeTab==='report'?renderReportTab(alarms):''}`;
+${activeTab==='report'?renderReportTab(alarms):''}
+${activeTab==='batches'?renderBatchesTab():''}
+`;
 }
 
 /* ── RAW MATERIALS TAB ── */
@@ -709,11 +983,17 @@ function renderRMTab(){
 ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.name).join(', ')}</div>`:''}
 
 <div class="card" style="padding:0">
-  <div style="padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f0ede6">
-    <span class="sec" style="margin:0">Raw materials</span>
-    <span class="muted" style="margin-left:8px;font-size:12px">Enter qty to add, then Save all</span>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #f0ede6">
+    <div>
+      <span class="sec" style="margin:0">Raw materials</span>
+      <span class="muted" style="margin-left:8px">Enter qty to add, then Save all</span>
+    </div>
+    <div class="row">
+      <button class="btn btn-success" id="rm-save-all-btn">✓ Save all</button>
+      <button class="btn btn-primary btn-sm" data-action="add-rm">+ Add material</button>
+    </div>
   </div>
-  <div id="rm-save-msg" style="padding:4px 1.25rem;font-size:12px;min-height:18px"></div>
+  <div id="rm-save-msg" style="padding:6px 1.25rem;font-size:12px;min-height:22px"></div>
   ${rawMaterials.length===0?'<div class="muted" style="padding:1rem 1.25rem">No raw materials yet. Click + Add material to start.</div>':''}
   ${rawMaterials.length>0?`<div style="overflow-x:auto"><table style="table-layout:fixed;width:100%">
     <thead><tr>
@@ -721,7 +1001,7 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
       <th style="width:17%;text-align:right">Total stock</th>
       <th style="width:8%;text-align:center" class="hide-mobile">Unit</th>
       <th style="width:22%;text-align:right;color:#0c447c">Add qty</th>
-      <th style="width:15%;text-align:right" class="hide-mobile">Cost ₹</th>
+      <th style="width:15%;text-align:right" class="hide-mobile">Reorder at</th>
       <th style="width:8%;text-align:center">Edit</th>
     </tr></thead>
     <tbody>
@@ -730,16 +1010,17 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
       return `<tr style="${isLow?'background:#fff8f0':''}">
         <td><strong style="font-weight:500">${r.name}</strong></td>
         <td style="text-align:right;white-space:nowrap">
-          <span id="rm-total-${r.id}" style="font-size:17px;font-weight:700;color:${isLow?'#791f1f':'#1a1a1a'};display:block;text-align:right;">${r.stock_qty}</span>
+          <span id="rm-total-${r.id}" style="font-size:17px;font-weight:700;color:${isLow?'#791f1f':'#1a1a1a'}">${r.stock_qty}</span>
+          ${isLow?'<span class="badge b-low" style="margin-left:4px;font-size:10px;vertical-align:middle">Low</span>':''}
         </td>
         <td style="text-align:center;color:#666;font-size:13px" class="hide-mobile">${r.unit}</td>
         <td style="text-align:right;padding-right:8px">
-          <input type="number" class="rm-add-input" data-id="${r.id}" data-current="${r.stock_qty}" data-price="${r.costing_price||0}"
+          <input type="number" class="rm-add-input" data-id="${r.id}" data-current="${r.stock_qty}" data-price="${r.price_per_unit||0}"
             value="" min="0" step="0.001" placeholder="0"
             style="width:100%;padding:6px 8px;font-size:14px;font-weight:600;border:2px solid #85b7eb;border-radius:6px;background:#e6f1fb;text-align:right;color:#0c447c"
-            oninput="updateRMPreview(${r.id},this.value,${r.stock_qty},${r.costing_price||0})"/>
+            oninput="updateRMPreview(${r.id},this.value,${r.stock_qty},${r.price_per_unit||0})"/>
         </td>
-        <td style="text-align:right;font-size:13px;white-space:nowrap;font-family:monospace;font-weight:500" class="hide-mobile">₹${r.costing_price||'0'}</td>
+        <td style="text-align:right;color:#666;font-size:13px;white-space:nowrap" class="hide-mobile">${r.reorder_threshold||'—'} ${r.reorder_threshold?r.unit:''}</td>
         <td style="text-align:center">
           <button class="btn btn-sm" data-action="edit-rm" data-id="${r.id}" title="Edit" style="padding:4px 7px">⚙</button>
         </td>
@@ -747,10 +1028,6 @@ ${lowRM.length?`<div class="alert-bar">⚠️ Reorder needed: ${lowRM.map(r=>r.n
     }).join('')}
     </tbody>
   </table></div>`:''}
-  <div style="display:flex;gap:8px;padding:0.75rem 1.25rem;border-top:1px solid #f0ede6;">
-    <button class="btn btn-success btn-sm" id="rm-save-all-btn" style="flex:1;">✓ Save all</button>
-    <button class="btn btn-primary btn-sm" data-action="add-rm" style="flex:1;">+ Add material</button>
-  </div>
 </div>
 
 ${rmModalOpen ? `<div id="rm-modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center">
@@ -770,7 +1047,7 @@ ${rmModalOpen ? `<div id="rm-modal-overlay" style="position:fixed;top:0;left:0;w
       <div><label class="fl">Reorder threshold</label><input type="number" id="rm-modal-thresh" value="${rmModalData?.reorder_threshold??''}" min="0" placeholder="0"/></div>
     </div>
     <div class="g2" style="margin-bottom:10px">
-      <div><label class="fl">Costing price (₹/unit)</label><input type="number" id="rm-modal-price" value="${rmModalData?.costing_price??''}" min="0" placeholder="0"/></div>
+      <div><label class="fl">Price per unit (₹)</label><input type="number" id="rm-modal-price" value="${rmModalData?.price_per_unit??''}" min="0" placeholder="0"/></div>
       <div><label class="fl">Supplier</label><input id="rm-modal-supplier" value="${rmModalData?.supplier||''}" placeholder="Optional"/></div>
     </div>
     <input type="hidden" id="rm-modal-id" value="${rmModalData?.id||''}" />
@@ -785,151 +1062,96 @@ ${rmModalOpen ? `<div id="rm-modal-overlay" style="position:fixed;top:0;left:0;w
 
 
 /* ── RECIPES TAB ── */
-async function upsertEdRecipe(recipeData){
-  const r = await fetch(`${SB}/rest/v1/ed_recipes`,{
-    method:'POST',
-    headers:{...H(),'Prefer':'resolution=merge-duplicates'},
-    body:JSON.stringify({id:recipeData.id, data:recipeData})
-  });
-  return r.ok;
-}
-async function deleteEdRecipe(id){
-  await fetch(`${SB}/rest/v1/ed_recipes?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:H()});
-}
-
-let edRecipeForm=null;
-
 function renderRecipesTab(){
-  const p = edRecipeForm && edRecipeForm!=='new' ? edRecipes.find(r=>r.id===edRecipeForm) : null;
-  const isNew = edRecipeForm==='new';
-  const formOpen = edRecipeForm!==null;
-
-  // Ingredient rows
-  let ingRowsHtml='';
-  Object.entries(window._edIngDraft||{}).forEach(([rmId,grams],i)=>{
-    const rm=rawMaterials.find(r=>String(r.id)===String(rmId));
-    const opts=rawMaterials.map(r=>`<option value="${r.id}" ${String(r.id)===String(rmId)?'selected':''}>${r.name}</option>`).join('');
-    ingRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
-      <select style="flex:2" onchange="edUpdateIngKey(${i},this.value)">${opts}</select>
-      <input type="number" value="${grams}" step="0.1" placeholder="g" style="flex:1;min-width:70px" oninput="edUpdateIngVal(${i},this.value)">
-      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">${
-        rm?.unit==='litre'||rm?.unit==='ml' ? 'ml' : 'g'
-      }</span>
-      <button class="btn btn-danger btn-sm" onclick="edRemoveIng(${i})">✕</button>
-    </div>`;
-  });
-
-  // Dough size rows
-  let sizeRowsHtml='';
-  (window._edSizeDraft||[]).forEach((s,i)=>{
-    sizeRowsHtml+=`<div class="ing-row" style="margin-bottom:6px">
-      <input type="number" value="${s.grams}" placeholder="g" style="flex:0 0 70px;min-width:60px" oninput="edUpdateSize(${i},'grams',this.value)">
-      <span style="font-size:11px;color:#666;white-space:nowrap;align-self:center">g →</span>
-      <input type="text" value="${s.label||''}" placeholder='e.g. 7"' style="flex:1" oninput="edUpdateSize(${i},'label',this.value)">
-      <button class="btn btn-danger btn-sm" onclick="edRemoveSize(${i})">✕</button>
-    </div>`;
-  });
-
-  const flourOpts=rawMaterials.map(r=>`<option value="${r.id}" ${String(r.id)===String(window._edFlourDraft||'')?'selected':''}>${r.name}</option>`).join('');
-
   return `
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span class="sec" style="margin:0">Recipes <span class="muted" style="font-size:11px;font-weight:400">${edRecipes.length} total</span></span>
-    <button class="btn btn-primary btn-sm" onclick="edOpenNew()">+ Add recipe</button>
+    <span class="sec" style="margin:0">Recipes</span>
+    <button class="btn btn-primary btn-sm" data-action="add-recipe">+ Add recipe</button>
   </div>
-  ${edRecipes.length===0?'<div class="muted">No recipes yet. Tap + Add recipe to start.</div>':''}
-  ${edRecipes.map(r=>{
-    const ingCount=Object.keys(r.rm_formula||{}).length;
-    const sizeCount=(r.dough_sizes||[]).length;
-    const tagColor=r.default_type==='rte'?'#791f1f':'#27500a';
-    const tagBg=r.default_type==='rte'?'#fcebeb':'#eaf3de';
-    return `<div class="card-flat" style="margin-bottom:10px">
+  ${recipes.length===0?'<div class="muted">No recipes added yet.</div>':''}
+  ${recipes.map(r=>{
+    const ings=recipeIngredients.filter(i=>i.recipe_id===r.id);
+    const variants=recipeVariants.filter(v=>v.recipe_id===r.id);
+    return `<div class="card-flat">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
         <div>
-          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:${tagBg};color:${tagColor};text-transform:uppercase;margin-right:6px">${r.default_type||'rtc'}</span>
-          <strong>${r.name||'Unnamed'}</strong>
-          <span class="muted" style="margin-left:6px;font-size:11px">${r.id}</span>
+          <strong>${r.id} — ${r.name}</strong>
+          <span class="muted" style="margin-left:6px">${r.product} · v${r.version||'1.0'}</span>
         </div>
         <div class="row">
-          <button class="btn btn-sm" onclick="edOpenEdit('${r.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="edDeleteRecipe('${r.id}')">✕</button>
+          <button class="btn btn-sm" data-action="edit-recipe" data-id="${r.id}">Edit</button>
+          <button class="btn btn-danger btn-sm" data-action="del-recipe" data-id="${r.id}">✕</button>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#666;margin-bottom:8px">
-        <span>Batch: <strong style="color:#1a1a1a">${r.flour_grams||1000}g</strong></span>
-        <span>Pack: <strong style="color:#1a1a1a">${r.pack_default||10} pcs</strong></span>
-        <span>${sizeCount} size${sizeCount!==1?'s':''}</span>
+      <div style="margin-bottom:8px">
+        <div class="muted" style="margin-bottom:4px">Ingredients per 1kg batch:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${ings.map(i=>`<span style="background:#f0ede6;border-radius:6px;padding:3px 8px;font-size:12px">${i.ingredient_name}: ${i.qty_per_kg}${i.unit}</span>`).join('')}
+          ${ings.length===0?'<span class="muted">No ingredients yet</span>':''}
+        </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">
-        ${Object.entries(r.rm_formula||{}).map(([rmId,grams])=>{
-          const rm=rawMaterials.find(x=>String(x.id)===String(rmId));
-          const isLiq=rm?.unit==='litre'||rm?.unit==='ml';
-        const dQty=isLiq?(grams>=1000?(grams/1000).toFixed(2)+'L':grams.toFixed(0)+'ml'):(grams>=1000?(grams/1000).toFixed(2)+'kg':grams.toFixed(0)+'g');
-        return `<span style="background:#f0ede6;border-radius:6px;padding:2px 8px;font-size:11px">${rm?rm.name:rmId}: ${dQty}</span>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
-        ${(r.dough_sizes||[]).map(s=>`<span style="background:#e6f1fb;border-radius:6px;padding:2px 8px;font-size:11px">${s.grams}g → ${s.label}</span>`).join('')}
+      <div>
+        <div class="muted" style="margin-bottom:4px">Variants (dough ball sizes):</div>
+        ${variants.map(v=>`<span style="background:#e6f1fb;border-radius:6px;padding:3px 8px;font-size:12px;margin-right:6px;margin-bottom:4px;display:inline-block">
+          ${v.dough_ball_g}g → ${v.output_size} · ${v.pieces_per_kg} pcs/kg · Pack: ${v.pack_size_pieces} pcs
+          <span class="badge ${v.status==='approved'?'b-ok':'b-warn'}" style="margin-left:4px">${v.status}</span>
+        </span>`).join('')}
+        ${variants.length===0?'<span class="muted">No variants yet</span>':''}
       </div>
     </div>`;
   }).join('')}
 </div>
 
-${formOpen?`<div class="card" style="border-color:#85b7eb;margin-top:4px" id="ed-recipe-form">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <span class="sec" style="margin:0">${isNew?'New Recipe':'Edit — '+(p?.name||'')}</span>
-    <button class="btn btn-sm" onclick="edCloseForm()">✕ Cancel</button>
+${recipeFormOpen ? `<div class="card" id="recipe-form-card" style="border-color:#85b7eb">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span class="sec" style="margin:0">${editingRecipe?'Edit — '+editingRecipe.name:'Add recipe'}</span>
   </div>
-
-  <div class="g3" style="margin-bottom:10px">
-    <div><label class="fl">Recipe ID</label>
-      <input id="ed-rec-id" value="${isNew?'':p?.id||''}" placeholder="e.g. TH-001" ${!isNew?'disabled':''}/>
-    </div>
-    <div><label class="fl">Product Type</label>
-      <input id="ed-rec-type" value="${p?.type||''}" placeholder="Chapati, Thepla…"/>
-    </div>
-    <div><label class="fl">RTC / RTE</label>
-      <select id="ed-rec-deftype">
-        <option value="rtc" ${(p?.default_type||'rtc')==='rtc'?'selected':''}>RTC</option>
-        <option value="rte" ${p?.default_type==='rte'?'selected':''}>RTE</option>
-      </select>
-    </div>
+  <div class="g3" style="margin-bottom:8px">
+    <div><label class="fl">Recipe ID</label><input id="rec-id" placeholder="CH-001" value="${editingRecipe?.id||''}" ${editingRecipe?'disabled':''}/></div>
+    <div><label class="fl">Product</label><select id="rec-product">
+      ${['Chapati','Bhature','Puri','Dal Pakwan','Wrap','Other'].map(p=>`<option ${editingRecipe?.product===p?'selected':''}>${p}</option>`).join('')}
+    </select></div>
+    <div><label class="fl">Version</label><input id="rec-version" placeholder="1.0" value="${editingRecipe?.version||''}"/></div>
   </div>
-
-  <div style="margin-bottom:10px">
-    <label class="fl">Recipe Name</label>
-    <input id="ed-rec-name" value="${p?.name||''}" placeholder="e.g. Thepla — Methi Wheat"/>
+  <div style="margin-bottom:8px"><label class="fl">Recipe name</label><input id="rec-name" placeholder="e.g. Chapati — Siddhikala Wheat" value="${editingRecipe?.name||''}"/></div>
+  <div style="margin-bottom:8px"><label class="fl">Notes / trial result</label><textarea id="rec-notes" rows="2" placeholder="Optional notes…">${editingRecipe?.notes||''}</textarea></div>
+  <div style="margin-bottom:8px"><label class="fl" style="font-size:12px;font-weight:500;color:#1a1a1a">Ingredients (per 1kg of primary flour/base)</label>
+    <div id="ing-rows"></div>
+    <button class="btn btn-sm" id="add-ing-row" style="margin-top:6px">+ Add ingredient</button>
   </div>
-
-  <div class="g3" style="margin-bottom:10px">
-    <div><label class="fl">Batch size (g flour)</label>
-      <input type="number" id="ed-rec-batch" value="${p?.flour_grams||1000}"/>
-    </div>
-    <div><label class="fl">Primary Flour</label>
-      <select id="ed-rec-flour" onchange="window._edFlourDraft=this.value">${flourOpts}</select>
-    </div>
-    <div><label class="fl">Default Pack (pcs)</label>
-      <input type="number" id="ed-rec-pack" value="${p?.pack_default||10}"/>
-    </div>
+  <div style="margin-bottom:12px"><label class="fl" style="font-size:12px;font-weight:500;color:#1a1a1a">Variants (dough ball sizes)</label>
+    <div id="var-rows"></div>
+    <button class="btn btn-sm" id="add-var-row" style="margin-top:6px">+ Add variant</button>
   </div>
-
-  <div style="margin-bottom:6px;font-size:12px;font-weight:500">Ingredients <span class="muted">(grams per batch)</span></div>
-  <div id="ed-ing-rows">${ingRowsHtml}</div>
-  <button class="btn btn-sm" style="margin-bottom:14px" onclick="edAddIng()">+ Add ingredient</button>
-
-  <div style="margin-bottom:6px;font-size:12px;font-weight:500">Dough sizes</div>
-  <div id="ed-size-rows">${sizeRowsHtml}</div>
-  <button class="btn btn-sm" style="margin-bottom:14px" onclick="edAddSize()">+ Add size</button>
-
   <div class="row">
-    <button class="btn btn-primary" id="ed-rec-save-btn" onclick="edSaveRecipe()">Save recipe</button>
-    <button class="btn" onclick="edCloseForm()">Cancel</button>
+    <button class="btn btn-primary" id="recipe-save-btn">Save recipe</button>
+    <button class="btn" id="recipe-cancel-btn">Cancel</button>
   </div>
-  <div id="ed-recipe-msg" style="margin-top:8px;font-size:12px"></div>
-</div>`:''}
-`;
-}
+  <div id="recipe-msg"></div>
+</div>` : ''}
+
+<div class="card">
+  <div class="sec" style="margin-bottom:12px">SKU → Recipe mapping</div>
+  <div class="muted" style="margin-bottom:10px">Map each Mumbai SKU to the recipe variant that produces it. Stock alarms use this mapping.</div>
+  ${SKUS.map(s=>{
+    const map=skuMap.find(m=>m.sku===s.id);
+    const variant=map?recipeVariants.find(v=>v.id===map.recipe_variant_id):null;
+    const rec=variant?recipes.find(r=>r.id===variant.recipe_id):null;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ede6">
+      <div style="width:130px;font-weight:500;font-size:13px">${s.name}</div>
+      <select data-action="map-sku" data-sku="${s.id}" style="flex:1;font-size:12px">
+        <option value="">— Not mapped —</option>
+        ${recipeVariants.map(v=>{
+          const r=recipes.find(x=>x.id===v.recipe_id);
+          return `<option value="${v.id}" ${map?.recipe_variant_id===v.id?'selected':''}>${r?.name||v.recipe_id} · ${v.dough_ball_g}g · ${v.output_size}</option>`;
+        }).join('')}
+      </select>
+      ${variant?`<span class="muted" style="font-size:11px">${rec?.id}</span>`:''}
+    </div>`;
+  }).join('')}
+  <div id="map-msg" style="margin-top:6px"></div>
+</div>`;}
 
 /* ── PRODUCTION PLAN TAB ── */
 function renderPlanTab(){
@@ -1000,7 +1222,7 @@ ${done.length?`<div class="card" style="padding:.75rem 0">
 
 /* ── REPORT TAB ── */
 function renderReportTab(alarms){
-  const totalRMValue=rawMaterials.reduce((a,r)=>a+(r.stock_qty*r.costing_price),0);
+  const totalRMValue=rawMaterials.reduce((a,r)=>a+(r.stock_qty*r.price_per_unit),0);
   const totalSpent=rmPurchases.reduce((a,p)=>a+(p.total_cost||0),0);
   const spentByRM={};
   rmPurchases.forEach(p=>{
@@ -1080,7 +1302,7 @@ ${alarms.length?`<div class="card">
       <td><strong>${r.name}</strong></td>
       <td>${r.stock_qty} ${r.unit}</td>
       <td>${r.reorder_threshold} ${r.unit}</td>
-      <td>${rupees(r.stock_qty*r.costing_price)}</td>
+      <td>${rupees(r.stock_qty*r.price_per_unit)}</td>
       <td>${r.stock_qty<=(r.reorder_threshold||0)&&r.reorder_threshold>0?'<span class="badge b-low">Reorder</span>':'<span class="badge b-ok">OK</span>'}</td>
     </tr>`).join('')}
     </tbody>
@@ -1152,9 +1374,9 @@ function bindLocal(){
     if(!name){document.getElementById('rm-modal-msg').style.color='#791f1f';document.getElementById('rm-modal-msg').textContent='Name is required.';return;}
     const btn=document.getElementById('rm-modal-save-btn');btn.disabled=true;btn.textContent='Saving…';
     if(id){
-      await sbPatch('raw_materials',{id},{name,unit,stock_qty:stock,reorder_threshold:thresh,costing_price:price,supplier});
+      await sbPatch('raw_materials',{id},{name,unit,stock_qty:stock,reorder_threshold:thresh,price_per_unit:price,supplier});
     }else{
-      await sbPost('raw_materials',{name,unit,stock_qty:stock,reorder_threshold:thresh,costing_price:price,supplier});
+      await sbPost('raw_materials',{name,unit,stock_qty:stock,reorder_threshold:thresh,price_per_unit:price,supplier});
     }
     closeRMModal();
     await loadLocal(); render();
@@ -1274,123 +1496,6 @@ function bindLocal(){
   }));
 }
 
-/* ── ED_RECIPES HELPERS (shared with Business App) ── */
-function edOpenNew(){
-  edRecipeForm='new';
-  window._edIngDraft={};
-  window._edSizeDraft=[{grams:50,label:'7"'}];
-  window._edFlourDraft=rawMaterials[0]?String(rawMaterials[0].id):'';
-  recipeFormOpen=true;
-  render();
-  setTimeout(()=>document.getElementById('ed-recipe-form')?.scrollIntoView({behavior:'smooth'}),100);
-}
-function edOpenEdit(id){
-  const p=edRecipes.find(r=>r.id===id);
-  if(!p)return;
-  edRecipeForm=id;
-  window._edIngDraft={...(p.rm_formula||{})};
-  window._edSizeDraft=JSON.parse(JSON.stringify(p.dough_sizes||[]));
-  window._edFlourDraft=String(p.primary_flour||'');
-  recipeFormOpen=true;
-  render();
-  setTimeout(()=>document.getElementById('ed-recipe-form')?.scrollIntoView({behavior:'smooth'}),100);
-}
-function edCloseForm(){
-  edRecipeForm=null;
-  recipeFormOpen=false;
-  window._edIngDraft={};
-  window._edSizeDraft=[];
-  render();
-}
-function edRerender(){
-  // Re-render just the form section without full render to preserve scroll
-  recipeFormOpen=true;
-  render();
-}
-function edUpdateIngKey(i,newKey){
-  const keys=Object.keys(window._edIngDraft);
-  const vals=Object.values(window._edIngDraft);
-  const nf={};
-  keys.forEach((k,j)=>{nf[j===i?newKey:k]=vals[j];});
-  window._edIngDraft=nf;
-  render(); // re-render so unit updates immediately
-}
-function edUpdateIngVal(i,val){
-  const keys=Object.keys(window._edIngDraft);
-  window._edIngDraft[keys[i]]=parseFloat(val)||0;
-}
-function edRemoveIng(i){
-  const keys=Object.keys(window._edIngDraft);
-  const vals=Object.values(window._edIngDraft);
-  const nf={};
-  keys.forEach((k,j)=>{if(j!==i)nf[k]=vals[j];});
-  window._edIngDraft=nf;
-  render();
-}
-function edAddIng(){
-  const used=Object.keys(window._edIngDraft);
-  const next=rawMaterials.find(r=>!used.includes(String(r.id)));
-  if(next)window._edIngDraft[String(next.id)]=0;
-  render();
-}
-function edUpdateSize(i,field,val){
-  if(!window._edSizeDraft[i])return;
-  window._edSizeDraft[i][field]=field==='grams'?(parseFloat(val)||0):val;
-}
-function edRemoveSize(i){
-  if((window._edSizeDraft||[]).length<=1){alert('Need at least one dough size');return;}
-  window._edSizeDraft.splice(i,1);
-  render();
-}
-function edAddSize(){
-  if(!window._edSizeDraft)window._edSizeDraft=[];
-  window._edSizeDraft.push({grams:50,label:'?'});
-  render();
-}
-async function edSaveRecipe(){
-  const id=(document.getElementById('ed-rec-id')?.value||'').trim().toUpperCase();
-  const name=(document.getElementById('ed-rec-name')?.value||'').trim();
-  const type=(document.getElementById('ed-rec-type')?.value||'').trim();
-  const default_type=document.getElementById('ed-rec-deftype')?.value||'rtc';
-  const flour_grams=parseFloat(document.getElementById('ed-rec-batch')?.value)||1000;
-  const primary_flour=document.getElementById('ed-rec-flour')?.value||'';
-  const pack_default=parseInt(document.getElementById('ed-rec-pack')?.value)||10;
-
-  if(!id){setMsg('ed-recipe-msg','Recipe ID is required.',false);return;}
-  if(!name){setMsg('ed-recipe-msg','Recipe name is required.',false);return;}
-  if(!(window._edSizeDraft||[]).length){setMsg('ed-recipe-msg','Add at least one dough size.',false);return;}
-
-  const btn=document.getElementById('ed-rec-save-btn');
-  btn.disabled=true;btn.textContent='Saving…';
-
-  const recipeData={
-    id,name,type,default_type,
-    primary_flour,flour_grams,pack_default,
-    atta_swappable:false,
-    rm_formula:{...window._edIngDraft},
-    dough_sizes:[...(window._edSizeDraft||[])],
-  };
-
-  const ok=await upsertEdRecipe(recipeData);
-  if(ok){
-    // Update local list
-    const idx=edRecipes.findIndex(r=>r.id===id);
-    if(idx>=0)edRecipes[idx]=recipeData;
-    else edRecipes.unshift(recipeData);
-    edCloseForm();
-    setMsg('ed-recipe-msg','✓ Saved.',true);
-  } else {
-    setMsg('ed-recipe-msg','Error saving. Try again.',false);
-    btn.disabled=false;btn.textContent='Save recipe';
-  }
-}
-async function edDeleteRecipe(id){
-  if(!confirm('Delete this recipe from Business App too?'))return;
-  await deleteEdRecipe(id);
-  edRecipes=edRecipes.filter(r=>r.id!==id);
-  render();
-}
-
 /* ── RECIPE FORM HELPERS ── */
 function initIngRows(ings){
   const c=document.getElementById('ing-rows');if(!c)return;
@@ -1466,6 +1571,303 @@ async function saveRecipe(){
   document.getElementById('rec-id').disabled=false;
   btn.disabled=false; btn.textContent='Save recipe';
   await loadLocal(); render();
+}
+
+/* ── BATCHES TAB ── */
+const SB_URL_B = 'https://frtpolvxblbwgrqvdmsq.supabase.co';
+const SB_KEY_B = 'sb_publishable_GlsF2nHMpqyCo7yrNr96jw_mI3br-91';
+const CLAUDE_MODEL = 'claude-sonnet-4-6';
+
+let batchInput = '';       // current free text input
+let batchProcessing = false;
+let batchViewId = null;    // batch being viewed/expanded
+let mediaRecorder = null;
+let isRecording = false;
+
+function generateBatchId() {
+  const now = new Date();
+  const d = now.toISOString().slice(0,10).replace(/-/g,'');
+  const t = now.toTimeString().slice(0,5).replace(':','');
+  return `B-${d}-${t}`;
+}
+
+function renderBatchesTab(){
+  let html = '<div style="margin-bottom:12px">';
+
+  // Input card
+  html += '<div class="card" style="border:1.5px solid #3b82f6">';
+  html += '<div style="font-size:13px;font-weight:600;color:#60a5fa;margin-bottom:10px">📦 New batch entry</div>';
+  html += '<textarea id="batch-text-input" rows="4" placeholder="Speak or type batch notes freely... e.g. Made 15kg chapati today, 40g dough balls, added extra ajwain, sent 200 packs to Ganesh Bhel" style="width:100%;background:#1a1d27;border:1px solid #2e3347;border-radius:8px;padding:10px;color:#e8eaf0;font-size:13px;font-family:inherit;resize:vertical;line-height:1.5" oninput="batchInput=this.value"></textarea>';
+  html += '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">';
+  html += '<button id="batch-voice-btn" onclick="toggleVoice()" style="flex:1;padding:10px;background:#1a1d27;border:1px solid #3b82f6;border-radius:8px;color:#60a5fa;font-size:13px;font-family:inherit;cursor:pointer">🎙 Voice</button>';
+  html += '<label style="flex:1;padding:10px;background:#1a1d27;border:1px solid #2e3347;border-radius:8px;color:#8b90a7;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">📷 Scan notes<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleBatchPhoto(event)"></label>';
+  html += '<button onclick="submitBatchLog()" style="flex:1;padding:10px;background:#f59e0b;border:none;border-radius:8px;color:#000;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">✓ Log batch</button>';
+  html += '</div>';
+  html += '<div id="batch-status" style="font-size:12px;margin-top:8px;color:#8b90a7;min-height:18px"></div>';
+  html += '</div>';
+
+  // Recent batches header
+  html += '<div style="font-size:11px;color:#565c78;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Recent batches</div>';
+
+  if(!batchLogs.length){
+    html += '<div style="color:#565c78;text-align:center;padding:24px;font-size:13px">No batches logged yet.</div>';
+  }
+
+  batchLogs.forEach(function(b){
+    const s = b.ai_summary || {};
+    const isOpen = batchViewId === b.id;
+    const updates = b.updates || [];
+    const hasComplaints = updates.some(function(u){return u.type==='complaint';});
+    const borderCol = hasComplaints ? 'rgba(239,68,68,.4)' : '#2e3347';
+
+    html += '<div class="card" style="margin-bottom:10px;border-color:' + borderCol + '">';
+
+    // Header row - clickable to expand
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;cursor:pointer" onclick="batchViewId=' + (isOpen ? 'null' : b.id) + ';render()">';
+    html += '<div>';
+    html += '<div style="font-size:12px;font-weight:700;color:#f59e0b;font-family:monospace">' + b.batch_id + '</div>';
+    html += '<div style="font-size:14px;font-weight:600;color:#e8eaf0;margin-top:2px">' + (s.recipe||'Batch') + (s.qty_kg ? ' · ' + s.qty_kg + 'kg' : '') + '</div>';
+    html += '<div style="font-size:11px;color:#8b90a7;margin-top:2px">' + ft(b.created_at) + ' · ' + (b.created_by||'') + (hasComplaints ? ' · ⚠️ complaint' : '') + '</div>';
+    html += '</div>';
+    html += '<span style="color:#565c78;font-size:18px">' + (isOpen?'▲':'▼') + '</span>';
+    html += '</div>';
+
+    if(isOpen){
+      html += '<div style="margin-top:14px;border-top:1px solid #2e3347;padding-top:12px">';
+
+      if(s.deviations){
+        html += '<div style="margin-bottom:10px">';
+        html += '<div style="font-size:10px;color:#565c78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Recipe deviations</div>';
+        html += '<div style="font-size:13px;color:#e8eaf0">' + s.deviations + '</div>';
+        html += '</div>';
+      }
+
+      if(s.dispatches && s.dispatches.length){
+        html += '<div style="margin-bottom:10px">';
+        html += '<div style="font-size:10px;color:#565c78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Dispatches</div>';
+        s.dispatches.forEach(function(d){
+          html += '<div style="font-size:13px;color:#e8eaf0;padding:4px 0;border-bottom:1px solid #1a1d27">' + d.customer + ' — ' + d.packs + ' packs' + (d.date ? ' · ' + d.date : '') + '</div>';
+        });
+        html += '</div>';
+      }
+
+      if(s.cold_chain){
+        html += '<div style="margin-bottom:10px">';
+        html += '<div style="font-size:10px;color:#565c78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cold chain</div>';
+        html += '<div style="font-size:13px;color:#60a5fa">' + s.cold_chain + '</div>';
+        html += '</div>';
+      }
+
+      if(updates.length){
+        html += '<div style="margin-bottom:10px">';
+        html += '<div style="font-size:10px;color:#565c78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Updates & complaints</div>';
+        updates.forEach(function(u){
+          const bg = u.type==='complaint' ? 'rgba(239,68,68,.1)' : '#1a1d27';
+          const col = u.type==='complaint' ? '#ef4444' : '#8b90a7';
+          const icon = u.type==='complaint' ? '⚠️ ' : '📝 ';
+          html += '<div style="font-size:12px;padding:6px 8px;border-radius:6px;margin-bottom:4px;background:' + bg + ';color:' + col + '">' + icon + u.text + '<span style="float:right;font-size:10px">' + ft(u.ts) + '</span></div>';
+        });
+        html += '</div>';
+      }
+
+      if(s.notes){
+        html += '<div style="margin-bottom:10px">';
+        html += '<div style="font-size:10px;color:#565c78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Notes</div>';
+        html += '<div style="font-size:13px;color:#e8eaf0">' + s.notes + '</div>';
+        html += '</div>';
+      }
+
+      // Raw text
+      html += '<div style="margin-bottom:12px">';
+      html += '<div style="font-size:10px;color:#565c78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Original log</div>';
+      html += '<div style="font-size:12px;color:#565c78;font-style:italic;line-height:1.5">"' + b.raw_text + '"</div>';
+      html += '</div>';
+
+      // Add update
+      html += '<textarea id="batch-update-' + b.id + '" rows="2" placeholder="Add update, complaint, or note to this batch..." style="width:100%;background:#1a1d27;border:1px solid #2e3347;border-radius:8px;padding:8px;color:#e8eaf0;font-size:12px;font-family:inherit;resize:none"></textarea>';
+      html += '<div style="display:flex;gap:8px;margin-top:6px">';
+      html += '<button onclick="addBatchUpdate(' + b.id + ',&quot;note&quot;)" style="flex:1;padding:8px;background:transparent;border:1px solid #2e3347;border-radius:6px;color:#8b90a7;font-size:12px;font-family:inherit;cursor:pointer">+ Note</button>';
+      html += '<button onclick="addBatchUpdate(' + b.id + ',&quot;complaint&quot;)" style="flex:1;padding:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;color:#ef4444;font-size:12px;font-family:inherit;cursor:pointer">⚠️ Complaint</button>';
+      html += '</div>';
+      html += '<div id="batch-update-msg-' + b.id + '" style="font-size:11px;margin-top:4px;color:#8b90a7"></div>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+
+// Voice recording using Web Speech API
+function toggleVoice() {
+  const btn = document.getElementById('batch-voice-btn');
+  const status = document.getElementById('batch-status');
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    status.textContent = 'Voice not supported on this browser. Use Chrome.';
+    return;
+  }
+  if (isRecording) {
+    if (window._batchRecognition) window._batchRecognition.stop();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.lang = 'en-IN';
+  window._batchRecognition = rec;
+  isRecording = true;
+  btn.style.background = 'rgba(239,68,68,.2)';
+  btn.style.borderColor = '#ef4444';
+  btn.style.color = '#ef4444';
+  btn.textContent = '⏹ Stop';
+  status.textContent = '🔴 Recording... speak now';
+
+  rec.onresult = (e) => {
+    let transcript = '';
+    for (let i = 0; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    const ta = document.getElementById('batch-text-input');
+    if (ta) { ta.value = transcript; batchInput = transcript; }
+  };
+  rec.onend = () => {
+    isRecording = false;
+    btn.style.background = '#1a1d27';
+    btn.style.borderColor = '#3b82f6';
+    btn.style.color = '#60a5fa';
+    btn.textContent = '🎙 Voice';
+    status.textContent = 'Recording stopped. Review text then click Log batch.';
+  };
+  rec.onerror = (e) => {
+    status.textContent = 'Voice error: ' + e.error;
+    isRecording = false;
+  };
+  rec.start();
+}
+
+// Photo scan — send image to Claude API
+async function handleBatchPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('batch-status');
+  status.textContent = '📷 Reading your notes...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = file.type;
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: 'This is a handwritten production batch note from a food manufacturing company. Please transcribe exactly what is written, preserving all details including quantities, customer names, dates, and any special notes. Output only the transcribed text, nothing else.' }
+            ]
+          }]
+        })
+      });
+      const data = await resp.json();
+      const text = data.content?.[0]?.text || '';
+      const ta = document.getElementById('batch-text-input');
+      if (ta) { ta.value = text; batchInput = text; }
+      status.textContent = '✓ Notes scanned. Review and click Log batch.';
+    } catch(err) {
+      status.textContent = 'Scan failed. Please type manually.';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// Submit batch — AI extracts structure
+async function submitBatchLog() {
+  const text = document.getElementById('batch-text-input')?.value?.trim();
+  if (!text) { document.getElementById('batch-status').textContent = 'Please enter some notes first.'; return; }
+  const status = document.getElementById('batch-status');
+  status.textContent = '🤖 AI processing your notes...';
+  batchProcessing = true;
+
+  try {
+    // Use Claude to extract structured data
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a production batch log assistant for an Indian frozen food company (Ethical Delights). Extract structured information from the following batch note and return ONLY valid JSON with these fields:
+- recipe: string (product name e.g. "Chapati", "Thepla", "Dal Pakwan")
+- qty_kg: number (kg produced, null if not mentioned)
+- dough_ball_g: number (dough ball size in grams, null if not mentioned)
+- deviations: string (any changes to standard recipe, null if none)
+- dispatches: array of {customer, packs, date} (null if none)
+- cold_chain: string (storage/transport conditions, null if not mentioned)
+- notes: string (any other important notes)
+
+Batch note: "${text}"
+
+Return only the JSON object, no other text.`
+        }]
+      })
+    });
+    const data = await resp.json();
+    let summary = {};
+    try { summary = JSON.parse(data.content?.[0]?.text || '{}'); } catch(e) { summary = {}; }
+
+    // Save to Supabase
+    const batchId = generateBatchId();
+    await sbPost('batch_logs', {
+      batch_id: batchId,
+      created_by: user,
+      raw_text: text,
+      ai_summary: summary,
+      updates: []
+    });
+
+    // Clear input
+    const ta = document.getElementById('batch-text-input');
+    if (ta) { ta.value = ''; batchInput = ''; }
+    status.textContent = `✓ Batch ${batchId} logged!`;
+    await loadLocal();
+    render();
+  } catch(err) {
+    status.textContent = 'Failed to save. Check connection.';
+  }
+  batchProcessing = false;
+}
+
+// Add note or complaint to existing batch
+async function addBatchUpdate(batchId, type) {
+  const ta = document.getElementById(`batch-update-${batchId}`);
+  const text = ta?.value?.trim();
+  const msgEl = document.getElementById(`batch-update-msg-${batchId}`);
+  if (!text) { if(msgEl) msgEl.textContent = 'Please enter some text.'; return; }
+
+  const batch = batchLogs.find(b => b.id == batchId);
+  if (!batch) return;
+  const updates = [...(batch.updates || []), { type, text, ts: new Date().toISOString(), by: user }];
+
+  await fetch(`${SB_URL_B}/rest/v1/batch_logs?id=eq.${batchId}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SB_KEY_B, 'Authorization': 'Bearer ' + SB_KEY_B, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ updates })
+  });
+
+  if (ta) ta.value = '';
+  if (msgEl) msgEl.textContent = type === 'complaint' ? '⚠️ Complaint logged.' : '✓ Note added.';
+  await loadLocal();
+  render();
 }
 
 /* ── BOOT ── */
