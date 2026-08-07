@@ -654,6 +654,8 @@
             border: 2px solid rgba(184, 134, 11, 0.2);
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(184, 134, 11, 0.08);
+            display: flex;
+            flex-direction: column;
         }
 
         .cert-card:hover {
@@ -664,6 +666,47 @@
         .cert-card h4 {
             color: var(--primary);
             margin-bottom: 0.5rem;
+        }
+
+        .cert-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(244, 164, 96, 0.05) 100%);
+            border: 2px solid rgba(184, 134, 11, 0.25);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cert-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(184, 134, 11, 0.03) 10px,
+                rgba(184, 134, 11, 0.03) 20px
+            );
+            pointer-events: none;
+        }
+
+        .cert-image-placeholder .placeholder-text {
+            position: relative;
+            z-index: 1;
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 1rem;
         }
 
         .cin-badge {
@@ -977,18 +1020,30 @@
                 
                 <div class="cert-grid">
                     <div class="cert-card">
+                        <div class="cert-image-placeholder">
+                            <div class="placeholder-text">Export Excellence Award 2017 Image</div>
+                        </div>
                         <h4>🏆 Export Excellence Award 2017</h4>
                         <p>Karnataka State Export Excellence Award for exceptional export performance and business practices</p>
                     </div>
                     <div class="cert-card">
+                        <div class="cert-image-placeholder">
+                            <div class="placeholder-text">Government Recognition Certificate</div>
+                        </div>
                         <h4>🏛️ Government Recognition</h4>
                         <p>Recognized by Government of Karnataka for outstanding business practices</p>
                     </div>
                     <div class="cert-card">
+                        <div class="cert-image-placeholder">
+                            <div class="placeholder-text">Statutory Compliance Document</div>
+                        </div>
                         <h4>✓ Statutory Compliance</h4>
                         <p>Fully compliant with all regulatory and legal requirements</p>
                     </div>
                     <div class="cert-card">
+                        <div class="cert-image-placeholder">
+                            <div class="placeholder-text">International Standards Certificate</div>
+                        </div>
                         <h4>🌍 International Standards</h4>
                         <p>Products meet international quality standards and export requirements</p>
                     </div>
@@ -1014,7 +1069,9 @@
                 <div class="products-grid">
                     <!-- Product 1: Flaking Grits -->
                     <div class="product-item">
-                        <img src="https://rgkasat.com/data1/tooltips/1.jpg" alt="Flaking Grits" class="product-image">
+                        <div class="product-image-placeholder">
+                            <div class="placeholder-text">Flaking Grits Product Image</div>
+                        </div>
                         <div class="product-content">
                             <h3>Flaking grits</h3>
                             <p>These are the first cut de germed corn. They are mainly used for manufacturing of Corn flakes and Brewery flakes.</p>
@@ -1027,7 +1084,9 @@
 
                     <!-- Product 2: Corn Grits -->
                     <div class="product-item">
-                        <img src="https://rgkasat.com/data1/tooltips/2.jpg" alt="Corn Grits" class="product-image">
+                        <div class="product-image-placeholder">
+                            <div class="placeholder-text">Corn Grits Product Image</div>
+                        </div>
                         <div class="product-content">
                             <h3>Corn Grits (Coarse and Fine)</h3>
                             <p>Based on the required corn grit particulate size we use our automated roller mills and plan sifter to support customer needs. These are used primarily in extruded snack food industry, breakfast cereals, breweries, confectionery and baking applications etc.</p>
@@ -1040,7 +1099,9 @@
 
                     <!-- Product 3: Corn Meal -->
                     <div class="product-item">
-                        <img src="https://rgkasat.com/data1/tooltips/3.jpg" alt="Corn Meal" class="product-image">
+                        <div class="product-image-placeholder">
+                            <div class="placeholder-text">Corn Meal Product Image</div>
+                        </div>
                         <div class="product-content">
                             <h3>Corn Meal</h3>
                             <p>Finest quality of corn grits without flour is made to support the application of specialty snacks. The grits are below 1 mm size to support the extrusion with great efficiency.</p>
@@ -1053,7 +1114,9 @@
 
                     <!-- Product 4: Corn Flour -->
                     <div class="product-item">
-                        <img src="https://rgkasat.com/data1/tooltips/4.jpg" alt="Corn Flour" class="product-image">
+                        <div class="product-image-placeholder">
+                            <div class="placeholder-text">Corn Flour Product Image</div>
+                        </div>
                         <div class="product-content">
                             <h3>Corn Flour</h3>
                             <p>Corn flour is very useful for gluten-free quick breads. It is also used in Baking industry, Pasta Making, sausages as starch substitutes, papadmaking and supplement in cattle feed.</p>
@@ -1066,7 +1129,9 @@
 
                     <!-- Product 5: Cattle Feed -->
                     <div class="product-item">
-                        <img src="https://rgkasat.com/data1/tooltips/1.jpg" alt="Cattle Feed (Makkachunni)" class="product-image">
+                        <div class="product-image-placeholder">
+                            <div class="placeholder-text">Cattle Feed (Makkachunni) Image</div>
+                        </div>
                         <div class="product-content">
                             <h3>Cattle Feed (Makkachunni)</h3>
                             <p>Fibre, germ and flour which are best source of Carbohydrate, fiber, protein and germ is supplied as cattle feed.</p>
@@ -1095,7 +1160,7 @@
                     <h3>Corn Receiving</h3>
                     <p>Every truck received at our plant is analyzed for relevant parameters to get the best quality raw material for our production. Our processing area is well separated from grain stock area to keep complete hygiene, dust free processing area. Corn is sent by automated elevators to the first bins in Plant.</p>
                     <div class="process-image-placeholder">
-                        <div class="placeholder-text">Corn Receiving / Equipment Image</div>
+                        <div class="placeholder-text">Corn Receiving Equipment Image</div>
                     </div>
                 </div>
 
@@ -1151,7 +1216,7 @@
                     <h3>Control Sifting</h3>
                     <p>The finished products are passed over control sifters to ensure the removal of oversize or fine materials, prior to the transfer to the finished product bins.</p>
                     <div class="process-image-placeholder">
-                        <div class="placeholder-text">Control Sifting Image</div>
+                        <div class="placeholder-text">Control Sifting Equipment Image</div>
                     </div>
                 </div>
 
@@ -1159,7 +1224,7 @@
                     <h3>Finished Products</h3>
                     <p>Products separated by plan sifter, purifier are collected in different bins passing through magnets. This material is packed in our standard pack sizes or customer requested kindly of packages.</p>
                     <div class="process-image-placeholder">
-                        <div class="placeholder-text">Finished Products / Packaging Image</div>
+                        <div class="placeholder-text">Finished Products & Packaging Image</div>
                     </div>
                 </div>
             </div>
