@@ -206,7 +206,68 @@
             margin: 0 auto;
         }
 
-        /* Home Page */
+        /* Carousel/Rotator */
+        .carousel {
+            max-width: 100%;
+            position: relative;
+            margin-bottom: 3rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(184, 134, 11, 0.15);
+        }
+
+        .carousel-inner {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+        }
+
+        .carousel-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .carousel-image.active {
+            opacity: 1;
+        }
+
+        .carousel-controls {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.8rem;
+            z-index: 10;
+        }
+
+        .carousel-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-dot.active {
+            background: white;
+            width: 14px;
+            height: 14px;
+        }
+
+        .carousel-dot:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        
         .home-intro {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(244, 164, 96, 0.05) 100%);
             padding: 3rem 2rem;
@@ -658,13 +719,27 @@
 
         <div class="container">
             <div class="content-section">
+                <!-- Image Carousel/Rotator -->
+                <div class="carousel">
+                    <div class="carousel-inner">
+                        <img src="https://rgkasat.com/data1/images/1.jpg" alt="Rotator 1" class="carousel-image active">
+                        <img src="https://rgkasat.com/data1/images/2.jpg" alt="Rotator 2" class="carousel-image">
+                        <img src="https://rgkasat.com/data1/images/3.jpg" alt="Rotator 3" class="carousel-image">
+                    </div>
+                    <div class="carousel-controls">
+                        <button class="carousel-dot active" onclick="currentSlide(0)"></button>
+                        <button class="carousel-dot" onclick="currentSlide(1)"></button>
+                        <button class="carousel-dot" onclick="currentSlide(2)"></button>
+                    </div>
+                </div>
+
                 <div class="home-intro">
                     <p>RGK Group is diversified Group with activities in agriculture, Textile Production (Looms), Textile Retail and Agro Processing unit. The group has flourished under the great guidance of Mr. Rameshji Kasat into all the above verticals of the industry. RGK Group has a very high brand reputation in north Karnataka for the best business practices and the quality products.</p>
                 </div>
 
                 <!-- Award Section with Image -->
                 <div class="award-section">
-                    <img src="https://via.placeholder.com/800x300?text=Karnataka+Export+Excellence+Award" alt="Export Excellence Award">
+                    <img src="https://rgkasat.com/images/export%20award.jpg" alt="Export Excellence Award">
                     <h3>Karnataka State Export Excellence Awards</h3>
                     <p><strong>Mr Sunil Kasat</strong> (Director, R G KASAT IND PVT LTD) and <strong>Mr Girish Kasat</strong> are receiving award on Behalf of the <strong>R G KASAT Industries Pvt Ltd</strong>. Award was given by Shri R V Deshpande Hon'ble Minister of Large and Medium Industries, Karnataka.</p>
                     <p>Award was for recognition and encouragement to promising exporters across various product and service categories spanning Micro/Small and Medium/Large units. The State Export Excellence Awards ceremony held at Bangalore International Exhibition Complex (BIEC), Bengaluru on <strong>24th November 2017</strong>. The event was part of the Vendor Development & Investors Summit 2017, Government of Karnataka.</p>
@@ -674,7 +749,7 @@
                 <h3 style="margin-top: 3rem; margin-bottom: 1.5rem;">Location & Connectivity</h3>
 
                 <!-- Map Image -->
-                <img src="https://via.placeholder.com/900x300?text=Bagalkot+Location+Map" alt="Bagalkot Location Map" class="location-map">
+                <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Bagalkot Location Map" class="location-map">
 
                 <div class="location-box">
                     <h4>✈️ Airports</h4>
@@ -701,7 +776,7 @@
         <div class="container">
             <div class="content-section">
                 <div class="about-intro">
-                    <img src="https://via.placeholder.com/400x350?text=RG+Kasat+Factory" alt="Factory">
+                    <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Factory Location">
                     <div class="about-intro-text">
                         <p>RGK Group is diversified group with activities in agriculture, textile production (Looms), textile retail and agro processing unit. The group has flourished under the great guidance of Mr. Rameshji Kasat into all the above verticals of the industry. RGK Group has a very high brand reputation in north Karnataka for the best business practices and the quality products.</p>
                         <p>With great experience in handling the Textile Retail Business for more than 4 decades RGK Group has ventured into first agro processing unit "R G Kasat Industries Pvt. Ltd". Which is highly automated dry corn processing agro unit built at agro park developed by Central Government at Bagalkot.</p>
@@ -710,7 +785,7 @@
 
                 <div class="key-features">
                     <h4>Key Features of The Project</h4>
-                    <img src="https://via.placeholder.com/700x300?text=Bagalkot+District+Map" alt="Bagalkot District Map">
+                    <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Bagalkot District Map">
                     <p><strong>Bagalkot is One out of 5 Declared FOOD-AGRO Park from Central Government.</strong></p>
                     <p>Bagalkot District was carved out of Bijapur in Year 1997. Bagalkot is divided into two parts-the new Bagalkot or Navanagar and the old Bagalkot town. The construction of new town became necessary following submergence of parts of old town due to construction of Almatti dam. Navanagar is a planned town with grid pattern layout with wide roads, parks, and other amenities.</p>
                     <p>Bagalkot produces approx. 20% of Karnataka state produced maize. With high availability of good crop every year and most months of the year, R G Kasat industries is in position to support with consistent quality of the Corn grits around the year to esteemed customers.</p>
@@ -819,7 +894,7 @@
                 <div class="products-grid">
                     <!-- Product 1: Flaking Grits -->
                     <div class="product-item">
-                        <img src="https://via.placeholder.com/400x250?text=Flaking+Grits" alt="Flaking Grits" class="product-image">
+                        <img src="https://rgkasat.com/data1/tooltips/1.jpg" alt="Flaking Grits" class="product-image">
                         <div class="product-content">
                             <h3>Flaking grits</h3>
                             <p>These are the first cut de germed corn. They are mainly used for manufacturing of Corn flakes and Brewery flakes.</p>
@@ -832,7 +907,7 @@
 
                     <!-- Product 2: Corn Grits -->
                     <div class="product-item">
-                        <img src="https://via.placeholder.com/400x250?text=Corn+Grits" alt="Corn Grits" class="product-image">
+                        <img src="https://rgkasat.com/data1/tooltips/2.jpg" alt="Corn Grits" class="product-image">
                         <div class="product-content">
                             <h3>Corn Grits (Coarse and Fine)</h3>
                             <p>Based on the required corn grit particulate size we use our automated roller mills and plan sifter to support customer needs. These are used primarily in extruded snack food industry, breakfast cereals, breweries, confectionery and baking applications etc.</p>
@@ -845,7 +920,7 @@
 
                     <!-- Product 3: Corn Meal -->
                     <div class="product-item">
-                        <img src="https://via.placeholder.com/400x250?text=Corn+Meal" alt="Corn Meal" class="product-image">
+                        <img src="https://rgkasat.com/data1/tooltips/3.jpg" alt="Corn Meal" class="product-image">
                         <div class="product-content">
                             <h3>Corn Meal</h3>
                             <p>Finest quality of corn grits without flour is made to support the application of specialty snacks. The grits are below 1 mm size to support the extrusion with great efficiency.</p>
@@ -858,7 +933,7 @@
 
                     <!-- Product 4: Corn Flour -->
                     <div class="product-item">
-                        <img src="https://via.placeholder.com/400x250?text=Corn+Flour" alt="Corn Flour" class="product-image">
+                        <img src="https://rgkasat.com/data1/tooltips/4.jpg" alt="Corn Flour" class="product-image">
                         <div class="product-content">
                             <h3>Corn Flour</h3>
                             <p>Corn flour is very useful for gluten-free quick breads. It is also used in Baking industry, Pasta Making, sausages as starch substitutes, papadmaking and supplement in cattle feed.</p>
@@ -871,7 +946,7 @@
 
                     <!-- Product 5: Cattle Feed -->
                     <div class="product-item">
-                        <img src="https://via.placeholder.com/400x250?text=Cattle+Feed" alt="Cattle Feed" class="product-image">
+                        <img src="https://rgkasat.com/data1/tooltips/1.jpg" alt="Cattle Feed" class="product-image">
                         <div class="product-content">
                             <h3>Cattle Feed (Makkachunni)</h3>
                             <p>Fibre, germ and flour which are best source of Carbohydrate, fiber, protein and germ is supplied as cattle feed.</p>
@@ -1010,6 +1085,36 @@
     </footer>
 
     <script>
+        let currentCarouselIndex = 0;
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.carousel-image');
+            const dots = document.querySelectorAll('.carousel-dot');
+            
+            if (index >= slides.length) {
+                currentCarouselIndex = 0;
+            } else if (index < 0) {
+                currentCarouselIndex = slides.length - 1;
+            } else {
+                currentCarouselIndex = index;
+            }
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[currentCarouselIndex].classList.add('active');
+            dots[currentCarouselIndex].classList.add('active');
+        }
+
+        function currentSlide(index) {
+            showSlide(index);
+        }
+
+        // Auto rotate carousel every 5 seconds
+        setInterval(() => {
+            showSlide(currentCarouselIndex + 1);
+        }, 5000);
+
         function showPage(pageId) {
             // Hide all pages
             const pages = document.querySelectorAll('.page');
