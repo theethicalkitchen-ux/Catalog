@@ -458,13 +458,32 @@
         .product-image-placeholder {
             width: 100%;
             height: 280px;
-            background: linear-gradient(135deg, #fffbf0 0%, #fffef5 100%);
-            border: 2px dashed rgba(184, 134, 11, 0.3);
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(244, 164, 96, 0.05) 100%);
+            border: 2px solid rgba(184, 134, 11, 0.25);
+            border-radius: 8px 8px 0 0;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(184, 134, 11, 0.03) 10px,
+                rgba(184, 134, 11, 0.03) 20px
+            );
+            pointer-events: none;
         }
 
         .placeholder-text {
@@ -474,29 +493,79 @@
             text-align: center;
             padding: 2rem;
             line-height: 1.6;
+            position: relative;
+            z-index: 1;
         }
 
         .process-image-placeholder {
             width: 100%;
-            height: 250px;
-            background: linear-gradient(135deg, #fffbf0 0%, #fffef5 100%);
-            border: 2px dashed rgba(184, 134, 11, 0.3);
-            border-radius: 4px;
+            height: 280px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(244, 164, 96, 0.05) 100%);
+            border: 2px solid rgba(184, 134, 11, 0.25);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(184, 134, 11, 0.03) 10px,
+                rgba(184, 134, 11, 0.03) 20px
+            );
+            pointer-events: none;
+        }
+
+        .process-image-placeholder .placeholder-text {
+            position: relative;
+            z-index: 1;
         }
 
         .about-image-placeholder {
             width: 100%;
             height: 300px;
-            background: linear-gradient(135deg, #fffbf0 0%, #fffef5 100%);
-            border: 2px dashed rgba(184, 134, 11, 0.3);
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(244, 164, 96, 0.05) 100%);
+            border: 2px solid rgba(184, 134, 11, 0.25);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(184, 134, 11, 0.03) 10px,
+                rgba(184, 134, 11, 0.03) 20px
+            );
+            pointer-events: none;
+        }
+
+        .about-image-placeholder .placeholder-text {
+            position: relative;
+            z-index: 1;
         }
 
         .product-content {
@@ -827,9 +896,7 @@
         <div class="container">
             <div class="content-section">
                 <div class="about-intro">
-                    <div class="about-image-placeholder">
-                        <div class="placeholder-text">Factory / Location Image</div>
-                    </div>
+                    <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Bagalkot District Location" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 1.5rem;">
                     <div class="about-intro-text">
                         <p>RGK Group is diversified group with activities in agriculture, textile production (Looms), textile retail and agro processing unit. The group has flourished under the great guidance of Mr. Rameshji Kasat into all the above verticals of the industry. RGK Group has a very high brand reputation in north Karnataka for the best business practices and the quality products.</p>
                         <p>With great experience in handling the Textile Retail Business for more than 4 decades RGK Group has ventured into first agro processing unit "R G Kasat Industries Pvt. Ltd". Which is highly automated dry corn processing agro unit built at agro park developed by Central Government at Bagalkot.</p>
@@ -838,9 +905,7 @@
 
                 <div class="key-features">
                     <h4>Key Features of The Project</h4>
-                    <div class="about-image-placeholder">
-                        <div class="placeholder-text">District Map / Location Image</div>
-                    </div>
+                    <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Bagalkot District Map" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 1.5rem;">
                     <p><strong>Bagalkot is One out of 5 Declared FOOD-AGRO Park from Central Government.</strong></p>
                     <p>Bagalkot District was carved out of Bijapur in Year 1997. Bagalkot is divided into two parts-the new Bagalkot or Navanagar and the old Bagalkot town. The construction of new town became necessary following submergence of parts of old town due to construction of Almatti dam. Navanagar is a planned town with grid pattern layout with wide roads, parks, and other amenities.</p>
                     <p>Bagalkot produces approx. 20% of Karnataka state produced maize. With high availability of good crop every year and most months of the year, R G Kasat industries is in position to support with consistent quality of the Corn grits around the year to esteemed customers.</p>
@@ -949,9 +1014,7 @@
                 <div class="products-grid">
                     <!-- Product 1: Flaking Grits -->
                     <div class="product-item">
-                        <div class="product-image-placeholder">
-                            <div class="placeholder-text">Flaking Grits Image</div>
-                        </div>
+                        <img src="https://rgkasat.com/data1/tooltips/1.jpg" alt="Flaking Grits" class="product-image">
                         <div class="product-content">
                             <h3>Flaking grits</h3>
                             <p>These are the first cut de germed corn. They are mainly used for manufacturing of Corn flakes and Brewery flakes.</p>
@@ -964,9 +1027,7 @@
 
                     <!-- Product 2: Corn Grits -->
                     <div class="product-item">
-                        <div class="product-image-placeholder">
-                            <div class="placeholder-text">Corn Grits Image</div>
-                        </div>
+                        <img src="https://rgkasat.com/data1/tooltips/2.jpg" alt="Corn Grits" class="product-image">
                         <div class="product-content">
                             <h3>Corn Grits (Coarse and Fine)</h3>
                             <p>Based on the required corn grit particulate size we use our automated roller mills and plan sifter to support customer needs. These are used primarily in extruded snack food industry, breakfast cereals, breweries, confectionery and baking applications etc.</p>
@@ -979,9 +1040,7 @@
 
                     <!-- Product 3: Corn Meal -->
                     <div class="product-item">
-                        <div class="product-image-placeholder">
-                            <div class="placeholder-text">Corn Meal Image</div>
-                        </div>
+                        <img src="https://rgkasat.com/data1/tooltips/3.jpg" alt="Corn Meal" class="product-image">
                         <div class="product-content">
                             <h3>Corn Meal</h3>
                             <p>Finest quality of corn grits without flour is made to support the application of specialty snacks. The grits are below 1 mm size to support the extrusion with great efficiency.</p>
@@ -994,9 +1053,7 @@
 
                     <!-- Product 4: Corn Flour -->
                     <div class="product-item">
-                        <div class="product-image-placeholder">
-                            <div class="placeholder-text">Corn Flour Image</div>
-                        </div>
+                        <img src="https://rgkasat.com/data1/tooltips/4.jpg" alt="Corn Flour" class="product-image">
                         <div class="product-content">
                             <h3>Corn Flour</h3>
                             <p>Corn flour is very useful for gluten-free quick breads. It is also used in Baking industry, Pasta Making, sausages as starch substitutes, papadmaking and supplement in cattle feed.</p>
@@ -1009,9 +1066,7 @@
 
                     <!-- Product 5: Cattle Feed -->
                     <div class="product-item">
-                        <div class="product-image-placeholder">
-                            <div class="placeholder-text">Cattle Feed Image</div>
-                        </div>
+                        <img src="https://rgkasat.com/data1/tooltips/1.jpg" alt="Cattle Feed (Makkachunni)" class="product-image">
                         <div class="product-content">
                             <h3>Cattle Feed (Makkachunni)</h3>
                             <p>Fibre, germ and flour which are best source of Carbohydrate, fiber, protein and germ is supplied as cattle feed.</p>
