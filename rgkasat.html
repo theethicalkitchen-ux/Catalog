@@ -457,20 +457,46 @@
 
         .product-image-placeholder {
             width: 100%;
-            height: 250px;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(244, 164, 96, 0.1) 100%);
+            height: 280px;
+            background: linear-gradient(135deg, #fffbf0 0%, #fffef5 100%);
+            border: 2px dashed rgba(184, 134, 11, 0.3);
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-bottom: 2px solid rgba(184, 134, 11, 0.2);
+            margin-bottom: 0;
         }
 
         .placeholder-text {
-            color: var(--text-light);
-            font-size: 0.95rem;
-            font-weight: 500;
+            color: var(--primary);
+            font-size: 1rem;
+            font-weight: 600;
             text-align: center;
             padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .process-image-placeholder {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #fffbf0 0%, #fffef5 100%);
+            border: 2px dashed rgba(184, 134, 11, 0.3);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .about-image-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #fffbf0 0%, #fffef5 100%);
+            border: 2px dashed rgba(184, 134, 11, 0.3);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .product-content {
@@ -801,7 +827,9 @@
         <div class="container">
             <div class="content-section">
                 <div class="about-intro">
-                    <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Factory Location">
+                    <div class="about-image-placeholder">
+                        <div class="placeholder-text">Factory / Location Image</div>
+                    </div>
                     <div class="about-intro-text">
                         <p>RGK Group is diversified group with activities in agriculture, textile production (Looms), textile retail and agro processing unit. The group has flourished under the great guidance of Mr. Rameshji Kasat into all the above verticals of the industry. RGK Group has a very high brand reputation in north Karnataka for the best business practices and the quality products.</p>
                         <p>With great experience in handling the Textile Retail Business for more than 4 decades RGK Group has ventured into first agro processing unit "R G Kasat Industries Pvt. Ltd". Which is highly automated dry corn processing agro unit built at agro park developed by Central Government at Bagalkot.</p>
@@ -810,7 +838,9 @@
 
                 <div class="key-features">
                     <h4>Key Features of The Project</h4>
-                    <img src="https://rgkasat.com/images/mapofbagalkot.gif" alt="Bagalkot District Map">
+                    <div class="about-image-placeholder">
+                        <div class="placeholder-text">District Map / Location Image</div>
+                    </div>
                     <p><strong>Bagalkot is One out of 5 Declared FOOD-AGRO Park from Central Government.</strong></p>
                     <p>Bagalkot District was carved out of Bijapur in Year 1997. Bagalkot is divided into two parts-the new Bagalkot or Navanagar and the old Bagalkot town. The construction of new town became necessary following submergence of parts of old town due to construction of Almatti dam. Navanagar is a planned town with grid pattern layout with wide roads, parks, and other amenities.</p>
                     <p>Bagalkot produces approx. 20% of Karnataka state produced maize. With high availability of good crop every year and most months of the year, R G Kasat industries is in position to support with consistent quality of the Corn grits around the year to esteemed customers.</p>
@@ -1009,46 +1039,73 @@
                 <div class="process-item">
                     <h3>Corn Receiving</h3>
                     <p>Every truck received at our plant is analyzed for relevant parameters to get the best quality raw material for our production. Our processing area is well separated from grain stock area to keep complete hygiene, dust free processing area. Corn is sent by automated elevators to the first bins in Plant.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Corn Receiving / Equipment Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Cleaning</h3>
                     <p>Corn is cleaned using the completely controlled cleaning equipment's like drum sieves, de-stoners, vibro-separators, Magnets etc. All our machines are supplied with pressurized air to remove the dust, fine impurities particles from the grain.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Cleaning Equipment Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Conditioning</h3>
                     <p>Corn is next fed into an automated moisture control unit. Here addition of water is done, to ensure that a constant level of moisture is attained.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Conditioning Unit Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>De-germination</h3>
                     <p>Dampened Maize is added to our De Germinator which is supplied by BUHLER. BUHLER, world's best known manufacturer of agro processing machinery has made this patented MHXM-M De germinator. With the help of buhler de germinator by gentle treatment on the maize kernel, the germ, fiber and endosperm are neatly separated with minimal quantities of fines. Hence as germ separation is very efficiently done we get De-germinated kernels with low fat content. Corn flow rate to de germinator are monitored online to help us produce consistent quality product.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">De-germinator Machine Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Aspiration</h3>
                     <p>Fines and husks generated by the de-germinator are removed by sifters and aspiration channels. Which are collected in closed area separated from main processing area.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Aspiration System Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Plansifters</h3>
                     <p>The mixture of de-germed maize and loosened maize germs are pneumatically lifted and graded by size on plan sifters.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Plansifter Machine Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Purifiers</h3>
                     <p>The finished products are passed over control sifters to ensure the removal of oversize or fine materials, prior to the transfer to the finished product bins.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Purifier Equipment Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Control Sifting</h3>
                     <p>The finished products are passed over control sifters to ensure the removal of oversize or fine materials, prior to the transfer to the finished product bins.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Control Sifting Image</div>
+                    </div>
                 </div>
 
                 <div class="process-item">
                     <h3>Finished Products</h3>
                     <p>Products separated by plan sifter, purifier are collected in different bins passing through magnets. This material is packed in our standard pack sizes or customer requested kindly of packages.</p>
+                    <div class="process-image-placeholder">
+                        <div class="placeholder-text">Finished Products / Packaging Image</div>
+                    </div>
                 </div>
             </div>
         </div>
